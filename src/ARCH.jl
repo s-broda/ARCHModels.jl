@@ -1,7 +1,9 @@
 __precompile__()
-#Todo: pass instances of GARCH{1,1} so we can enforce invariants?
-#check if StatsBase has changed much
-#start using Optim
+#Todo:
+#pass instances of GARCH{1,1} so we can enforce invariants?
+#Docs
+#CI
+
 module ARCH
 
 using StatsBase: StatisticalModel
@@ -19,7 +21,7 @@ struct ARCHModel{VS<:VolatilitySpec,T<:AbstractFloat,df} <: StatisticalModel
 end
 ARCHModel{T1<:VolatilitySpec,T2,df}(VS::Type{T1},data::Vector{T2},coefs::NTuple{df,T2})=ARCHModel{VS,T2,df}(data,coefs)
 
-loglikelihood{T}(am::ARCHModel{T})=arch_loglik!(T,am.data,zeros(nobs(am)),am.coefs...)
+loglikelihood{T}(am::ARCHModel{T})=arch_loglik!(T,am.data,zeros(am.data),am.coefs...)
 nobs(am::ARCHModel)=length(am.data)
 fit{T}(AM::Type{ARCHModel{T}},data)=fit(T,data)
 
