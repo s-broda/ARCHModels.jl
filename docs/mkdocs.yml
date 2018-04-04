@@ -22,3 +22,6 @@ docs_dir: 'build'
 
 pages:
   - Home: index.md
+  - Basics:
+    - Title 1: types.md
+    - Title 2: functions.md
