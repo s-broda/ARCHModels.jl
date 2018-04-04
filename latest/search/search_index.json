@@ -1,0 +1,44 @@
+{
+    "docs": [
+        {
+            "location": "/", 
+            "text": "The ARCH Package\n\n\n\n\nContents\n\n\n- [My Functions](functions.md#My-Functions-1)\n\n\n\n\n\nIndex\n\n\n\n\nARCH.ARCHModel\n\n\nARCH.VolatilitySpec\n\n\nARCH.simulate", 
+            "title": "Home"
+        }, 
+        {
+            "location": "/#the-arch-package", 
+            "text": "", 
+            "title": "The ARCH Package"
+        }, 
+        {
+            "location": "/#contents", 
+            "text": "- [My Functions](functions.md#My-Functions-1)", 
+            "title": "Contents"
+        }, 
+        {
+            "location": "/#index", 
+            "text": "ARCH.ARCHModel  ARCH.VolatilitySpec  ARCH.simulate", 
+            "title": "Index"
+        }, 
+        {
+            "location": "/types/", 
+            "text": "My Types\n\n\n#\n\n\nARCH.ARCHModel\n \n \nType\n.\n\n\nstruct ARCHModel{VS\n:VolatilitySpec, T\n:AbstractFloat, df} \n: StatisticalModel\n\n\n\n\nsource\n\n\n#\n\n\nARCH.VolatilitySpec\n \n \nType\n.\n\n\nabstract type VolatilitySpec end\n\n\nsource", 
+            "title": "Title 1"
+        }, 
+        {
+            "location": "/types/#my-types", 
+            "text": "#  ARCH.ARCHModel     Type .  struct ARCHModel{VS :VolatilitySpec, T :AbstractFloat, df}  : StatisticalModel  source  #  ARCH.VolatilitySpec     Type .  abstract type VolatilitySpec end  source", 
+            "title": "My Types"
+        }, 
+        {
+            "location": "/functions/", 
+            "text": "My Functions\n\n\n#\n\n\nARCH.simulate\n \n \nFunction\n.\n\n\nSimulate an ARCH model.\n\n\nsource", 
+            "title": "Title 2"
+        }, 
+        {
+            "location": "/functions/#my-functions", 
+            "text": "#  ARCH.simulate     Function .  Simulate an ARCH model.  source", 
+            "title": "My Functions"
+        }
+    ]
+}
