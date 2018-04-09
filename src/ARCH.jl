@@ -1,15 +1,20 @@
 __precompile__()
 #Todo:
 #pass instances of GARCH{1,1} so we can enforce invariants?
-#Docs
-#CI
-
+#change coefs to vectors instead of tuples?
+#pretty print output by overloading show
+#change to where syntax everywhere
+#plotting via timeseries
+#marketdata
+#alternative error distributions
+#standard errors
+#AD?
 module ARCH
 
 using StatsBase: StatisticalModel
-
-import StatsBase: loglikelihood, nobs, fit
-export loglikelihood, nobs, fit
+using Optim
+import StatsBase: loglikelihood, nobs, fit, aic, dof
+export loglikelihood, nobs, fit, aic, dof
 export ARCHModel, VolatilitySpec, simulate
 const FP = AbstractFloat
 
@@ -30,6 +35,7 @@ ARCHModel{T1<:VolatilitySpec, T2, df}(VS::Type{T1}, data::Vector{T2}, coefs::NTu
 
 loglikelihood{T}(am::ARCHModel{T}) = arch_loglik!(T, am.data, zeros(am.data), am.coefs...)
 nobs(am::ARCHModel) = length(am.data)
+dof(am::ARCHModel{VS, T, df}) where {VS, T, df}= df
 fit{T}(AM::Type{ARCHModel{T}}, data) = fit(T,data)
 """
 Simulate an ARCH model.

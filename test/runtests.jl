@@ -18,3 +18,5 @@ m32 = ARCHModel(T, data32, coefs32)
 LL32 = ARCH.arch_loglik!(T, data32, ht32, coefs32...)
 @test LL ≈ LL32
 @test loglikelihood(m32) == LL32
+
+@test all(fit(GARCH, data, 3, 3).coefs .≈ (0.9339850882732338, 0.9030897598910242, 0.03901849907497808, 0.019404554001798847, -0.00684168051842598))

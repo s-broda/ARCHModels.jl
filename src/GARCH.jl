@@ -49,9 +49,29 @@ end#function
   end#quote
 end#function
 
-function fit{p, q}(G::Type{GARCH{p,q}}, data)
+function archstart{p, q, T}(G::Type{GARCH{p,q}}, data::Array{T})
+  x0 = zeros(T, p+q+1)
+  x0[2:p+1] = 0.9/p
+  x0[p+2:end] = 0.05/q
+  x0[1] = var(data)*(one(T)-sum(x0))
+  return x0
+end
+
+function fit{p, q}(G::Type{GARCH{p,q}}, data, args...; kwargs...)
   ht = zeros(data)
   obj = x -> -arch_loglik!(G, data, ht, x...)
-  #  optimize(DifferentiableFunction(obj), [1., .8, .1], BFGS(), OptimizationOptions(autodiff = true))
+  x0 = archstart(G, data)
+  res = optimize(obj, x0, args...; kwargs...)
+  return ARCHModel(G, data, Tuple(res.minimizer))
 end
-fit(G::Type{GARCH}, data)="find best GARCH model by AIC"
+
+function fit(G::Type{GARCH}, data, maxp, maxq, args...; kwargs...)
+  res = Array{ARCHModel, 2}(maxp, maxq)
+  for p = 1:maxp, q = 1:maxq
+    res[p, q] = fit(GARCH{p, q}, data, args...; kwargs...)
+  end
+  aics = aic.(res)
+  println(aics)
+  _, ind = findmin(aics)
+  return res[ind]
+end
