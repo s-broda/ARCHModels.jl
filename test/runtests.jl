@@ -22,4 +22,4 @@ ht32 = zeros(data32)
 AM32=selectmodel(GARCH, data32)
 @test nobs(AM32) == T
 @test dof(AM32) == 3
-@test all(AM32.coefs .≈ (0.9740575f0, 0.8999464f0, 0.053036463f0))
+@test all(AM32.coefs .≈ (0.97979194f0, 0.899479f0, 0.053148188f0))

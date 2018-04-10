@@ -15,8 +15,8 @@ module ARCH
 
 using StatsBase: StatisticalModel
 using Optim
-import StatsBase: loglikelihood, nobs, fit, aic, bic, aicc, dof
-export            loglikelihood, nobs, fit, aic, bic, aicc, dof
+import StatsBase: loglikelihood, nobs, fit, aic, bic, aicc, dof, coef, coefnames
+export            loglikelihood, nobs, fit, aic, bic, aicc, dof, coef, coefnames
 export ARCHModel, VolatilitySpec, simulate, selectmodel
 const FP = AbstractFloat
 
@@ -38,6 +38,8 @@ ARCHModel{T1<:VolatilitySpec, T2, df}(VS::Type{T1}, data::Vector{T2}, coefs::NTu
 loglikelihood{T}(am::ARCHModel{T}) = arch_loglik!(T, am.data, zeros(am.data), am.coefs...)
 nobs(am::ARCHModel) = length(am.data)
 dof(am::ARCHModel{VS, T, df}) where {VS, T, df}= df
+coef(am::ARCHModel)=am.coefs
+
 fit{T}(AM::Type{ARCHModel{T}}, data) = fit(T, data)
 """
 Simulate an ARCH model.

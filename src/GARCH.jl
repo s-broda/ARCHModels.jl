@@ -24,7 +24,7 @@ struct GARCH{p,q} <: VolatilitySpec end
         LL += log(ht[t]) + data[t]^2/ht[t]
       end#for
     end#inbounds
-    LL = -((T-$r)*$log2pi+LL)/2
+    LL = -(T*$log2pi+LL)/2
   end#quote
 end#function
 
@@ -60,6 +60,7 @@ function archstart{p, q, T}(G::Type{GARCH{p,q}}, data::Array{T})
 end
 
 function fit{p, q, T}(G::Type{GARCH{p,q}}, data::Array{T}, args...; kwargs...)
+  #without ARCH terms, volatility is constant and beta_i is not identified.
   q == 0 && return ARCHModel(G, data, Tuple([mean(data.^2); zeros(T, p)]))
   ht = zeros(data)
   obj = x -> -arch_loglik!(G, data, ht, x...)
@@ -77,4 +78,12 @@ function selectmodel(G::Type{GARCH}, data, maxp=3, maxq=3, args...; criterion=bi
   println(crits)
   _, ind = findmin(crits)
   return res[ind]
+end
+
+function coefnames{p, q}(G::ARCHModel{GARCH{p,q}})
+  names = Array{String, 1}(p+q+1)
+  names[1]="omega"
+  names[2:p+1].=(i->"beta_$i").([1:p...])
+  names[p+2:p+q+1].=(i->"alpha_$i").([1+q...])
+  return names
 end
