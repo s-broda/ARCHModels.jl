@@ -10,11 +10,13 @@ struct GARCH{p,q} <: VolatilitySpec end
     T = length(data)
     T > $r || error("Sample too small.")
     @inbounds begin
-      LL = $(zero(T1))#GARCH.jl uses sum(log.(ht[1:$r])+datasq[1:$r]./ht[1:$r]) instead of 0.
+      LL = $(zero(T1))
       den = $(one(T1))
       @nexprs $(p+q) i -> den -= coefs[i+1]
-      h0 = coefs[1]/den
+      h0 = max(coefs[1]/den, 0)
+      lh0 = log(h0)
       @nexprs $r i -> ht[i] = h0
+      @nexprs $r i -> LL += lh0+data[i]^2/h0
       @fastmath for t = $(r+1):T
         ht[t] = coefs[1]
         @nexprs $p i -> ht[t] += coefs[i+1]*ht[t-i]
@@ -57,7 +59,8 @@ function archstart{p, q, T}(G::Type{GARCH{p,q}}, data::Array{T})
   return x0
 end
 
-function fit{p, q}(G::Type{GARCH{p,q}}, data, args...; kwargs...)
+function fit{p, q, T}(G::Type{GARCH{p,q}}, data::Array{T}, args...; kwargs...)
+  q == 0 && return ARCHModel(G, data, Tuple([mean(data.^2); zeros(T, p)]))
   ht = zeros(data)
   obj = x -> -arch_loglik!(G, data, ht, x...)
   x0 = archstart(G, data)
@@ -65,13 +68,13 @@ function fit{p, q}(G::Type{GARCH{p,q}}, data, args...; kwargs...)
   return ARCHModel(G, data, Tuple(res.minimizer))
 end
 
-function fit(G::Type{GARCH}, data, maxp, maxq, args...; kwargs...)
-  res = Array{ARCHModel, 2}(maxp, maxq)
-  for p = 1:maxp, q = 1:maxq
-    res[p, q] = fit(GARCH{p, q}, data, args...; kwargs...)
+function selectmodel(G::Type{GARCH}, data, maxp=3, maxq=3, args...; criterion=bic, kwargs...)
+  res = Array{ARCHModel, 2}(maxp+1, maxq+1)
+  for p = 0:maxp, q = 0:maxq
+    res[p+1, q+1] = fit(GARCH{p, q}, data, args...; kwargs...)
   end
-  aics = aic.(res)
-  println(aics)
-  _, ind = findmin(aics)
+  crits = criterion.(res)
+  println(crits)
+  _, ind = findmin(crits)
   return res[ind]
 end

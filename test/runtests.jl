@@ -9,17 +9,17 @@ srand(1)
 data = simulate(spec, T, coefs)
 ht = zeros(data)
 @test loglikelihood(ARCHModel(spec, data, coefs)) ==  ARCH.arch_loglik!(spec, data, ht, coefs...)
-AM=fit(GARCH, data, 3, 3)
-@test all(AM.coefs .≈ (0.9339850882732338, 0.9030897598910242, 0.03901849907497808, 0.019404554001798847, -0.00684168051842598))
+AM=selectmodel(GARCH, data)
 @test nobs(AM) == T
-@test dof(AM) == 5
+@test dof(AM) == 3
+@test all(AM.coefs .≈ (0.9086976182731443, 0.9055259493364445, 0.05036608916556923))
 
 coefs32 = NTuple{3,Float32}(coefs)
 srand(1)
 data32 = simulate(spec, T, coefs32)
 ht32 = zeros(data32)
 @test loglikelihood(ARCHModel(spec, data32, coefs32)) ==  ARCH.arch_loglik!(spec, data32, ht32, coefs32...)
-AM32=fit(GARCH, data32, 3, 3)
-@test all(AM32.coefs .≈ (1.0410453f0, 0.8948746f0, 0.03434224f0, 0.027093302f0, -0.0065628835f0))
+AM32=selectmodel(GARCH, data32)
 @test nobs(AM32) == T
-@test dof(AM32) == 5
+@test dof(AM32) == 3
+@test all(AM32.coefs .≈ (0.9740575f0, 0.8999464f0, 0.053036463f0))

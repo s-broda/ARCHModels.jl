@@ -9,13 +9,15 @@ __precompile__()
 #alternative error distributions
 #standard errors
 #AD?
+#demean?
+
 module ARCH
 
 using StatsBase: StatisticalModel
 using Optim
-import StatsBase: loglikelihood, nobs, fit, aic, dof
-export loglikelihood, nobs, fit, aic, dof
-export ARCHModel, VolatilitySpec, simulate
+import StatsBase: loglikelihood, nobs, fit, aic, bic, aicc, dof
+export            loglikelihood, nobs, fit, aic, bic, aicc, dof
+export ARCHModel, VolatilitySpec, simulate, selectmodel
 const FP = AbstractFloat
 
 """
@@ -36,7 +38,7 @@ ARCHModel{T1<:VolatilitySpec, T2, df}(VS::Type{T1}, data::Vector{T2}, coefs::NTu
 loglikelihood{T}(am::ARCHModel{T}) = arch_loglik!(T, am.data, zeros(am.data), am.coefs...)
 nobs(am::ARCHModel) = length(am.data)
 dof(am::ARCHModel{VS, T, df}) where {VS, T, df}= df
-fit{T}(AM::Type{ARCHModel{T}}, data) = fit(T,data)
+fit{T}(AM::Type{ARCHModel{T}}, data) = fit(T, data)
 """
 Simulate an ARCH model.
 """
