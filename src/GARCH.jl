@@ -38,7 +38,7 @@ end#function
     @nexprs $(p+q) i -> den -= coefs[i+1]
     h0 = coefs[1]/den
     randn!(@view data[1:$r])
-    @nexprs $r i -> data[i] *= h0
+    @nexprs $r i -> data[i] *= sqrt(h0)
     @assert T > $r "Sample too small."
     @inbounds begin
       for t = $(r+1):T
