@@ -30,9 +30,9 @@ abstract type VolatilitySpec end
     struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat, df} <: StatisticalModel
 """
 struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat, df} <: StatisticalModel
-  data::Vector{T}
-  coefs::NTuple{df,T}
-  ARCHModel{VS, T, df}(data, coefs) where {VS, T, df}=new(data, coefs)
+    data::Vector{T}
+    coefs::NTuple{df,T}
+    ARCHModel{VS, T, df}(data, coefs) where {VS, T, df}=new(data, coefs)
 end
 ARCHModel{T1<:VolatilitySpec, T2, df}(VS::Type{T1}, data::Vector{T2}, coefs::NTuple{df,T2}) = ARCHModel{VS, T2, df}(data, coefs)
 
