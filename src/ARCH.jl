@@ -1,6 +1,5 @@
 __precompile__()
 #Todo:
-#fix sqrt in sim
 #share code between sim and loglik
 #pass instances of GARCH{1,1} so we can enforce invariants?
 #change coefs to vectors instead of tuples?
@@ -16,6 +15,7 @@ module ARCH
 
 using StatsBase: StatisticalModel
 using Optim
+export BFGS
 import StatsBase: loglikelihood, nobs, fit, aic, bic, aicc, dof, coef, coefnames
 export            loglikelihood, nobs, fit, aic, bic, aicc, dof, coef, coefnames
 export ARCHModel, VolatilitySpec, simulate, selectmodel

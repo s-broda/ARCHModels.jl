@@ -8,7 +8,7 @@ function arch_loglik!{p, q, T1<:FP}(M::Type{GARCH{p,q}}, data::Vector{T1}, ht::V
     T > r || error("Sample too small.")
     log2pi = T1(1.837877066409345483560659472811235279722794947275566825634303080965531391854519)
     @inbounds begin
-        den=one(coefs[1])
+        den=one(T1)
         for i = 1:p+q
             den -= coefs[i+1]
         end
@@ -32,7 +32,7 @@ function arch_loglik!{p, q, T1<:FP}(M::Type{GARCH{p,q}}, data::Vector{T1}, ht::V
 end#function
 
 
-function archsim!{p,q}(::Type{GARCH{p, q}}, data, ht, coefs)
+function archsim!{p,q, T1<:FP}(::Type{GARCH{p, q}}, data::Vector{T1}, ht::Vector{T1}, coefs::Vector{T1})
     r = max(p,q)
     length(coefs) == p+q+1 || error("Incorrect number of parameters: expected $(p+q+1), got $(length(coefs)).")
     T=length(data)
@@ -50,12 +50,12 @@ function archsim!{p,q}(::Type{GARCH{p, q}}, data, ht, coefs)
             for i = 1:q
                 ht[t] += coefs[i+1+p]*data[t-i]^2
             end
-            data[t] = sqrt(ht[t])*randn()
+            data[t] = sqrt(ht[t])*randn(T1)
         end#for
     end#inbounds
 end#function
 
-function archstart{p, q, T}(G::Type{GARCH{p,q}}, data::Array{T})
+function archstart{p, q, T<:FP}(G::Type{GARCH{p,q}}, data::Array{T})
     x0 = zeros(T, p+q+1)
     x0[2:p+1] = 0.9/p
     x0[p+2:end] = 0.05/q
@@ -63,13 +63,21 @@ function archstart{p, q, T}(G::Type{GARCH{p,q}}, data::Array{T})
     return x0
 end
 
-function fit{p, q, T}(G::Type{GARCH{p,q}}, data::Array{T}, args...; kwargs...)
+function archconstraints{p, q, T<:FP}(G::Type{GARCH{p,q}}, data::Array{T})
+    lower = zeros(T, p+q+1)
+    upper = ones(T, p+q+1)
+    upper[1] = T(Inf)
+    return lower, upper
+end
+
+function fit{p, q, T}(G::Type{GARCH{p,q}}, data::Array{T}, algorithm=BFGS; kwargs...)
     #without ARCH terms, volatility is constant and beta_i is not identified.
     q == 0 && return ARCHModel(G, data, Tuple([mean(data.^2); zeros(T, p)]))
     ht = zeros(data)
     obj = x -> -arch_loglik!(G, data, ht, x)
     x0 = archstart(G, data)
-    res = optimize(obj, x0, args...; kwargs...)
+    lower, upper = archconstraints(G, data)
+    res = optimize(obj, x0, lower, upper, Fminbox{algorithm}(); kwargs...)
     return ARCHModel(G, data, Tuple(res.minimizer))
 end
 
