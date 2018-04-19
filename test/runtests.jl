@@ -1,15 +1,14 @@
 using ARCH
 using Base.Test
-
-T=10^4
-spec = GARCH{1, 1}
-coefs = (1., .9, .05)
-srand(1)
-data = simulate(spec, T, coefs)
-ht = zeros(data)
-
+T=10^4;
+spec = GARCH{1, 1};
+coefs = (1., .9, .05);
+srand(1);
+data = simulate(spec, T, coefs);
+ht = zeros(data);
 AM=selectmodel(GARCH, data)
-@test loglikelihood(ARCHModel(spec, data, coefs)) ==  ARCH.arch_loglik!(spec, data, ht, [coefs...])
+
+@test loglikelihood(ARCHModel(spec, data, coefs)) ==  ARCH._loglik!(spec, data, ht, [coefs...])
 @test nobs(AM) == T
 @test dof(AM) == 3
 @test all(isapprox.(AM.coefs, (0.9086851798550601, 0.9055267194855281, 0.05036584604511605), rtol=1e-4))
