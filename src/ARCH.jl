@@ -19,6 +19,7 @@ module ARCH
 
 using StatsBase: StatisticalModel
 using Optim
+using Base.Cartesian: @nloops, @nref, @ntuple
 export BFGS
 import StatsBase: loglikelihood, nobs, fit, aic, bic, aicc, dof, coef, coefnames
 export            loglikelihood, nobs, fit, aic, bic, aicc, dof, coef, coefnames
@@ -89,10 +90,9 @@ function _sim!{spec<:VolatilitySpec, T1<:FP}(M::Type{spec}, data::Vector{T1}, ht
         for t = r+1:T
             _update!(M, data, ht, coefs, t)
             data[t] = sqrt(ht[t])*randn(T1)
-        end#for
-    end#inbounds
-end#function
-
+        end
+    end
+end
 
 function fit{spec<:VolatilitySpec}(M::Type{spec}, data, algorithm=BFGS; kwargs...)
     ht = zeros(data)
@@ -103,5 +103,22 @@ function fit{spec<:VolatilitySpec}(M::Type{spec}, data, algorithm=BFGS; kwargs..
     return ARCHModel(M, data, Tuple(res.minimizer))
 end
 
+function selectmodel{spec<:VolatilitySpec, T}(M::Type{spec}, data::Vector{T}, maxpq=3, args...; criterion=bic, kwargs...)
+    nparams=length(Base.unwrap_unionall(M).parameters) #e.g., two (p and q) for GARCH{p, q}
+    res=_selectmodel(spec, Val{nparams}(), Val{maxpq}(), data)
+    crits = criterion.(res)
+    _, ind = findmin(crits)
+    return res[ind]
+end
+
+@generated function _selectmodel{nparams, maxpq}(spec, ::Val{nparams}, ::Val{maxpq}, data)
+quote
+    res =Array{ARCHModel, $nparams}(@ntuple($nparams, i->$maxpq))
+    @nloops $nparams i res begin
+        @nref($nparams, res, i) = fit(spec{@ntuple($nparams, i)...}, data)
+    end
+    return res
+end
+end
 include("GARCH.jl")
 end#module

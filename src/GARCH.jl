@@ -44,16 +44,6 @@ function _constraints{p, q, T<:FP}(G::Type{GARCH{p,q}}, data::Array{T})
     return lower, upper
 end
 
-function selectmodel(G::Type{GARCH}, data, maxp=3, maxq=3, args...; criterion=bic, kwargs...)
-    res = Array{ARCHModel, 2}(maxp+1, maxq+1)
-    for p = 0:maxp, q = 0:maxq
-        res[p+1, q+1] = fit(GARCH{p, q}, data, args...; kwargs...)
-    end
-    crits = criterion.(res)
-    _, ind = findmin(crits)
-    return res[ind]
-end
-
 function coefnames{p, q}(::Type{GARCH{p,q}})
     names = Array{String, 1}(p+q+1)
     names[1]="omega"
