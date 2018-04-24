@@ -1,11 +1,11 @@
 export GARCH
 struct GARCH{p, q} <: VolatilitySpec end
 
-@inline nparams(M::Type{GARCH{p,q}}) where {p, q} = p+q+1
+@inline nparams(::Type{GARCH{p,q}}) where {p, q} = p+q+1
 
-@inline presample(M::Type{GARCH{p,q}}) where {p, q} = max(p, q)
+@inline presample(::Type{GARCH{p,q}}) where {p, q} = max(p, q)
 
-@inline function update!(M::Type{GARCH{p,q}}, data, ht, coefs, t) where {p, q}
+@inline function update!(::Type{GARCH{p,q}}, data, ht, coefs, t) where {p, q}
     @fastmath begin
         ht[t] = coefs[1]
         for i = 1:p
@@ -17,7 +17,7 @@ struct GARCH{p, q} <: VolatilitySpec end
     end
 end
 
-@inline function uncond(M::Type{GARCH{p, q}}, coefs::Vector{T}) where {p, q, T}
+@inline function uncond(::Type{GARCH{p, q}}, coefs::Vector{T}) where {p, q, T<:AbstractFloat}
     @fastmath begin
         den=one(T)
         for i = 1:p+q
@@ -27,7 +27,7 @@ end
     end
 end
 
-function startingvals(G::Type{GARCH{p,q}}, data::Array{T}) where {p, q, T<:FP}
+function startingvals(::Type{GARCH{p,q}}, data::Array{T}) where {p, q, T<:AbstractFloat}
     x0 = zeros(T, p+q+1)
     x0[2:p+1] = 0.9/p
     x0[p+2:end] = 0.05/q
@@ -35,7 +35,7 @@ function startingvals(G::Type{GARCH{p,q}}, data::Array{T}) where {p, q, T<:FP}
     return x0
 end
 
-function constraints(G::Type{GARCH{p,q}}, data::Array{T}) where {p, q, T<:FP}
+function constraints(::Type{GARCH{p,q}}, data::Array{T}) where {p, q, T<:AbstractFloat}
     lower = zeros(T, p+q+1)
     upper = ones(T, p+q+1)
     upper[1] = T(Inf)
