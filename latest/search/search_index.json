@@ -2,7 +2,7 @@
     "docs": [
         {
             "location": "/", 
-            "text": "The ARCH Package\n\n\nThis project has received funding from the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (grant agreement No. 750559).\n\n\n\n\n\n\nContents\n\n\n- [My Functions](functions.md#My-Functions-1)\n\n\n\n\n\nIndex\n\n\n\n\nARCH.ARCHModel\n\n\nARCH.VolatilitySpec\n\n\nARCH.simulate", 
+            "text": "The ARCH Package\n\n\nThis project has received funding from the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (grant agreement No. 750559).\n\n\n\n\n\n\nContents\n\n\n- [My Functions](functions.md#My-Functions-1)\n\n\n\n\n\nIndex", 
             "title": "Home"
         }, 
         {
@@ -17,27 +17,27 @@
         }, 
         {
             "location": "/#index", 
-            "text": "ARCH.ARCHModel  ARCH.VolatilitySpec  ARCH.simulate", 
+            "text": "", 
             "title": "Index"
         }, 
         {
             "location": "/types/", 
-            "text": "My Types\n\n\n#\n\n\nARCH.ARCHModel\n \n \nType\n.\n\n\nstruct ARCHModel{VS\n:VolatilitySpec, T\n:AbstractFloat, df} \n: StatisticalModel\n\n\n\n\nsource\n\n\n#\n\n\nARCH.VolatilitySpec\n \n \nType\n.\n\n\nabstract type VolatilitySpec end\n\n\nsource", 
+            "text": "My Types\n\n\nARCH.ARCHModel\nARCH.VolatilitySpec", 
             "title": "Title 1"
         }, 
         {
             "location": "/types/#my-types", 
-            "text": "#  ARCH.ARCHModel     Type .  struct ARCHModel{VS :VolatilitySpec, T :AbstractFloat, df}  : StatisticalModel  source  #  ARCH.VolatilitySpec     Type .  abstract type VolatilitySpec end  source", 
+            "text": "ARCH.ARCHModel\nARCH.VolatilitySpec", 
             "title": "My Types"
         }, 
         {
             "location": "/functions/", 
-            "text": "My Functions\n\n\n#\n\n\nARCH.simulate\n \n \nFunction\n.\n\n\nSimulate an ARCH model.\n\n\nsource", 
+            "text": "My Functions\n\n\nARCH.simulate", 
             "title": "Title 2"
         }, 
         {
             "location": "/functions/#my-functions", 
-            "text": "#  ARCH.simulate     Function .  Simulate an ARCH model.  source", 
+            "text": "ARCH.simulate", 
             "title": "My Functions"
         }
     ]
