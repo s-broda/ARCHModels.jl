@@ -1,6 +1,5 @@
 __precompile__()
 #Todo:
-#coverage
 #docs
 #pretty print output by overloading show
 #plotting via timeseries
@@ -13,8 +12,8 @@ __precompile__()
 #should archmodel carry ht?
 # don't pass data into start
 #figure out what to do about unid'd models. Eg, in fit, we had
-    #without ARCH terms, volatility is constant and beta_i is not identified.
-    #q == 0 && return ARCHModel(G, data, Tuple([mean(data.^2); zeros(T, p)]))
+#without ARCH terms, volatility is constant and beta_i is not identified.
+#q == 0 && return ARCHModel(G, data, Tuple([mean(data.^2); zeros(T, p)]))
 
 module ARCH
 
@@ -43,11 +42,11 @@ fit(AM::Type{ARCHModel{VS}}, data) where {VS<:VolatilitySpec} = fit(T, data)
 coefnames(::ARCHModel{VS}) where {VS<:VolatilitySpec} = coefnames(VS)
 
 function simulate(spec::Type{VS}, nobs, coefs::Vector{T}) where {VS<:VolatilitySpec, T<:AbstractFloat}
-  const warmup = 100
-  data = zeros(T, nobs+warmup)
-  ht = zeros(T, nobs+warmup)
-  sim!(ht, spec, data, coefs)
-  data[warmup+1:warmup+nobs]
+    const warmup = 100
+    data = zeros(T, nobs+warmup)
+    ht = zeros(T, nobs+warmup)
+    sim!(ht, spec, data, coefs)
+    data[warmup+1:warmup+nobs]
 end
 
 function loglik!(ht::Vector{T1}, spec::Type{VS}, data::Vector{T1}, coefs::Vector{T1}) where {VS<:VolatilitySpec, T1<:AbstractFloat}
@@ -106,9 +105,9 @@ function selectmodel(spec::Type{VS}, data::Vector{T}, maxpq=3, args...; criterio
 end
 
 @generated function _selectmodel(VS, ::Val{ndims}, ::Val{maxpq}, data) where {ndims, maxpq}
-quote
-    res =Array{ARCHModel, $ndims}(@ntuple($ndims, i->$maxpq))
-    @nloops $ndims i res begin
+    quote
+        res =Array{ARCHModel, $ndims}(@ntuple($ndims, i->$maxpq))
+        @nloops $ndims i res begin
         @nref($ndims, res, i) = fit(VS{@ntuple($ndims, i)...}, data)
     end
     return res
