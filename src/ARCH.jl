@@ -2,16 +2,16 @@ __precompile__()
 #Todo:
 #coverage
 #docs
-#write fit!
-#modifying functions arg order
-#should archmodel carry ht?
-#remove unnecessarity FP restrictions
 #pretty print output by overloading show
 #plotting via timeseries
 #marketdata
 #alternative error distributions
 #standard errors
 #demean?
+
+#write fit!
+#modifying functions arg order
+#should archmodel carry ht?
 # don't pass data into start
 #figure out what to do about unid'd models. Eg, in fit, we had
     #without ARCH terms, volatility is constant and beta_i is not identified.
@@ -36,7 +36,7 @@ struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat} <: StatisticalModel
 end
 ARCHModel(spec::Type{VS}, data::Vector{T}, coefs::Vector{T}) where {VS<:VolatilitySpec, T} = ARCHModel{VS, T}(data, coefs)
 
-loglikelihood(am::ARCHModel{VS}) where {VS<:VolatilitySpec} = loglik!(VS, am.data, zeros(am.data), am.coefs)
+loglikelihood(am::ARCHModel{VS}) where {VS<:VolatilitySpec} = loglik!(zeros(am.data), VS, am.data, am.coefs)
 nobs(am::ARCHModel) = length(am.data)
 dof(am::ARCHModel{VS}) where {VS<:VolatilitySpec} = nparams(VS)
 coef(am::ARCHModel)=am.coefs
@@ -48,11 +48,11 @@ function simulate(spec::Type{VS}, nobs, coefs::Vector{T}) where {VS<:VolatilityS
   const warmup = 100
   data = zeros(T, nobs+warmup)
   ht = zeros(T, nobs+warmup)
-  sim!(spec, data, ht, coefs)
+  sim!(ht, spec, data, coefs)
   data[warmup+1:warmup+nobs]
 end
 
-function loglik!(spec::Type{VS}, data::Vector{T1}, ht::Vector{T1}, coefs::Vector{T1}) where {VS<:VolatilitySpec, T1<:AbstractFloat}
+function loglik!(ht::Vector{T1}, spec::Type{VS}, data::Vector{T1}, coefs::Vector{T1}) where {VS<:VolatilitySpec, T1<:AbstractFloat}
     T = length(data)
     r = presample(spec)
     length(coefs) == nparams(spec) || error("Incorrect number of parameters: expected $(p+q+1), got $(length(coefs)).")
@@ -65,7 +65,7 @@ function loglik!(spec::Type{VS}, data::Vector{T1}, ht::Vector{T1}, coefs::Vector
         ht[1:r] .= h0
         LL = r*lh0+sum(data[1:r].^2)/h0
         @fastmath for t = r+1:T
-            update!(spec, data, ht, coefs, t)
+            update!(ht, spec, data, coefs, t)
             LL += log(ht[t]) + data[t]^2/ht[t]
         end#for
     end#inbounds
@@ -73,7 +73,7 @@ function loglik!(spec::Type{VS}, data::Vector{T1}, ht::Vector{T1}, coefs::Vector
 end#function
 
 
-function sim!(spec::Type{VS}, data::Vector{T1}, ht::Vector{T1}, coefs::Vector{T1}) where {VS<:VolatilitySpec, T1<:AbstractFloat}
+function sim!(ht::Vector{T1}, spec::Type{VS}, data::Vector{T1}, coefs::Vector{T1}) where {VS<:VolatilitySpec, T1<:AbstractFloat}
     T =  length(data)
     r = presample(spec)
     length(coefs) == nparams(spec) || error("Incorrect number of parameters: expected $(p+q+1), got $(length(coefs)).")
@@ -83,7 +83,7 @@ function sim!(spec::Type{VS}, data::Vector{T1}, ht::Vector{T1}, coefs::Vector{T1
     data[1:r] .*= sqrt(h0)
     @inbounds begin
         for t = r+1:T
-            update!(spec, data, ht, coefs, t)
+            update!(ht, spec, data, coefs, t)
             data[t] = sqrt(ht[t])*randn(T1)
         end
     end
@@ -91,7 +91,7 @@ end
 
 function fit(spec::Type{VS}, data, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec}
     ht = zeros(data)
-    obj = x -> -loglik!(spec, data, ht, x)
+    obj = x -> -loglik!(ht, spec, data, x)
     x0 = startingvals(spec, data)
     lower, upper = constraints(spec, data)
     res = optimize(obj, x0, lower, upper, Fminbox{algorithm}(); kwargs...)

@@ -5,7 +5,7 @@ struct GARCH{p, q} <: VolatilitySpec end
 
 @inline presample(::Type{GARCH{p,q}}) where {p, q} = max(p, q)
 
-@inline function update!(::Type{GARCH{p,q}}, data, ht, coefs, t) where {p, q}
+@inline function update!(ht, ::Type{GARCH{p,q}}, data, coefs, t) where {p, q}
     @fastmath begin
         ht[t] = coefs[1]
         for i = 1:p
