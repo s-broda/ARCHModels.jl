@@ -15,3 +15,5 @@ am=selectmodel(GARCH, data)
 @test coefnames(GARCH{1, 1})==["omega", "beta_1", "alpha_1"]
 @test all(isapprox.(coef(am), [0.9086850084210619, 0.9055267307122488, 0.050365843108442374], rtol=1e-4))
 @test_throws ARCH.NumParamError ARCH.loglik!(ht, spec, data, [0., 0., 0., 0.])
+@test_throws ARCH.NumParamError ARCH.sim!(ht, spec, data, [0., 0., 0., 0.])
+@test selectmodel(ARCH.arch, data).coefs == fit(ARCH.arch{3}, data).coefs

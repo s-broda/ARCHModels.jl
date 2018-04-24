@@ -8,6 +8,7 @@ __precompile__()
 #standard errors
 #demean?
 
+#how to export arch?
 #write fit!
 #should archmodel carry ht?
 #figure out what to do about unid'd models. Eg, in fit, we had
@@ -103,7 +104,8 @@ function fit(::Type{VS}, data::Vector{T}, algorithm=BFGS; kwargs...) where {VS<:
 end
 
 function selectmodel(::Type{VS}, data::Vector{T}, maxpq=3, args...; criterion=bic, kwargs...) where {VS<:VolatilitySpec, T<:AbstractFloat}
-    ndims = length(Base.unwrap_unionall(VS).parameters) #e.g., two (p and q) for GARCH{p, q}
+    #ndims = length(Base.unwrap_unionall(VS).parameters) #e.g., two (p and q) for GARCH{p, q}
+    ndims =my_unwrap_unionall(VS)#e.g., two (p and q) for GARCH{p, q}
     res = _selectmodel(VS, Val{ndims}(), Val{maxpq}(), data)
     crits = criterion.(res)
     _, ind = findmin(crits)
@@ -118,6 +120,16 @@ end
     end
     return res
 end
+end
+
+#count the number of type vars. there's probably a better way.
+function my_unwrap_unionall(a::ANY)
+    count=0
+    while isa(a, UnionAll)
+        a = a.body
+        count += 1
+    end
+    return count
 end
 include("GARCH.jl")
 end#module
