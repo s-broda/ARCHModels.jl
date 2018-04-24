@@ -6,25 +6,22 @@ struct GARCH{p, q} <: VolatilitySpec end
 @inline presample(::Type{GARCH{p,q}}) where {p, q} = max(p, q)
 
 @inline function update!(ht, ::Type{GARCH{p,q}}, data, coefs, t) where {p, q}
-    @fastmath begin
-        ht[t] = coefs[1]
-        for i = 1:p
-            ht[t] += coefs[i+1]*ht[t-i]
-        end
-        for i = 1:q
-            ht[t] += coefs[i+1+p]*data[t-i]^2
-        end
+    ht[t] = coefs[1]
+    for i = 1:p
+        ht[t] += coefs[i+1]*ht[t-i]
     end
+    for i = 1:q
+        ht[t] += coefs[i+1+p]*data[t-i]^2
+    end
+    return nothing
 end
 
 @inline function uncond(::Type{GARCH{p, q}}, coefs::Vector{T}) where {p, q, T<:AbstractFloat}
-    @fastmath begin
-        den=one(T)
-        for i = 1:p+q
-            den -= coefs[i+1]
-        end
-        h0 = coefs[1]/den
+    den=one(T)
+    for i = 1:p+q
+        den -= coefs[i+1]
     end
+    h0 = coefs[1]/den
 end
 
 function startingvals(::Type{GARCH{p,q}}, data::Array{T}) where {p, q, T<:AbstractFloat}

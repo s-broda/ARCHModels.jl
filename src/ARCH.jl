@@ -75,16 +75,17 @@ function sim!(ht::Vector{T1}, spec::Type{VS}, data::Vector{T1}, coefs::Vector{T1
     T =  length(data)
     r = presample(spec)
     length(coefs) == nparams(spec) || error("Incorrect number of parameters: expected $(p+q+1), got $(length(coefs)).")
-    h0 = uncond(spec, coefs)
-    h0 > 0 || error("Model is nonstationary.")
-    randn!(@view data[1:r])
-    data[1:r] .*= sqrt(h0)
     @inbounds begin
-        for t = r+1:T
+        h0 = uncond(spec, coefs)
+        h0 > 0 || error("Model is nonstationary.")
+        randn!(@view data[1:r])
+        data[1:r] .*= sqrt(h0)
+        @fastmath for t = r+1:T
             update!(ht, spec, data, coefs, t)
             data[t] = sqrt(ht[t])*randn(T1)
         end
     end
+    return nothing
 end
 
 function fit(spec::Type{VS}, data, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec}
