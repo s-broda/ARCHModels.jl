@@ -32,17 +32,17 @@ struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat, df} <: StatisticalModel
     coefs::NTuple{df,T}
     ARCHModel{VS, T, df}(data, coefs) where {VS, T, df}=new(data, coefs)
 end
-ARCHModel{T1<:VolatilitySpec, T2, df}(VS::Type{T1}, data::Vector{T2}, coefs::NTuple{df,T2}) = ARCHModel{VS, T2, df}(data, coefs)
+ARCHModel(VS::Type{T1}, data::Vector{T2}, coefs::NTuple{df,T2}) where {T1<:VolatilitySpec, T2, df} = ARCHModel{VS, T2, df}(data, coefs)
 
-loglikelihood{T}(am::ARCHModel{T}) = loglik!(T, am.data, zeros(am.data), [am.coefs...])
+loglikelihood(am::ARCHModel{T}) where {T} = loglik!(T, am.data, zeros(am.data), [am.coefs...])
 nobs(am::ARCHModel) = length(am.data)
 dof(am::ARCHModel{VS, T, df}) where {VS, T, df}= df
 coef(am::ARCHModel)=am.coefs
 
-fit{T}(AM::Type{ARCHModel{T}}, data) = fit(T, data)
-coefnames{spec}(::ARCHModel{spec}) = coefnames(spec)
+fit(AM::Type{ARCHModel{T}}, data) where {T} = fit(T, data)
+coefnames(::ARCHModel{spec}) where {spec} = coefnames(spec)
 
-function simulate{T1<:VolatilitySpec, T2<:AbstractFloat, N}(VS::Type{T1}, nobs, coefs::NTuple{N,T2})
+function simulate(VS::Type{T1}, nobs, coefs::NTuple{N,T2}) where {T1<:VolatilitySpec, T2<:AbstractFloat, N}
   const warmup = 100
   data = zeros(T2, nobs+warmup)
   ht = zeros(T2, nobs+warmup)
@@ -50,7 +50,7 @@ function simulate{T1<:VolatilitySpec, T2<:AbstractFloat, N}(VS::Type{T1}, nobs, 
   data[warmup+1:warmup+nobs]
 end
 
-function loglik!{spec<:VolatilitySpec, T1<:FP}(M::Type{spec}, data::Vector{T1}, ht::Vector{T1}, coefs::Vector{T1})
+function loglik!(M::Type{spec}, data::Vector{T1}, ht::Vector{T1}, coefs::Vector{T1}) where {spec<:VolatilitySpec, T1<:FP}
     T = length(data)
     r = presample(M)
     length(coefs) == nparams(M) || error("Incorrect number of parameters: expected $(p+q+1), got $(length(coefs)).")
@@ -71,7 +71,7 @@ function loglik!{spec<:VolatilitySpec, T1<:FP}(M::Type{spec}, data::Vector{T1}, 
 end#function
 
 
-function sim!{spec<:VolatilitySpec, T1<:FP}(M::Type{spec}, data::Vector{T1}, ht::Vector{T1}, coefs::Vector{T1})
+function sim!(M::Type{spec}, data::Vector{T1}, ht::Vector{T1}, coefs::Vector{T1}) where {spec<:VolatilitySpec, T1<:FP}
     T =  length(data)
     r = presample(M)
     length(coefs) == nparams(M) || error("Incorrect number of parameters: expected $(p+q+1), got $(length(coefs)).")
@@ -87,7 +87,7 @@ function sim!{spec<:VolatilitySpec, T1<:FP}(M::Type{spec}, data::Vector{T1}, ht:
     end
 end
 
-function fit{spec<:VolatilitySpec}(M::Type{spec}, data, algorithm=BFGS; kwargs...)
+function fit(M::Type{spec}, data, algorithm=BFGS; kwargs...) where {spec<:VolatilitySpec}
     ht = zeros(data)
     obj = x -> -loglik!(M, data, ht, x)
     x0 = startingvals(M, data)
@@ -96,7 +96,7 @@ function fit{spec<:VolatilitySpec}(M::Type{spec}, data, algorithm=BFGS; kwargs..
     return ARCHModel(M, data, Tuple(res.minimizer))
 end
 
-function selectmodel{spec<:VolatilitySpec, T}(M::Type{spec}, data::Vector{T}, maxpq=3, args...; criterion=bic, kwargs...)
+function selectmodel(M::Type{spec}, data::Vector{T}, maxpq=3, args...; criterion=bic, kwargs...) where {spec<:VolatilitySpec, T}
     ndims=length(Base.unwrap_unionall(M).parameters) #e.g., two (p and q) for GARCH{p, q}
     res=_selectmodel(spec, Val{ndims}(), Val{maxpq}(), data)
     crits = criterion.(res)
@@ -104,7 +104,7 @@ function selectmodel{spec<:VolatilitySpec, T}(M::Type{spec}, data::Vector{T}, ma
     return res[ind]
 end
 
-@generated function _selectmodel{ndims, maxpq}(spec, ::Val{ndims}, ::Val{maxpq}, data)
+@generated function _selectmodel(spec, ::Val{ndims}, ::Val{maxpq}, data) where {ndims, maxpq}
 quote
     res =Array{ARCHModel, $ndims}(@ntuple($ndims, i->$maxpq))
     @nloops $ndims i res begin

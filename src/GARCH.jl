@@ -1,11 +1,11 @@
 export GARCH
 struct GARCH{p, q} <: VolatilitySpec end
 
-@inline nparams{p, q}(M::Type{GARCH{p,q}}) = p+q+1
+@inline nparams(M::Type{GARCH{p,q}}) where {p, q} = p+q+1
 
-@inline presample{p, q}(M::Type{GARCH{p,q}}) = max(p, q)
+@inline presample(M::Type{GARCH{p,q}}) where {p, q} = max(p, q)
 
-@inline function update!{p, q}(M::Type{GARCH{p,q}}, data, ht, coefs, t)
+@inline function update!(M::Type{GARCH{p,q}}, data, ht, coefs, t) where {p, q}
     @fastmath begin
         ht[t] = coefs[1]
         for i = 1:p
@@ -16,7 +16,7 @@ struct GARCH{p, q} <: VolatilitySpec end
         end
     end
 end
-@inline function uncond{p, q, T}(M::Type{GARCH{p, q}}, coefs::Vector{T})
+@inline function uncond(M::Type{GARCH{p, q}}, coefs::Vector{T}) where {p, q, T}
     @fastmath begin
         den=one(T)
         for i = 1:p+q
@@ -26,7 +26,7 @@ end
     end
 end
 
-function startingvals{p, q, T<:FP}(G::Type{GARCH{p,q}}, data::Array{T})
+function startingvals(G::Type{GARCH{p,q}}, data::Array{T}) where {p, q, T<:FP}
     x0 = zeros(T, p+q+1)
     x0[2:p+1] = 0.9/p
     x0[p+2:end] = 0.05/q
@@ -34,14 +34,14 @@ function startingvals{p, q, T<:FP}(G::Type{GARCH{p,q}}, data::Array{T})
     return x0
 end
 
-function constraints{p, q, T<:FP}(G::Type{GARCH{p,q}}, data::Array{T})
+function constraints(G::Type{GARCH{p,q}}, data::Array{T}) where {p, q, T<:FP}
     lower = zeros(T, p+q+1)
     upper = ones(T, p+q+1)
     upper[1] = T(Inf)
     return lower, upper
 end
 
-function coefnames{p, q}(::Type{GARCH{p,q}})
+function coefnames(::Type{GARCH{p,q}}) where {p, q}
     names = Array{String, 1}(p+q+1)
     names[1]="omega"
     names[2:p+1].=(i->"beta_$i").([1:p...])
