@@ -10,7 +10,6 @@ __precompile__()
 #demean?
 
 #write fit!
-#modifying functions arg order
 #should archmodel carry ht?
 # don't pass data into start
 #figure out what to do about unid'd models. Eg, in fit, we had
@@ -22,7 +21,6 @@ module ARCH
 using StatsBase: StatisticalModel
 using Optim
 using Base.Cartesian: @nloops, @nref, @ntuple
-export BFGS
 import StatsBase: loglikelihood, nobs, fit, aic, bic, aicc, dof, coef, coefnames
 export            loglikelihood, nobs, fit, aic, bic, aicc, dof, coef, coefnames
 export ARCHModel, VolatilitySpec, simulate, selectmodel
