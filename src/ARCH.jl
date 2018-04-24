@@ -1,7 +1,7 @@
 __precompile__()
 #Todo:
 
-#change coefs to vectors instead of tuples?
+#remove unnecessarity FP restrictions
 #pretty print output by overloading show
 #plotting via timeseries
 #marketdata
@@ -26,26 +26,26 @@ const FP = AbstractFloat
 
 abstract type VolatilitySpec end
 
-struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat, df} <: StatisticalModel
+struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat} <: StatisticalModel
     data::Vector{T}
-    coefs::NTuple{df,T}
-    ARCHModel{VS, T, df}(data, coefs) where {VS, T, df}=new(data, coefs)
+    coefs::Vector{T}
+    ARCHModel{VS, T}(data, coefs) where {VS, T} = new(data, coefs)
 end
-ARCHModel(VS::Type{T1}, data::Vector{T2}, coefs::NTuple{df,T2}) where {T1<:VolatilitySpec, T2, df} = ARCHModel{VS, T2, df}(data, coefs)
+ARCHModel(VS::Type{T1}, data::Vector{T2}, coefs::Vector{T2}) where {T1<:VolatilitySpec, T2} = ARCHModel{VS, T2}(data, coefs)
 
-loglikelihood(am::ARCHModel{T}) where {T} = loglik!(T, am.data, zeros(am.data), [am.coefs...])
+loglikelihood(am::ARCHModel{T}) where {T} = loglik!(T, am.data, zeros(am.data), am.coefs)
 nobs(am::ARCHModel) = length(am.data)
-dof(am::ARCHModel{VS, T, df}) where {VS, T, df}= df
+dof(am::ARCHModel{VS}) where {VS} = nparams(VS)
 coef(am::ARCHModel)=am.coefs
 
 fit(AM::Type{ARCHModel{T}}, data) where {T} = fit(T, data)
 coefnames(::ARCHModel{spec}) where {spec} = coefnames(spec)
 
-function simulate(VS::Type{T1}, nobs, coefs::NTuple{N,T2}) where {T1<:VolatilitySpec, T2<:AbstractFloat, N}
+function simulate(VS::Type{T1}, nobs, coefs::Vector{T2}) where {T1<:VolatilitySpec, T2<:AbstractFloat}
   const warmup = 100
   data = zeros(T2, nobs+warmup)
   ht = zeros(T2, nobs+warmup)
-  sim!(VS, data, ht, [coefs...])
+  sim!(VS, data, ht, coefs)
   data[warmup+1:warmup+nobs]
 end
 
@@ -92,7 +92,7 @@ function fit(M::Type{spec}, data, algorithm=BFGS; kwargs...) where {spec<:Volati
     x0 = startingvals(M, data)
     lower, upper = constraints(M, data)
     res = optimize(obj, x0, lower, upper, Fminbox{algorithm}(); kwargs...)
-    return ARCHModel(M, data, Tuple(res.minimizer))
+    return ARCHModel(M, data, res.minimizer)
 end
 
 function selectmodel(M::Type{spec}, data::Vector{T}, maxpq=3, args...; criterion=bic, kwargs...) where {spec<:VolatilitySpec, T}

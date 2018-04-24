@@ -16,6 +16,7 @@ struct GARCH{p, q} <: VolatilitySpec end
         end
     end
 end
+
 @inline function uncond(M::Type{GARCH{p, q}}, coefs::Vector{T}) where {p, q, T}
     @fastmath begin
         den=one(T)
