@@ -3,7 +3,6 @@ __precompile__()
 
 #change coefs to vectors instead of tuples?
 #pretty print output by overloading show
-#change to where syntax everywhere
 #plotting via timeseries
 #marketdata
 #alternative error distributions
