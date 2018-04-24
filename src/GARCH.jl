@@ -1,12 +1,10 @@
 export GARCH
 struct GARCH{p, q} <: VolatilitySpec end
 
-@inline function _checkinputs{p, q}(M::Type{GARCH{p,q}}, coefs, T)
-    r = max(p, q)
-    length(coefs) == p+q+1 || error("Incorrect number of parameters: expected $(p+q+1), got $(length(coefs)).")
-    T > r || error("Sample too small.")
-    return r
-end
+@inline _nparams{p, q}(M::Type{GARCH{p,q}}) = p+q+1
+
+@inline _presample{p, q}(M::Type{GARCH{p,q}}) = max(p, q)
+
 @inline function _update!{p, q}(M::Type{GARCH{p,q}}, data, ht, coefs, t)
     @fastmath begin
         ht[t] = coefs[1]
@@ -27,7 +25,6 @@ end
         h0 = coefs[1]/den
     end
 end
-
 
 function _start{p, q, T<:FP}(G::Type{GARCH{p,q}}, data::Array{T})
     x0 = zeros(T, p+q+1)

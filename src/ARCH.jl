@@ -1,7 +1,6 @@
 __precompile__()
 #Todo:
 
-#pass instances of GARCH{1,1} so we can enforce invariants? then if the instance knows r and p, we can simplify selectinputs and selectmode
 #change coefs to vectors instead of tuples?
 #pretty print output by overloading show
 #change to where syntax everywhere
@@ -62,7 +61,9 @@ end
 
 function _loglik!{spec<:VolatilitySpec, T1<:FP}(M::Type{spec}, data::Vector{T1}, ht::Vector{T1}, coefs::Vector{T1})
     T = length(data)
-    r = _checkinputs(M, coefs, T)
+    r = _presample(M)
+    length(coefs) == _nparams(M) || error("Incorrect number of parameters: expected $(p+q+1), got $(length(coefs)).")
+    T > r || error("Sample too small.")
     log2pi = T1(1.837877066409345483560659472811235279722794947275566825634303080965531391854519)
     @inbounds begin
         h0 = _uncond(M, coefs)
@@ -81,7 +82,8 @@ end#function
 
 function _sim!{spec<:VolatilitySpec, T1<:FP}(M::Type{spec}, data::Vector{T1}, ht::Vector{T1}, coefs::Vector{T1})
     T =  length(data)
-    r = _checkinputs(M, coefs, T)
+    r = _presample(M)
+    length(coefs) == _nparams(M) || error("Incorrect number of parameters: expected $(p+q+1), got $(length(coefs)).")
     h0 = _uncond(M, coefs)
     h0 > 0 || error("Model is nonstationary.")
     randn!(@view data[1:r])
@@ -104,18 +106,18 @@ function fit{spec<:VolatilitySpec}(M::Type{spec}, data, algorithm=BFGS; kwargs..
 end
 
 function selectmodel{spec<:VolatilitySpec, T}(M::Type{spec}, data::Vector{T}, maxpq=3, args...; criterion=bic, kwargs...)
-    nparams=length(Base.unwrap_unionall(M).parameters) #e.g., two (p and q) for GARCH{p, q}
-    res=_selectmodel(spec, Val{nparams}(), Val{maxpq}(), data)
+    ndims=length(Base.unwrap_unionall(M).parameters) #e.g., two (p and q) for GARCH{p, q}
+    res=_selectmodel(spec, Val{ndims}(), Val{maxpq}(), data)
     crits = criterion.(res)
     _, ind = findmin(crits)
     return res[ind]
 end
 
-@generated function _selectmodel{nparams, maxpq}(spec, ::Val{nparams}, ::Val{maxpq}, data)
+@generated function _selectmodel{ndims, maxpq}(spec, ::Val{ndims}, ::Val{maxpq}, data)
 quote
-    res =Array{ARCHModel, $nparams}(@ntuple($nparams, i->$maxpq))
-    @nloops $nparams i res begin
-        @nref($nparams, res, i) = fit(spec{@ntuple($nparams, i)...}, data)
+    res =Array{ARCHModel, $ndims}(@ntuple($ndims, i->$maxpq))
+    @nloops $ndims i res begin
+        @nref($ndims, res, i) = fit(spec{@ntuple($ndims, i)...}, data)
     end
     return res
 end
