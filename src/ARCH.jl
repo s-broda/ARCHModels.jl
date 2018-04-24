@@ -25,14 +25,8 @@ export            loglikelihood, nobs, fit, aic, bic, aicc, dof, coef, coefnames
 export ARCHModel, VolatilitySpec, simulate, selectmodel
 const FP = AbstractFloat
 
-"""
-abstract type VolatilitySpec end
-"""
 abstract type VolatilitySpec end
 
-"""
-    struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat, df} <: StatisticalModel
-"""
 struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat, df} <: StatisticalModel
     data::Vector{T}
     coefs::NTuple{df,T}
@@ -48,9 +42,6 @@ coef(am::ARCHModel)=am.coefs
 fit{T}(AM::Type{ARCHModel{T}}, data) = fit(T, data)
 coefnames{spec}(::ARCHModel{spec}) = coefnames(spec)
 
-"""
-Simulate an ARCH model.
-"""
 function simulate{T1<:VolatilitySpec, T2<:AbstractFloat, N}(VS::Type{T1}, nobs, coefs::NTuple{N,T2})
   const warmup = 100
   data = zeros(T2, nobs+warmup)
