@@ -32,7 +32,7 @@ function startingvals(::Type{GARCH{p,q}}, data::Array{T}) where {p, q, T<:Abstra
     return x0
 end
 
-function constraints(::Type{GARCH{p,q}}, data::Array{T}) where {p, q, T<:AbstractFloat}
+function constraints(::Type{GARCH{p,q}}, ::Type{T}) where {p, q, T<:AbstractFloat}
     lower = zeros(T, p+q+1)
     upper = ones(T, p+q+1)
     upper[1] = T(Inf)

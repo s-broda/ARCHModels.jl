@@ -10,7 +10,6 @@ __precompile__()
 
 #write fit!
 #should archmodel carry ht?
-# don't pass data into start
 #figure out what to do about unid'd models. Eg, in fit, we had
 #without ARCH terms, volatility is constant and beta_i is not identified.
 #q == 0 && return ARCHModel(G, data, Tuple([mean(data.^2); zeros(T, p)]))
@@ -87,11 +86,11 @@ function sim!(ht::Vector{T1}, spec::Type{VS}, data::Vector{T1}, coefs::Vector{T1
     return nothing
 end
 
-function fit(spec::Type{VS}, data, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec}
+function fit(spec::Type{VS}, data::Vector{T}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec, T<:AbstractFloat}
     ht = zeros(data)
     obj = x -> -loglik!(ht, spec, data, x)
     x0 = startingvals(spec, data)
-    lower, upper = constraints(spec, data)
+    lower, upper = constraints(spec, T)
     res = optimize(obj, x0, lower, upper, Fminbox{algorithm}(); kwargs...)
     return ARCHModel(spec, data, res.minimizer)
 end
