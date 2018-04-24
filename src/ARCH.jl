@@ -40,7 +40,7 @@ struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat, df} <: StatisticalModel
 end
 ARCHModel{T1<:VolatilitySpec, T2, df}(VS::Type{T1}, data::Vector{T2}, coefs::NTuple{df,T2}) = ARCHModel{VS, T2, df}(data, coefs)
 
-loglikelihood{T}(am::ARCHModel{T}) = _loglik!(T, am.data, zeros(am.data), [am.coefs...])
+loglikelihood{T}(am::ARCHModel{T}) = loglik!(T, am.data, zeros(am.data), [am.coefs...])
 nobs(am::ARCHModel) = length(am.data)
 dof(am::ARCHModel{VS, T, df}) where {VS, T, df}= df
 coef(am::ARCHModel)=am.coefs
@@ -55,24 +55,24 @@ function simulate{T1<:VolatilitySpec, T2<:AbstractFloat, N}(VS::Type{T1}, nobs, 
   const warmup = 100
   data = zeros(T2, nobs+warmup)
   ht = zeros(T2, nobs+warmup)
-  _sim!(VS, data, ht, [coefs...])
+  sim!(VS, data, ht, [coefs...])
   data[warmup+1:warmup+nobs]
 end
 
-function _loglik!{spec<:VolatilitySpec, T1<:FP}(M::Type{spec}, data::Vector{T1}, ht::Vector{T1}, coefs::Vector{T1})
+function loglik!{spec<:VolatilitySpec, T1<:FP}(M::Type{spec}, data::Vector{T1}, ht::Vector{T1}, coefs::Vector{T1})
     T = length(data)
-    r = _presample(M)
-    length(coefs) == _nparams(M) || error("Incorrect number of parameters: expected $(p+q+1), got $(length(coefs)).")
+    r = presample(M)
+    length(coefs) == nparams(M) || error("Incorrect number of parameters: expected $(p+q+1), got $(length(coefs)).")
     T > r || error("Sample too small.")
     log2pi = T1(1.837877066409345483560659472811235279722794947275566825634303080965531391854519)
     @inbounds begin
-        h0 = _uncond(M, coefs)
+        h0 = uncond(M, coefs)
         h0 > 0 || return T1(NaN)
         lh0 = log(h0)
         ht[1:r] .= h0
         LL = r*lh0+sum(data[1:r].^2)/h0
         @fastmath for t = r+1:T
-            _update!(M, data, ht, coefs, t)
+            update!(M, data, ht, coefs, t)
             LL += log(ht[t]) + data[t]^2/ht[t]
         end#for
     end#inbounds
@@ -80,17 +80,17 @@ function _loglik!{spec<:VolatilitySpec, T1<:FP}(M::Type{spec}, data::Vector{T1},
 end#function
 
 
-function _sim!{spec<:VolatilitySpec, T1<:FP}(M::Type{spec}, data::Vector{T1}, ht::Vector{T1}, coefs::Vector{T1})
+function sim!{spec<:VolatilitySpec, T1<:FP}(M::Type{spec}, data::Vector{T1}, ht::Vector{T1}, coefs::Vector{T1})
     T =  length(data)
-    r = _presample(M)
-    length(coefs) == _nparams(M) || error("Incorrect number of parameters: expected $(p+q+1), got $(length(coefs)).")
-    h0 = _uncond(M, coefs)
+    r = presample(M)
+    length(coefs) == nparams(M) || error("Incorrect number of parameters: expected $(p+q+1), got $(length(coefs)).")
+    h0 = uncond(M, coefs)
     h0 > 0 || error("Model is nonstationary.")
     randn!(@view data[1:r])
     data[1:r] .*= sqrt(h0)
     @inbounds begin
         for t = r+1:T
-            _update!(M, data, ht, coefs, t)
+            update!(M, data, ht, coefs, t)
             data[t] = sqrt(ht[t])*randn(T1)
         end
     end
@@ -98,9 +98,9 @@ end
 
 function fit{spec<:VolatilitySpec}(M::Type{spec}, data, algorithm=BFGS; kwargs...)
     ht = zeros(data)
-    obj = x -> -_loglik!(M, data, ht, x)
-    x0 = _start(M, data)
-    lower, upper = _constraints(M, data)
+    obj = x -> -loglik!(M, data, ht, x)
+    x0 = startingvals(M, data)
+    lower, upper = constraints(M, data)
     res = optimize(obj, x0, lower, upper, Fminbox{algorithm}(); kwargs...)
     return ARCHModel(M, data, Tuple(res.minimizer))
 end

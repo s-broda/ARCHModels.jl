@@ -9,7 +9,7 @@ data = simulate(spec, T, coefs);
 ht = zeros(data);
 AM=selectmodel(GARCH, data)
 
-@test loglikelihood(ARCHModel(spec, data, coefs)) ==  ARCH._loglik!(spec, data, ht, [coefs...])
+@test loglikelihood(ARCHModel(spec, data, coefs)) ==  ARCH.loglik!(spec, data, ht, [coefs...])
 @test nobs(AM) == T
 @test dof(AM) == 3
 @test all(isapprox.(AM.coefs, (0.9086850084210619, 0.9055267307122488, 0.050365843108442374), rtol=1e-4))
