@@ -1,6 +1,7 @@
 export GARCH
+export _ARCH #_ARCH conflicts with module name
 struct GARCH{p, q} <: VolatilitySpec end
-const arch = GARCH{0}
+const _ARCH = GARCH{0}
 
 @inline nparams(::Type{GARCH{p,q}}) where {p, q} = p+q+1
 

@@ -8,12 +8,10 @@ __precompile__()
 #standard errors
 #demean?
 
+#test new constructors and fit(!) methods
 #how to export arch?
-#write fit!
-#should archmodel carry ht?
-#figure out what to do about unid'd models. Eg, in fit, we had
-#without ARCH terms, volatility is constant and beta_i is not identified.
-#q == 0 && return ARCHModel(G, data, Tuple([mean(data.^2); zeros(T, p)]))
+#what should simulate return?
+
 
 module ARCH
 
@@ -35,17 +33,20 @@ Base.showerror(io::IO, e::NumParamError) = print(io, "incorrect number of parame
 
 struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat} <: StatisticalModel
     data::Vector{T}
+    ht::Vector{T}
     coefs::Vector{T}
-    ARCHModel{VS, T}(data, coefs) where {VS, T} = (length(coefs) == nparams(VS)? new(data, coefs) : throw(NumParamError(nparams(VS), length(coefs))))
+    function ARCHModel{VS, T}(data, ht, coefs) where {VS, T}
+        length(coefs) == nparams(VS)  || throw(NumParamError(nparams(VS), length(coefs)))
+        new(data, ht, coefs)
+    end
 end
-ARCHModel(::Type{VS}, data::Vector{T}, coefs::Vector{T}) where {VS<:VolatilitySpec, T} = ARCHModel{VS, T}(data, coefs)
+ARCHModel(::Type{VS}, data::Vector{T}, ht::Vector{T}, coefs::Vector{T}) where {VS<:VolatilitySpec, T} = ARCHModel{VS, T}(data, ht, coefs)
+ARCHModel(::Type{VS}, data, coefs) where {VS<:VolatilitySpec} = (ht = zeros(data); loglik!(ht, VS, data, coefs); ARCHModel(VS, data, ht, coefs))
 
 loglikelihood(am::ARCHModel{VS}) where {VS<:VolatilitySpec} = loglik!(zeros(am.data), VS, am.data, am.coefs)
 nobs(am::ARCHModel) = length(am.data)
 dof(am::ARCHModel{VS}) where {VS<:VolatilitySpec} = nparams(VS)
 coef(am::ARCHModel)=am.coefs
-
-fit(AM::Type{ARCHModel{VS}}, data) where {VS<:VolatilitySpec} = fit(T, data)
 coefnames(::ARCHModel{VS}) where {VS<:VolatilitySpec} = coefnames(VS)
 
 function simulate(::Type{VS}, nobs, coefs::Vector{T}) where {VS<:VolatilitySpec, T<:AbstractFloat}
@@ -94,14 +95,18 @@ function sim!(ht::Vector{T1}, ::Type{VS}, data::Vector{T1}, coefs::Vector{T1}) w
     return nothing
 end
 
-function fit(::Type{VS}, data::Vector{T}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec, T<:AbstractFloat}
-    ht = zeros(data)
+function fit!(ht::Vector{T}, coefs::Vector{T}, ::Type{VS}, data::Vector{T}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec, T<:AbstractFloat}
     obj = x -> -loglik!(ht, VS, data, x)
-    x0 = startingvals(VS, data)
     lower, upper = constraints(VS, T)
-    res = optimize(obj, x0, lower, upper, Fminbox{algorithm}(); kwargs...)
-    return ARCHModel(VS, data, res.minimizer)
+    res = optimize(obj, coefs, lower, upper, Fminbox{algorithm}(); kwargs...)
+    coefs .= res.minimizer
+    return nothing
 end
+fit!(AM::ARCHModel{VS}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec} = fit!(AM.ht, AM.coefs, VS, AM.data, algorithm; kwargs...)
+fit(::Type{VS}, data, algorithm=BFGS; kwargs...) where VS<:VolatilitySpec = (ht = zeros(data); coefs=startingvals(VS, data); fit!(ht, coefs, VS, data, algorithm; kwargs...); return ARCHModel(VS, data, ht, coefs))
+fit(AM::ARCHModel{VS}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec} = (AM2=ARCHModel(VS, AM.data, AM.coefs); fit!(AM2, algorithm=BFGS; kwargs...); return AM2)
+
+
 
 function selectmodel(::Type{VS}, data::Vector{T}, maxpq=3, args...; criterion=bic, kwargs...) where {VS<:VolatilitySpec, T<:AbstractFloat}
     #ndims = length(Base.unwrap_unionall(VS).parameters) #e.g., two (p and q) for GARCH{p, q}
