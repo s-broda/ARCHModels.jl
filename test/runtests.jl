@@ -24,3 +24,6 @@ am3=fit(am2)
 @test_throws ARCH.NumParamError ARCH.sim!(ht, spec, data, [0., 0., 0., 0.])
 @test_throws ARCH.LengthMissmatchError ARCHModel(spec, data, coefs, coefs)
 @test selectmodel(ARCH._ARCH, data).coefs == fit(ARCH._ARCH{3}, data).coefs
+
+ f = x-> ARCH.loglik(spec, data, x)
+ @test det(ForwardDiff.hessian(f, coefs)) == -7.523213634979238e11

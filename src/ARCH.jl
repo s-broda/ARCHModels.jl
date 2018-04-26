@@ -16,7 +16,8 @@ module ARCH
 
 using StatsBase: StatisticalModel
 using Optim
-using Base.Cartesian: @nloops, @nref, @ntuple
+using ForwardDiff
+
 import StatsBase: loglikelihood, nobs, fit, fit!, aic, bic, aicc, dof, coef, coefnames
 export            loglikelihood, nobs, fit, fit!, aic, bic, aicc, dof, coef, coefnames
 export ARCHModel, VolatilitySpec, simulate, selectmodel
@@ -63,7 +64,7 @@ function simulate(::Type{VS}, nobs, coefs::Vector{T}) where {VS<:VolatilitySpec,
     data[warmup+1:warmup+nobs]
 end
 
-function loglik!(ht::Vector{T1}, ::Type{VS}, data::Vector{T1}, coefs::Vector{T1}) where {VS<:VolatilitySpec, T1<:AbstractFloat}
+function loglik!(ht::Vector{T2}, ::Type{VS}, data::Vector{T1}, coefs::Vector{T2}) where {VS<:VolatilitySpec, T1<:AbstractFloat, T2}
     T = length(data)
     r = presample(VS)
     length(coefs) == nparams(VS) || throw(NumParamError(nparams(VS), length(coefs)))
@@ -71,7 +72,7 @@ function loglik!(ht::Vector{T1}, ::Type{VS}, data::Vector{T1}, coefs::Vector{T1}
     log2pi = T1(1.837877066409345483560659472811235279722794947275566825634303080965531391854519)
     @inbounds begin
         h0 = uncond(VS, coefs)
-        h0 > 0 || return T1(NaN)
+        h0 > 0 || return T2(NaN)
         lh0 = log(h0)
         ht[1:r] .= h0
         LL = r*lh0+sum(data[1:r].^2)/h0
@@ -83,6 +84,10 @@ function loglik!(ht::Vector{T1}, ::Type{VS}, data::Vector{T1}, coefs::Vector{T1}
     LL = -(T*log2pi+LL)/2
 end#function
 
+function loglik(spec, data, coefs::Vector{T}) where {T}
+    ht=zeros(T, length(data))
+    loglik!(ht, spec, data, coefs)
+end
 
 function sim!(ht::Vector{T1}, ::Type{VS}, data::Vector{T1}, coefs::Vector{T1}) where {VS<:VolatilitySpec, T1<:AbstractFloat}
     T =  length(data)

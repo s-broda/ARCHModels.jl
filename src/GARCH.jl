@@ -18,7 +18,7 @@ const _ARCH = GARCH{0}
     return nothing
 end
 
-@inline function uncond(::Type{GARCH{p, q}}, coefs::Vector{T}) where {p, q, T<:AbstractFloat}
+@inline function uncond(::Type{GARCH{p, q}}, coefs::Vector{T}) where {p, q, T}
     den=one(T)
     for i = 1:p+q
         den -= coefs[i+1]
@@ -26,7 +26,7 @@ end
     h0 = coefs[1]/den
 end
 
-function startingvals(::Type{GARCH{p,q}}, data::Array{T}) where {p, q, T<:AbstractFloat}
+function startingvals(::Type{GARCH{p,q}}, data::Array{T}) where {p, q, T}
     x0 = zeros(T, p+q+1)
     x0[2:p+1] = 0.9/p
     x0[p+2:end] = 0.05/q
@@ -34,7 +34,7 @@ function startingvals(::Type{GARCH{p,q}}, data::Array{T}) where {p, q, T<:Abstra
     return x0
 end
 
-function constraints(::Type{GARCH{p,q}}, ::Type{T}) where {p, q, T<:AbstractFloat}
+function constraints(::Type{GARCH{p,q}}, ::Type{T}) where {p, q, T}
     lower = zeros(T, p+q+1)
     upper = ones(T, p+q+1)
     upper[1] = T(Inf)
