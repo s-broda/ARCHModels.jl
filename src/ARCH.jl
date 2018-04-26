@@ -8,7 +8,6 @@ __precompile__()
 #standard errors
 #demean?
 
-#test new constructors and fit(!) methods
 #how to export arch?
 #what should simulate return?
 
@@ -18,8 +17,8 @@ module ARCH
 using StatsBase: StatisticalModel
 using Optim
 using Base.Cartesian: @nloops, @nref, @ntuple
-import StatsBase: loglikelihood, nobs, fit, aic, bic, aicc, dof, coef, coefnames
-export            loglikelihood, nobs, fit, aic, bic, aicc, dof, coef, coefnames
+import StatsBase: loglikelihood, nobs, fit, fit!, aic, bic, aicc, dof, coef, coefnames
+export            loglikelihood, nobs, fit, fit!, aic, bic, aicc, dof, coef, coefnames
 export ARCHModel, VolatilitySpec, simulate, selectmodel
 
 abstract type VolatilitySpec end
@@ -109,8 +108,8 @@ function fit!(ht::Vector{T}, coefs::Vector{T}, ::Type{VS}, data::Vector{T}, algo
     coefs .= res.minimizer
     return nothing
 end
-fit!(AM::ARCHModel{VS}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec} = fit!(AM.ht, AM.coefs, VS, AM.data, algorithm; kwargs...)
 fit(::Type{VS}, data, algorithm=BFGS; kwargs...) where VS<:VolatilitySpec = (ht = zeros(data); coefs=startingvals(VS, data); fit!(ht, coefs, VS, data, algorithm; kwargs...); return ARCHModel(VS, data, ht, coefs))
+fit!(AM::ARCHModel{VS}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec} = (AM.coefs.=startingvals(VS, AM.data); fit!(AM.ht, AM.coefs, VS, AM.data, algorithm; kwargs...))
 fit(AM::ARCHModel{VS}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec} = (AM2=ARCHModel(VS, AM.data, AM.coefs); fit!(AM2, algorithm=BFGS; kwargs...); return AM2)
 
 function selectmodel(::Type{VS}, data::Vector{<:AbstractFloat}, maxpq=3, args...; criterion=bic, kwargs...) where {VS<:VolatilitySpec}
@@ -134,5 +133,4 @@ function my_unwrap_unionall(a::ANY)
     return count
 end
 include("GARCH.jl")
-include(joinpath("..", "test", "runtests.jl"))
 end#module
