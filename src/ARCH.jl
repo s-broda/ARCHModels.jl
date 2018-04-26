@@ -106,17 +106,16 @@ fit!(AM::ARCHModel{VS}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec} = 
 fit(::Type{VS}, data, algorithm=BFGS; kwargs...) where VS<:VolatilitySpec = (ht = zeros(data); coefs=startingvals(VS, data); fit!(ht, coefs, VS, data, algorithm; kwargs...); return ARCHModel(VS, data, ht, coefs))
 fit(AM::ARCHModel{VS}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec} = (AM2=ARCHModel(VS, AM.data, AM.coefs); fit!(AM2, algorithm=BFGS; kwargs...); return AM2)
 
-function selectmodel(::Type{VS}, data::Vector{T}, maxpq=3, args...; criterion=bic, kwargs...) where {VS<:VolatilitySpec, T<:AbstractFloat}
+function selectmodel(::Type{VS}, data::Vector{<:AbstractFloat}, maxpq=3, args...; criterion=bic, kwargs...) where {VS<:VolatilitySpec}
     ndims =my_unwrap_unionall(VS)#e.g., two (p and q) for GARCH{p, q}
-    res =Array{ARCHModel, ndims}(ntuple(i->maxpq, ndims))
-    for ind in CartesianRange(size(res))
-        res[ind] = fit(VS{ind.I...}, data)
+    res =Array{ARCHModel, ndims}(ntuple(i->maxpq+1, ndims))
+    Threads.@threads for ind in collect(CartesianRange(size(res)))
+        res[ind] = fit(VS{(ind.I .- 1)...}, data)
     end
     crits = criterion.(res)
     _, ind = findmin(crits)
     return res[ind]
 end
-
 
 #count the number of type vars. there's probably a better way.
 function my_unwrap_unionall(a::ANY)
