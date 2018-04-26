@@ -29,7 +29,13 @@ struct NumParamError <: Exception
     got::Int
 end
 
+struct LengthMissmatchError <: Exception
+    length1::Int
+    length2::Int
+end
+
 Base.showerror(io::IO, e::NumParamError) = print(io, "incorrect number of parameters: expected $(e.expected), got $(e.got).")
+Base.showerror(io::IO, e::LengthMissmatchError) = print(io, "length of arrays does not match: $(e.length1) and $(e.length2).")
 
 struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat} <: StatisticalModel
     data::Vector{T}
@@ -37,7 +43,8 @@ struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat} <: StatisticalModel
     coefs::Vector{T}
     function ARCHModel{VS, T}(data, ht, coefs) where {VS, T}
         length(coefs) == nparams(VS)  || throw(NumParamError(nparams(VS), length(coefs)))
-        new(data, ht, coefs)
+        length(data) == length(ht)  || throw(LengthMissmatchError(length(data), length(ht)))
+        new(copy(data), copy(ht), copy(coefs))
     end
 end
 ARCHModel(::Type{VS}, data::Vector{T}, ht::Vector{T}, coefs::Vector{T}) where {VS<:VolatilitySpec, T} = ARCHModel{VS, T}(data, ht, coefs)
@@ -127,4 +134,5 @@ function my_unwrap_unionall(a::ANY)
     return count
 end
 include("GARCH.jl")
+include(joinpath("..", "test", "runtests.jl"))
 end#module
