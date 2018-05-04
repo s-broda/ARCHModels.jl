@@ -96,7 +96,7 @@ function stderror(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
     J = ForwardDiff.jacobian(f, am.coefs)
     V = J'J #outer product of scores
     Ji = -inv(ForwardDiff.hessian(g, am.coefs)) #inverse of observed Fisher information
-    return sqrt.(diag(Ji*V*Ji))
+    return sqrt.(diag(Ji*V*Ji)) #Huber sandwich
 end
 
 function sim!(ht::Vector{T1}, ::Type{VS}, data::Vector{T1}, coefs::Vector{T1}) where {VS<:VolatilitySpec, T1<:AbstractFloat}
