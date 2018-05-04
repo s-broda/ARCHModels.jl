@@ -5,7 +5,6 @@ __precompile__()
 #plotting via timeseries
 #marketdata
 #alternative error distributions
-#standard errors
 #demean?
 
 #how to export arch?
