@@ -18,8 +18,8 @@ using StatsBase: StatisticalModel
 using Optim
 using ForwardDiff
 
-import StatsBase: loglikelihood, nobs, fit, fit!, aic, bic, aicc, dof, coef, coefnames
-export            loglikelihood, nobs, fit, fit!, aic, bic, aicc, dof, coef, coefnames
+import StatsBase: loglikelihood, nobs, fit, fit!, aic, bic, aicc, dof, coef, coefnames, stderror
+export            loglikelihood, nobs, fit, fit!, aic, bic, aicc, dof, coef, coefnames, stderror
 export ARCHModel, VolatilitySpec, simulate, selectmodel
 
 abstract type VolatilitySpec end
@@ -29,13 +29,13 @@ struct NumParamError <: Exception
     got::Int
 end
 
-struct LengthMissmatchError <: Exception
+struct LengthMismatchError <: Exception
     length1::Int
     length2::Int
 end
 
 Base.showerror(io::IO, e::NumParamError) = print(io, "incorrect number of parameters: expected $(e.expected), got $(e.got).")
-Base.showerror(io::IO, e::LengthMissmatchError) = print(io, "length of arrays does not match: $(e.length1) and $(e.length2).")
+Base.showerror(io::IO, e::LengthMismatchError) = print(io, "length of arrays does not match: $(e.length1) and $(e.length2).")
 
 struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat} <: StatisticalModel
     data::Vector{T}
@@ -43,7 +43,7 @@ struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat} <: StatisticalModel
     coefs::Vector{T}
     function ARCHModel{VS, T}(data, ht, coefs) where {VS, T}
         length(coefs) == nparams(VS)  || throw(NumParamError(nparams(VS), length(coefs)))
-        length(data) == length(ht)  || throw(LengthMissmatchError(length(data), length(ht)))
+        length(data) == length(ht)  || throw(LengthMismatchError(length(data), length(ht)))
         new(copy(data), copy(ht), copy(coefs))
     end
 end
@@ -84,9 +84,20 @@ function loglik!(ht::Vector{T2}, ::Type{VS}, data::Vector{T1}, coefs::Vector{T2}
     LL = -(T*log2pi+LL)/2
 end#function
 
-function loglik(spec, data, coefs::Vector{T}) where {T}
-    ht=zeros(T, length(data))
+function logliks(spec, data, coefs::Vector{T}) where {T}
+    ht = zeros(T, length(data))
+    log2pi = T(1.837877066409345483560659472811235279722794947275566825634303080965531391854519)
     loglik!(ht, spec, data, coefs)
+    LLs = -(log.(ht)+data.^2./ht.+log2pi)/2
+end
+
+function stderror(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
+    f = x -> ARCH.logliks(VS, am.data, x)
+    g = x -> sum(ARCH.logliks(VS, am.data, x))
+    J = ForwardDiff.jacobian(f, am.coefs)
+    V = J'J #outer product of scores
+    Ji = -inv(ForwardDiff.hessian(g, am.coefs)) #inverse of observed Fisher information
+    return sqrt.(diag(Ji*V*Ji))
 end
 
 function sim!(ht::Vector{T1}, ::Type{VS}, data::Vector{T1}, coefs::Vector{T1}) where {VS<:VolatilitySpec, T1<:AbstractFloat}
