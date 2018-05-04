@@ -1,7 +1,6 @@
 __precompile__()
 #Todo:
 #docs
-#pretty print output by overloading show
 #plotting via timeseries
 #marketdata
 #alternative error distributions
@@ -14,11 +13,13 @@ __precompile__()
 module ARCH
 
 using StatsBase: StatisticalModel
+using StatsFuns: normccdf
 using Optim
 using ForwardDiff
 
-import StatsBase: loglikelihood, nobs, fit, fit!, aic, bic, aicc, dof, coef, coefnames, stderror
-export            loglikelihood, nobs, fit, fit!, aic, bic, aicc, dof, coef, coefnames, stderror
+import Base.show, Base.showerror
+import StatsBase: loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderror
+export            loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderror
 export ARCHModel, VolatilitySpec, simulate, selectmodel
 
 abstract type VolatilitySpec end
@@ -33,8 +34,8 @@ struct LengthMismatchError <: Exception
     length2::Int
 end
 
-Base.showerror(io::IO, e::NumParamError) = print(io, "incorrect number of parameters: expected $(e.expected), got $(e.got).")
-Base.showerror(io::IO, e::LengthMismatchError) = print(io, "length of arrays does not match: $(e.length1) and $(e.length2).")
+showerror(io::IO, e::NumParamError) = print(io, "incorrect number of parameters: expected $(e.expected), got $(e.got).")
+showerror(io::IO, e::LengthMismatchError) = print(io, "length of arrays does not match: $(e.length1) and $(e.length2).")
 
 struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat} <: StatisticalModel
     data::Vector{T}
@@ -147,5 +148,20 @@ function my_unwrap_unionall(a::ANY)
     end
     return count
 end
+
+function coeftable(am::ARCHModel)
+    cc = coef(am)
+    se = stderror(am)
+    zz = cc ./ se
+    CoefTable(hcat(cc, se, zz, 2.0 * normccdf.(abs.(zz))),
+              ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
+              coefnames(am), 4)
+end
+
+function show(io::IO, am::ARCHModel{VS}) where {VS <: VolatilitySpec}
+    println(io, "\n", split("$VS",".")[2], " fitted to ",
+        nobs(am), " observations.\n\n", coeftable(am))
+end
+
 include("GARCH.jl")
 end#module

@@ -29,3 +29,7 @@ e = @test_throws ARCH.LengthMismatchError ARCHModel(spec, data, coefs, coefs)
 str = sprint(showerror, e.value)
 @test startswith(str, "length of arrays does not match")
 @test selectmodel(ARCH._ARCH, data).coefs == fit(ARCH._ARCH{3}, data).coefs
+
+io = IOBuffer()
+str = sprint(io -> show(io, am))
+@test startswith(str, "\nGARCH{1,1}")
