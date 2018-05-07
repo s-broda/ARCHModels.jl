@@ -18,8 +18,8 @@ using Optim
 using ForwardDiff
 
 import Base.show, Base.showerror
-import StatsBase: loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderror
-export            loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderror
+import StatsBase: loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderr
+export            loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderr
 export ARCHModel, VolatilitySpec, simulate, selectmodel
 
 abstract type VolatilitySpec end
@@ -91,7 +91,7 @@ function logliks(spec, data, coefs::Vector{T}) where {T}
     LLs = -(log.(ht)+data.^2./ht.+log2pi)/2
 end
 
-function stderror(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
+function stderr(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
     f = x -> ARCH.logliks(VS, am.data, x)
     g = x -> sum(ARCH.logliks(VS, am.data, x))
     J = ForwardDiff.jacobian(f, am.coefs)
@@ -151,7 +151,7 @@ end
 
 function coeftable(am::ARCHModel)
     cc = coef(am)
-    se = stderror(am)
+    se = stderr(am)
     zz = cc ./ se
     CoefTable(hcat(cc, se, zz, 2.0 * normccdf.(abs.(zz))),
               ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
