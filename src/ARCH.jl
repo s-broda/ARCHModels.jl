@@ -159,9 +159,12 @@ function coeftable(am::ARCHModel)
 end
 
 function show(io::IO, am::ARCHModel{VS}) where {VS <: VolatilitySpec}
-    println(io, "\n", split("$VS",".")[2], " fitted to ",
+    println(io, "\n", split("$VS", ".")[2], " model fitted to ",
         nobs(am), " observations.\n\n", coeftable(am))
 end
+
+#from here https://stackoverflow.com/questions/46671965/printing-variable-subscripts-in-julia
+subscript(i::Integer) = i<0 ? error("$i is negative") : join('₀'+d for d in reverse(digits(i)))
 
 include("GARCH.jl")
 end#module
