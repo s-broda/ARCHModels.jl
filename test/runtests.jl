@@ -16,7 +16,7 @@ am3=fit(am2)
 @test loglikelihood(ARCHModel(spec, data, coefs)) ==  ARCH.loglik!(ht, spec, data, coefs)
 @test nobs(am) == T
 @test dof(am) == 3
-@test coefnames(GARCH{1, 1})==["omega", "beta_1", "alpha_1"]
+@test coefnames(GARCH{1, 1}) == ["ω", "β₁", "α₁"]
 @test all(isapprox.(coef(am), [0.9086850084210619, 0.9055267307122488, 0.050365843108442374], rtol=1e-4))
 @test all(isapprox.(stderror(am), [0.14583357347889914, 0.01035533071207874, 0.005222909457230848], rtol=1e-4))
 @test all(am2.coefs .== am.coefs)
