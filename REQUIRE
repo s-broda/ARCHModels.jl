@@ -3,3 +3,4 @@ StatsBase
 StatsFuns
 Optim
 ForwardDiff
+Distributions

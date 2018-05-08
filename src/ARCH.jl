@@ -13,14 +13,16 @@ __precompile__()
 module ARCH
 
 using StatsBase: StatisticalModel
-using StatsFuns: normccdf, log2π
+using StatsFuns: normccdf, normlogpdf, log2π, RFunctions.tdistrand
 using Optim
 using ForwardDiff
+using Distributions
 
-import Base.show, Base.showerror
+import Distributions: logpdf
+import Base: show, showerror, Random.rand, mean, var
 import StatsBase: loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderr
 export            loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderr
-export ARCHModel, VolatilitySpec, simulate, selectmodel
+export ARCHModel, VolatilitySpec, simulate, selectmodel, StdNormal, StdTDist
 
 abstract type VolatilitySpec end
 
@@ -164,5 +166,7 @@ end
 #from here https://stackoverflow.com/questions/46671965/printing-variable-subscripts-in-julia
 subscript(i::Integer) = i<0 ? error("$i is negative") : join('₀'+d for d in reverse(digits(i)))
 
+include("standardizeddistributions.jl")
 include("GARCH.jl")
+
 end#module
