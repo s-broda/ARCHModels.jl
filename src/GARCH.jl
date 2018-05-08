@@ -1,5 +1,5 @@
 export GARCH
-export _ARCH #_ARCH conflicts with module name
+export _ARCH #ARCH conflicts with module name
 struct GARCH{p, q} <: VolatilitySpec end
 const _ARCH = GARCH{0}
 
