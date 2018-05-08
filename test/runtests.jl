@@ -1,16 +1,16 @@
 using Base.Test
 
 using ARCH
-T=10^4;
+T = 10^4;
 spec = GARCH{1, 1};
 coefs = [1., .9, .05];
 srand(1);
 data = simulate(spec, T, coefs);
 ht = zeros(data);
-am=selectmodel(GARCH, data)
-am2=ARCHModel(spec, data, ht, coefs)
+am = selectmodel(GARCH, data)
+am2 = ARCHModel(spec, data, ht, coefs)
 fit!(am2)
-am3=fit(am2)
+am3 = fit(am2)
 
 
 @test loglikelihood(ARCHModel(spec, data, coefs)) ==  ARCH.loglik!(ht, spec, data, coefs)
