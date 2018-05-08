@@ -13,7 +13,7 @@ __precompile__()
 module ARCH
 
 using StatsBase: StatisticalModel
-using StatsFuns: normccdf
+using StatsFuns: normccdf, log2π
 using Optim
 using ForwardDiff
 
@@ -64,12 +64,11 @@ function simulate(::Type{VS}, nobs, coefs::Vector{T}) where {VS<:VolatilitySpec,
     data[warmup+1:warmup+nobs]
 end
 
-function loglik!(ht::Vector{T2}, ::Type{VS}, data::Vector{T1}, coefs::Vector{T2}) where {VS<:VolatilitySpec, T1<:AbstractFloat, T2}
+function loglik!(ht::Vector{T2}, ::Type{VS}, data::Vector{<:AbstractFloat}, coefs::Vector{T2}) where {VS<:VolatilitySpec, T2}
     T = length(data)
     r = presample(VS)
     length(coefs) == nparams(VS) || throw(NumParamError(nparams(VS), length(coefs)))
     T > r || error("Sample too small.")
-    log2pi = T1(1.837877066409345483560659472811235279722794947275566825634303080965531391854519)
     @inbounds begin
         h0 = uncond(VS, coefs)
         h0 > 0 || return T2(NaN)
@@ -81,14 +80,13 @@ function loglik!(ht::Vector{T2}, ::Type{VS}, data::Vector{T1}, coefs::Vector{T2}
             LL += log(ht[t]) + data[t]^2/ht[t]
         end#for
     end#inbounds
-    LL = -(T*log2pi+LL)/2
+    LL = -(T*log2π+LL)/2
 end#function
 
 function logliks(spec, data, coefs::Vector{T}) where {T}
     ht = zeros(T, length(data))
-    log2pi = T(1.837877066409345483560659472811235279722794947275566825634303080965531391854519)
     loglik!(ht, spec, data, coefs)
-    LLs = -(log.(ht)+data.^2./ht.+log2pi)/2
+    LLs = -(log.(ht)+data.^2./ht.+log2π)/2
 end
 
 function stderr(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
