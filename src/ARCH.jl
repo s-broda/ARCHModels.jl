@@ -76,7 +76,7 @@ function loglik!(ht::Vector{T2}, ::Type{VS}, data::Vector{<:AbstractFloat}, coef
         h0 > 0 || return T2(NaN)
         lh0 = log(h0)
         ht[1:r] .= h0
-        LL = r*lh0+sum(data[1:r].^2)/h0
+        LL = r*lh0+sum(view(data, 1:r).^2)/h0
         @fastmath for t = r+1:T
             update!(ht, VS, data, coefs, t)
             LL += log(ht[t]) + data[t]^2/ht[t]
