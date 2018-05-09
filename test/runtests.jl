@@ -35,27 +35,14 @@ str = sprint(io -> show(io, am))
 @test startswith(str, "\nGARCH{1,1}")
 
 d = StdNormal()
-@test ARCH.constraints(d) == (Float64[], Float64[])
-mymean = mean(d)
-@test mymean == 0.
-@test mymean isa Float64
-myvar = var(StdNormal(Float32))
-@test myvar == 1.
-@test myvar isa Float32
+@test ARCH.constraints(StdNormal, Float64) == (Float64[], Float64[])
 srand(1)
-@test rand(d) ≈ 0.2972879845354616
-@test ARCH.nparams(d) == 0
-ARCH.logpdf(d, 1.) ≈ -1.4189385332046727
+data = rand(d, 10000)
+@test ARCH.logkernel(StdNormal, data[1], []) ≈ -0.044190072874578434
+@test ARCH.nparams(StdNormal) == 0
+@test ARCH.logconst(StdNormal, []) ≈ -0.9189385332046728
 
-d = StdTDist(3)
-@test ARCH.constraints(d) == ([2.0], [Inf])
-mymean = mean(d)
-@test mymean == 0.
-@test mymean isa Float64
-myvar = var(StdTDist(3.0f0))
-@test myvar == 1.
-@test myvar isa Float32
+d = StdTDist(4)
 srand(1)
-@test rand(d) ≈ 0.17647305710079372
-@test ARCH.nparams(d) == 1
-ARCH.logpdf(d, 1.) ≈ -1.6479184330021646
+data = rand(d, 10000)
+@test fit(StdTDist, data).ν ≈ 3.9724379269755077
