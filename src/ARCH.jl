@@ -4,6 +4,7 @@ __precompile__()
 #plotting via timeseries
 #marketdata
 #alternative error distributions
+#get rid of dependency on Distributions?
 #demean?
 
 #how to export arch?
@@ -17,9 +18,10 @@ using StatsFuns: normccdf, normlogpdf, log2π, RFunctions.tdistrand
 using Optim
 using ForwardDiff
 using Distributions
+using Roots
 
 import Distributions: logpdf
-import Base: show, showerror, Random.rand, mean, var
+import Base: show, showerror, Random.rand, eltype
 import StatsBase: loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderr
 export            loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderr
 export ARCHModel, VolatilitySpec, simulate, selectmodel, StdNormal, StdTDist
