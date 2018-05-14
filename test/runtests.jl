@@ -45,4 +45,4 @@ data = rand(d, 10000)
 d = StdTDist(4)
 srand(1)
 data = rand(d, 10000)
-@test fit(StdTDist, data).ν ≈ 3.9724379269755077
+@test fit(StdTDist, data).ν ≈ 3.972437329588246
