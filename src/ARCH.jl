@@ -27,6 +27,7 @@ export            loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, co
 export ARCHModel, VolatilitySpec, simulate, selectmodel, StdNormal, StdTDist
 
 abstract type VolatilitySpec end
+abstract type StandardizedDistribution <: Distribution{Univariate, Continuous} end
 
 struct NumParamError <: Exception
     expected::Int
@@ -60,11 +61,11 @@ dof(am::ARCHModel{VS}) where {VS<:VolatilitySpec} = nparams(VS)
 coef(am::ARCHModel)=am.coefs
 coefnames(::ARCHModel{VS}) where {VS<:VolatilitySpec} = coefnames(VS)
 
-function simulate(::Type{VS}, nobs, coefs::Vector{T}) where {VS<:VolatilitySpec, T<:AbstractFloat}
+function simulate(::Type{VS}, nobs, coefs::Vector{T}, dist::StandardizedDistribution=StdNormal{T}()) where {VS<:VolatilitySpec, T<:AbstractFloat}
     const warmup = 100
     data = zeros(T, nobs+warmup)
     ht = zeros(T, nobs+warmup)
-    sim!(ht, VS, data, coefs)
+    sim!(ht, VS, dist, data, coefs)
     data[warmup+1:warmup+nobs]
 end
 
@@ -102,18 +103,18 @@ function stderr(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
     return sqrt.(diag(Ji*V*Ji)) #Huber sandwich
 end
 
-function sim!(ht::Vector{T1}, ::Type{VS}, data::Vector{T1}, coefs::Vector{T1}) where {VS<:VolatilitySpec, T1<:AbstractFloat}
+function sim!(ht::Vector{T1}, ::Type{VS}, dist, data::Vector{T1}, coefs::Vector{T1}) where {VS<:VolatilitySpec, T1<:AbstractFloat}
     T =  length(data)
     r = presample(VS)
     length(coefs) == nparams(VS) || throw(NumParamError(nparams(VS), length(coefs)))
     @inbounds begin
         h0 = uncond(VS, coefs)
         h0 > 0 || error("Model is nonstationary.")
-        randn!(@view data[1:r])
+        rand!(dist, @view data[1:r])
         data[1:r] .*= sqrt(h0)
         @fastmath for t = r+1:T
             update!(ht, VS, data, coefs, t)
-            data[t] = sqrt(ht[t])*randn(T1)
+            data[t] = sqrt(ht[t])*rand(dist)
         end
     end
     return nothing

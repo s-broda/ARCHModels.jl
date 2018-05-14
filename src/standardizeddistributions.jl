@@ -1,5 +1,3 @@
-abstract type StandardizedDistribution <: Distribution{Univariate, Continuous} end
-
 function fit(::Type{SD}, data::Vector{T}, algorithm=BFGS; kwargs...) where {SD<:StandardizedDistribution, T<:AbstractFloat}
     obj = x -> -loglik(SD, data, x)
     lower, upper = constraints(SD, T)
