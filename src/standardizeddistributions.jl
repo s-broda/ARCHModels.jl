@@ -37,7 +37,7 @@ rand(d::StdTDist) = tdistrand(d.ν)*sqrt((d.ν-2)/d.ν)
 nparams(::Type{StdTDist}) = 1
 
 function constraints(::Type{StdTDist}, ::Type{T}) where {T}
-    lower = T[2]
+    lower = T[21/10]
     upper = T[Inf]
     return lower, upper
 end
