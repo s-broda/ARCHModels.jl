@@ -6,7 +6,7 @@ __precompile__()
 #alternative error distributions
 #get rid of dependency on Distributions?
 #demean?
-
+#GARCH instances should carry params like distributions do
 #how to export arch?
 #what should simulate return?
 
