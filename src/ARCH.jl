@@ -5,8 +5,10 @@ __precompile__()
 #marketdata
 #alternative error distributions
 #get rid of dependency on Distributions?
+#PkgBenchmark
 #demean?
-#GARCH instances should carry params like distributions do
+#GARCH instances should carry params like distributions do (eg for simulate, but not for loglike, b/c of ForwardDiff), but then it needs to be parameterizedon float type
+#
 #how to export arch?
 #what should simulate return?
 
@@ -68,30 +70,38 @@ function simulate(::Type{VS}, nobs, coefs::Vector{T}, dist::StandardizedDistribu
     sim!(ht, VS, dist, data, coefs)
     data[warmup+1:warmup+nobs]
 end
-
-function loglik!(ht::Vector{T2}, ::Type{VS}, data::Vector{<:AbstractFloat}, coefs::Vector{T2}) where {VS<:VolatilitySpec, T2}
+function splitcoefs(coefs, VS, SD)
+    ng = nparams(VS)
+    nd = nparams(SD)
+    length(coefs) == ng+nd || throw(NumParamError(nparams(VS), length(coefs)))
+    garchcoefs = coefs[1:ng]
+    distcoefs = coefs[ng+1:ng+nd]
+    return garchcoefs, distcoefs
+end
+function loglik!(ht::Vector{T2}, ::Type{VS}, ::Type{SD}, data::Vector{<:AbstractFloat}, coefs::Vector{T2}) where {VS<:VolatilitySpec, SD<:StandardizedDistribution, T2}
     T = length(data)
     r = presample(VS)
-    length(coefs) == nparams(VS) || throw(NumParamError(nparams(VS), length(coefs)))
+    garchcoefs, distcoefs = splitcoefs(coefs, VS, SD)
     T > r || error("Sample too small.")
     @inbounds begin
-        h0 = uncond(VS, coefs)
+        h0 = uncond(VS, garchcoefs)
         h0 > 0 || return T2(NaN)
         lh0 = log(h0)
         ht[1:r] .= h0
-        LL = r*lh0+sum(view(data, 1:r).^2)/h0
-        @fastmath for t = r+1:T
-            update!(ht, VS, data, coefs, t)
-            LL += log(ht[t]) + data[t]^2/ht[t]
+        LL = zero(T2)
+        @fastmath for t = 1:T
+            t > r && update!(ht, VS, data, garchcoefs, t)
+            LL += -log(ht[t])/2 + logkernel(SD, data[t]/sqrt(ht[t]), distcoefs)
         end#for
     end#inbounds
-    LL = -(T*log2π+LL)/2
+    LL += T*logconst(SD, distcoefs)
 end#function
 
-function logliks(spec, data, coefs::Vector{T}) where {T}
+function logliks(spec, dist, data, coefs::Vector{T}) where {T}
+    garchcoefs, distcoefs = splitcoefs(coefs, spec, dist)
     ht = zeros(T, length(data))
-    loglik!(ht, spec, data, coefs)
-    LLs = -(log.(ht)+data.^2./ht.+log2π)/2
+    loglik!(ht, spec, dist, data, coefs)
+    LLs = -log.(ht)/2+logkernel.(dist, data./sqrt.(ht), Ref{Vector{T}}(distcoefs))+logconst(dist, distcoefs)
 end
 
 function stderr(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
@@ -103,7 +113,7 @@ function stderr(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
     return sqrt.(diag(Ji*V*Ji)) #Huber sandwich
 end
 
-function sim!(ht::Vector{T1}, ::Type{VS}, dist, data::Vector{T1}, coefs::Vector{T1}) where {VS<:VolatilitySpec, T1<:AbstractFloat}
+function sim!(ht::Vector{T1}, ::Type{VS}, dist::StandardizedDistribution, data::Vector{T1}, coefs::Vector{T1}) where {VS<:VolatilitySpec, T1<:AbstractFloat}
     T =  length(data)
     r = presample(VS)
     length(coefs) == nparams(VS) || throw(NumParamError(nparams(VS), length(coefs)))
@@ -120,11 +130,19 @@ function sim!(ht::Vector{T1}, ::Type{VS}, dist, data::Vector{T1}, coefs::Vector{
     return nothing
 end
 
-function fit!(ht::Vector{T}, coefs::Vector{T}, ::Type{VS}, data::Vector{T}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec, T<:AbstractFloat}
-    obj = x -> -loglik!(ht, VS, data, x)
-    lower, upper = constraints(VS, T)
+function fit!(ht::Vector{T}, garchcoefs::Vector{T}, distcoefs::Vector{T}, ::Type{VS}, ::Type{SD}, data::Vector{T}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec, SD<:StandardizedDistribution, T<:AbstractFloat}
+    obj = x -> -loglik!(ht, VS, SD, data, x)
+    lowergarch, uppergarch = constraints(VS, T)
+    lowerdist, upperdist = constraints(SD, T)
+    lower = vcat(lowergarch, lowerdist)
+    upper = vcat(uppergarch, upperdist)
+    coefs = vcat(garchcoefs, distcoefs)
     res = optimize(obj, coefs, lower, upper, Fminbox{algorithm}(); kwargs...)
     coefs .= res.minimizer
+    ng = nparams(VS)
+    ns = nparams(SD)
+    garchcoefs .= coefs[1:ng]
+    distcoefs .= coefs[ng+1:ng+ns]
     return nothing
 end
 fit(::Type{VS}, data, algorithm=BFGS; kwargs...) where VS<:VolatilitySpec = (ht = zeros(data); coefs=startingvals(VS, data); fit!(ht, coefs, VS, data, algorithm; kwargs...); return ARCHModel(VS, data, ht, coefs))
