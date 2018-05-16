@@ -145,7 +145,7 @@ function fit!(ht::Vector{T}, garchcoefs::Vector{T}, distcoefs::Vector{T}, ::Type
     distcoefs .= coefs[ng+1:ng+ns]
     return nothing
 end
-fit(::Type{VS}, data, algorithm=BFGS; kwargs...) where VS<:VolatilitySpec = (ht = zeros(data); coefs=startingvals(VS, data); fit!(ht, coefs, VS, data, algorithm; kwargs...); return ARCHModel(VS, data, ht, coefs))
+fit(::Type{VS}, data::Vector{T}, ::Type{SD}=StdNormal,  algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec, SD<:StandardizedDistribution, T<:AbstractFloat} = (ht = zeros(data); coefs=startingvals(VS, data); distcoefs=startingvals(SD, data); fit!(ht, coefs, distcoefs, VS, SD, data, algorithm; kwargs...); return ARCHModel(VS, SD,  data, ht, coefs))
 fit!(AM::ARCHModel{VS}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec} = (AM.coefs.=startingvals(VS, AM.data); fit!(AM.ht, AM.coefs, VS, AM.data, algorithm; kwargs...))
 fit(AM::ARCHModel{VS}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec} = (AM2=ARCHModel(VS, AM.data, AM.coefs); fit!(AM2, algorithm=BFGS; kwargs...); return AM2)
 
