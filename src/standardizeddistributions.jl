@@ -18,10 +18,14 @@ rand(::StdNormal{T}) where {T} = randn(T)
 nparams(::Type{StdNormal}) = 0
 fit(::Type{StdNormal}, data::Vector{T}) where {T<:AbstractFloat} = StdNormal(T)
 
-function constraints(::Type{StdNormal}, ::Type{T})  where {T}
+function constraints(::Type{StdNormal}, ::Type{T})  where {T<:AbstractFloat}
     lower = T[]
     upper = T[]
     return lower, upper
+end
+
+function startingvals(::Type{StdNormal}, data::Vector{T})  where {T<:AbstractFloat}
+    return T[]
 end
 
 struct StdTDist{T} <: StandardizedDistribution
@@ -32,7 +36,7 @@ StdTDist(ν::T) where {T} = StdTDist{T}(ν)
 StdTDist(ν::Integer) = StdTDist(float(ν))
 Base.eltype(::StdTDist{T})  where {T} = T
 (rand(d::StdTDist{T})::T) where {T}  = tdistrand(d.ν)*sqrt((d.ν-2)/d.ν)
-@inline logkernel(::Type{StdTDist}, x, coefs) = (-(coefs[1] + 1) / 2) * log(1 + x^2 / (coefs[1]-2))
+@inline logkernel(::Type{StdTDist}, x, coefs) = (-(coefs[1] + 1) / 2) * log1p(abs2(x) / (coefs[1]-2))
 @inline logconst(::Type{StdTDist}, coefs)  =  lgamma((coefs[1] + 1) / 2) - log((coefs[1]-2) * pi) / 2 - lgamma(coefs[1] / 2)
 nparams(::Type{StdTDist}) = 1
 
@@ -42,16 +46,18 @@ function constraints(::Type{StdTDist}, ::Type{T}) where {T}
     return lower, upper
 end
 
-#mean of abs(t)
-eabst(ν)=2*sqrt(ν-2)/(ν-1)/beta(ν/2, 1/2)
-##alteratively, could use mean of log(abs(t)):
-#elogabst(ν)=log(ν-2)/2-digamma(ν/2)/2+digamma(1/2)/2
 
 
 function startingvals(::Type{StdTDist}, data::Array{T}) where {T}
+    #mean of abs(t)
+    eabst(ν)=2*sqrt(ν-2)/(ν-1)/beta(ν/2, 1/2)
+    ##alteratively, could use mean of log(abs(t)):
+    #elogabst(ν)=log(ν-2)/2-digamma(ν/2)/2+digamma(1/2)/2
+    ht = zeros(data)
+    loglik!(ht, GARCH{1, 1}, StdNormal, data, startingvals(GARCH{1, 1}, data))
     lower = convert(T, 2)
     upper = convert(T, 30)
-    z = mean(abs.(data)/std(data))
+    z = mean(abs.(data)./sqrt.(ht))
     z > eabst(upper) ? [upper] : [find_zero(x->z-eabst(x), (lower, upper))]
 end
 
