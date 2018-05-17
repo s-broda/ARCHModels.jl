@@ -112,7 +112,16 @@ function stderr(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
     g = x -> sum(ARCH.logliks(VS, typeof(am.dist), am.data, x))
     J = ForwardDiff.jacobian(f, vcat(am.coefs, am.dist.coefs))
     V = J'J #outer product of scores
-    Ji = -inv(ForwardDiff.hessian(g, vcat(am.coefs, am.dist.coefs))) #inverse of observed Fisher information
+    Ji = try
+        -inv(ForwardDiff.hessian(g, vcat(am.coefs, am.dist.coefs))) #inverse of observed Fisher information
+    catch e
+        if e isa LinAlg.SingularException
+            warn("Fisher information is singular; standard errors may be inaccurate.")
+            I
+        else
+            rethrow(e)
+        end
+    end
     return sqrt.(diag(Ji*V*Ji)) #Huber sandwich
 end
 
@@ -160,6 +169,7 @@ function selectmodel(::Type{VS}, data::Vector{<:AbstractFloat}, dist::Type{SD}=S
     Threads.@threads for ind in collect(CartesianRange(size(res)))
         res[ind] = fit(VS{(ind.I .- 1)...}, data, dist)
     end
+    println(res)
     crits = criterion.(res)
     _, ind = findmin(crits)
     return res[ind]
