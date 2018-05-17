@@ -3,13 +3,12 @@ __precompile__()
 #docs
 #plotting via timeseries
 #marketdata
-#alternative error distributions
-#get rid of dependency on Distributions?
 #PkgBenchmark
 #loglik! etc should take distcoefs seperately
 #demean?
 #GARCH instances should carry params like distributions do (eg for simulate, but not for loglike, b/c of ForwardDiff), but then it needs to be parameterizedon float type
-#
+#bic table
+#simulate ARCHModel
 #how to export arch?
 #what should simulate return?
 
