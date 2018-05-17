@@ -6,6 +6,7 @@ __precompile__()
 #alternative error distributions
 #get rid of dependency on Distributions?
 #PkgBenchmark
+#loglik! etc should take distcoefs seperately
 #demean?
 #GARCH instances should carry params like distributions do (eg for simulate, but not for loglike, b/c of ForwardDiff), but then it needs to be parameterizedon float type
 #
@@ -22,14 +23,15 @@ using ForwardDiff
 using Distributions
 using Roots
 
-import Distributions: logpdf
 import Base: show, showerror, Random.rand, eltype
 import StatsBase: loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderr
 export            loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderr
 export ARCHModel, VolatilitySpec, simulate, selectmodel, StdNormal, StdTDist
 
 abstract type VolatilitySpec end
-abstract type StandardizedDistribution <: Distribution{Univariate, Continuous} end
+abstract type StandardizedDistribution{T} <: Distribution{Univariate, Continuous}
+end
+
 
 struct NumParamError <: Exception
     expected::Int
@@ -44,24 +46,26 @@ end
 showerror(io::IO, e::NumParamError) = print(io, "incorrect number of parameters: expected $(e.expected), got $(e.got).")
 showerror(io::IO, e::LengthMismatchError) = print(io, "length of arrays does not match: $(e.length1) and $(e.length2).")
 
-struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat} <: StatisticalModel
+struct ARCHModel{VS<:VolatilitySpec, T<:AbstractFloat, SD<:StandardizedDistribution{T}} <: StatisticalModel
     data::Vector{T}
     ht::Vector{T}
     coefs::Vector{T}
-    function ARCHModel{VS, T}(data, ht, coefs) where {VS, T}
+    dist::SD
+
+    function ARCHModel{VS, T, SD}(data, ht, coefs, dist) where {VS, T, SD}
         length(coefs) == nparams(VS)  || throw(NumParamError(nparams(VS), length(coefs)))
         length(data) == length(ht)  || throw(LengthMismatchError(length(data), length(ht)))
-        new(copy(data), copy(ht), copy(coefs))
+        new(copy(data), copy(ht), copy(coefs), dist)
     end
 end
-ARCHModel(::Type{VS}, data::Vector{T}, ht::Vector{T}, coefs::Vector{T}) where {VS<:VolatilitySpec, T} = ARCHModel{VS, T}(data, ht, coefs)
-ARCHModel(::Type{VS}, data, coefs) where {VS<:VolatilitySpec} = (ht = zeros(data); loglik!(ht, VS, data, coefs); ARCHModel(VS, data, ht, coefs))
+ARCHModel(::Type{VS}, data::Vector{T}, ht::Vector{T}, coefs::Vector{T}, dist::SD=StdNormal{T}()) where {VS<:VolatilitySpec, T, SD<:StandardizedDistribution{T}} = ARCHModel{VS, T, SD}(data, ht, coefs, dist)
+ARCHModel(::Type{VS}, data::Vector{T}, coefs::Vector{T}, dist::SD=StdNormal{T}()) where {VS<:VolatilitySpec, T, SD<:StandardizedDistribution{T}} = (ht = zeros(data); loglik!(ht, VS, SD,  data, vcat(coefs, dist.coefs)); ARCHModel(VS, data, ht, coefs, dist))
 
-loglikelihood(am::ARCHModel{VS}) where {VS<:VolatilitySpec} = loglik!(zeros(am.data), VS, am.data, am.coefs)
+loglikelihood(am::ARCHModel{VS}) where {VS<:VolatilitySpec} = loglik!(zeros(am.data), VS, typeof(am.dist), am.data, vcat(am.coefs, am.dist.coefs))
 nobs(am::ARCHModel) = length(am.data)
-dof(am::ARCHModel{VS}) where {VS<:VolatilitySpec} = nparams(VS)
-coef(am::ARCHModel)=am.coefs
-coefnames(::ARCHModel{VS}) where {VS<:VolatilitySpec} = coefnames(VS)
+dof(am::ARCHModel{VS}) where {VS<:VolatilitySpec} = nparams(VS) + nparams(typeof(am.dist))
+coef(am::ARCHModel)=vcat(am.coefs, am.dist.coefs)
+coefnames(am::ARCHModel{VS}) where {VS<:VolatilitySpec} = vcat(coefnames(VS), coefnames(typeof(am.dist)))
 
 function simulate(::Type{VS}, nobs, coefs::Vector{T}, dist::StandardizedDistribution=StdNormal{T}()) where {VS<:VolatilitySpec, T<:AbstractFloat}
     const warmup = 100
@@ -73,7 +77,7 @@ end
 function splitcoefs(coefs, VS, SD)
     ng = nparams(VS)
     nd = nparams(SD)
-    length(coefs) == ng+nd || throw(NumParamError(nparams(VS), length(coefs)))
+    length(coefs) == ng+nd || throw(NumParamError(ng+nd, length(coefs)))
     garchcoefs = coefs[1:ng]
     distcoefs = coefs[ng+1:ng+nd]
     return garchcoefs, distcoefs
@@ -105,11 +109,11 @@ function logliks(spec, dist, data, coefs::Vector{T}) where {T}
 end
 
 function stderr(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
-    f = x -> ARCH.logliks(VS, am.data, x)
-    g = x -> sum(ARCH.logliks(VS, am.data, x))
-    J = ForwardDiff.jacobian(f, am.coefs)
+    f = x -> ARCH.logliks(VS, typeof(am.dist), am.data, x)
+    g = x -> sum(ARCH.logliks(VS, typeof(am.dist), am.data, x))
+    J = ForwardDiff.jacobian(f, vcat(am.coefs, am.dist.coefs))
     V = J'J #outer product of scores
-    Ji = -inv(ForwardDiff.hessian(g, am.coefs)) #inverse of observed Fisher information
+    Ji = -inv(ForwardDiff.hessian(g, vcat(am.coefs, am.dist.coefs))) #inverse of observed Fisher information
     return sqrt.(diag(Ji*V*Ji)) #Huber sandwich
 end
 
@@ -145,20 +149,47 @@ function fit!(ht::Vector{T}, garchcoefs::Vector{T}, distcoefs::Vector{T}, ::Type
     distcoefs .= coefs[ng+1:ng+ns]
     return nothing
 end
-fit(::Type{VS}, data::Vector{T}, ::Type{SD}=StdNormal,  algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec, SD<:StandardizedDistribution, T<:AbstractFloat} = (ht = zeros(data); coefs=startingvals(VS, data); distcoefs=startingvals(SD, data); fit!(ht, coefs, distcoefs, VS, SD, data, algorithm; kwargs...); return ARCHModel(VS, SD,  data, ht, coefs))
-fit!(AM::ARCHModel{VS}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec} = (AM.coefs.=startingvals(VS, AM.data); fit!(AM.ht, AM.coefs, VS, AM.data, algorithm; kwargs...))
-fit(AM::ARCHModel{VS}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec} = (AM2=ARCHModel(VS, AM.data, AM.coefs); fit!(AM2, algorithm=BFGS; kwargs...); return AM2)
 
-function selectmodel(::Type{VS}, data::Vector{<:AbstractFloat}, maxpq=3, args...; criterion=bic, kwargs...) where {VS<:VolatilitySpec}
+fit(::Type{VS}, data::Vector{T}, ::Type{SD}=StdNormal{T},  algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec, SD<:StandardizedDistribution, T<:AbstractFloat} = (ht = zeros(data); coefs=startingvals(VS, data); distcoefs=startingvals(SD, data); fit!(ht, coefs, distcoefs, VS, SD, data, algorithm; kwargs...); return ARCHModel(VS, data, ht, coefs, SD(distcoefs...)))
+fit!(AM::ARCHModel{VS}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec} = (AM.coefs.=startingvals(VS, AM.data); AM.dist.coefs.=startingvals(typeof(AM.dist), AM.data); fit!(AM.ht, AM.coefs, AM.dist.coefs, VS, typeof(AM.dist), AM.data, algorithm; kwargs...))
+fit(AM::ARCHModel{VS}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec} = (AM2=deepcopy(AM); fit!(AM2, algorithm=BFGS; kwargs...); return AM2)
+
+
+function selectmodel(::Type{VS}, data::Vector{<:AbstractFloat}, dist::Type{SD}=StdNormal, maxpq=3; criterion=bic, kwargs...) where {VS<:VolatilitySpec, SD<:StandardizedDistribution}
     ndims =my_unwrap_unionall(VS)#e.g., two (p and q) for GARCH{p, q}
     res =Array{ARCHModel, ndims}(ntuple(i->maxpq+1, ndims))
     Threads.@threads for ind in collect(CartesianRange(size(res)))
-        res[ind] = fit(VS{(ind.I .- 1)...}, data)
+        res[ind] = fit(VS{(ind.I .- 1)...}, data, dist)
     end
     crits = criterion.(res)
     _, ind = findmin(crits)
     return res[ind]
 end
+
+function fit(::Type{SD}, data::Vector{T}, algorithm=BFGS; kwargs...) where {SD<:StandardizedDistribution, T<:AbstractFloat}
+    nparams(SD) == 0 && return SD{T}()
+    obj = x -> -loglik(SD, data, x)
+    lower, upper = constraints(SD, T)
+    x0 = startingvals(SD, data)
+    res = optimize(obj, x0, lower, upper, Fminbox{algorithm}(); kwargs...)
+    coefs = res.minimizer
+    return SD(coefs...)
+end
+
+
+function loglik(::Type{SD}, data::Vector{<:AbstractFloat}, coefs::Vector{T2}) where {SD<:StandardizedDistribution, T2}
+    T = length(data)
+    length(coefs) == nparams(SD) || throw(NumParamError(nparams(SD), length(coefs)))
+    @inbounds begin
+        LL = zero(T2)
+        @fastmath for t = 1:T
+            LL += logkernel(SD, data[t], coefs)
+        end#for
+    end#inbounds
+    LL +=  T*logconst(SD, coefs)
+end#function
+
+Base.eltype(::StandardizedDistribution{T})  where {T} = T
 
 #count the number of type vars. there's probably a better way.
 function my_unwrap_unionall(a::ANY)
@@ -180,8 +211,8 @@ function coeftable(am::ARCHModel)
 end
 
 function show(io::IO, am::ARCHModel{VS}) where {VS <: VolatilitySpec}
-    println(io, "\n", split("$VS", ".")[2], " model fitted to ",
-        nobs(am), " observations.\n\n", coeftable(am))
+    println(io, "\n", split("$VS", ".")[2], " model with ", distname(typeof(am.dist)), " errors, T=",
+        nobs(am), ".\n\n", coeftable(am))
 end
 
 #from here https://stackoverflow.com/questions/46671965/printing-variable-subscripts-in-julia

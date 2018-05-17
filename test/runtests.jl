@@ -11,9 +11,10 @@ am = selectmodel(GARCH, data)
 am2 = ARCHModel(spec, data, ht, coefs)
 fit!(am2)
 am3 = fit(am2)
+dist=StdNormal{}
+d = StdNormal()
 
-
-@test loglikelihood(ARCHModel(spec, data, coefs)) ==  ARCH.loglik!(ht, spec, data, coefs)
+@test loglikelihood(ARCHModel(spec, data, coefs)) ==  ARCH.loglik!(ht, spec, dist, data, coefs)
 @test nobs(am) == T
 @test dof(am) == 3
 @test coefnames(GARCH{1, 1}) == ["ω", "β₁", "α₁"]
@@ -22,10 +23,10 @@ am3 = fit(am2)
 @test all(am2.coefs .== am.coefs)
 @test all(am3.coefs .== am2.coefs)
 
-e = @test_throws ARCH.NumParamError ARCH.loglik!(ht, spec, data, [0., 0., 0., 0.])
+e = @test_throws ARCH.NumParamError ARCH.loglik!(ht, spec, dist, data, [0., 0., 0., 0.])
 str = sprint(showerror, e.value)
 @test startswith(str, "incorrect number of parameters")
-@test_throws ARCH.NumParamError ARCH.sim!(ht, spec, data, [0., 0., 0., 0.])
+@test_throws ARCH.NumParamError ARCH.sim!(ht, spec, d, data, [0., 0., 0., 0.])
 e = @test_throws ARCH.LengthMismatchError ARCHModel(spec, data, coefs, coefs)
 str = sprint(showerror, e.value)
 @test startswith(str, "length of arrays does not match")
@@ -34,7 +35,7 @@ io = IOBuffer()
 str = sprint(io -> show(io, am))
 @test startswith(str, "\nGARCH{1,1}")
 
-d = StdNormal()
+
 @test ARCH.constraints(StdNormal, Float64) == (Float64[], Float64[])
 srand(1)
 data = rand(d, 10000)
@@ -45,4 +46,4 @@ data = rand(d, 10000)
 d = StdTDist(4)
 srand(1)
 data = rand(d, 10000)
-@test fit(StdTDist, data).ν ≈ 3.972437329588246 rtol=1e-4
+@test fit(StdTDist, data).coefs[1] ≈ 3.972437329588246 rtol=1e-4
