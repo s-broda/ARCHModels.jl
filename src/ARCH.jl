@@ -163,13 +163,15 @@ fit!(AM::ARCHModel{VS}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec} = 
 fit(AM::ARCHModel{VS}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec} = (AM2=deepcopy(AM); fit!(AM2, algorithm=BFGS; kwargs...); return AM2)
 
 
-function selectmodel(::Type{VS}, data::Vector{<:AbstractFloat}, dist::Type{SD}=StdNormal, maxpq=3; criterion=bic, kwargs...) where {VS<:VolatilitySpec, SD<:StandardizedDistribution}
-    ndims =my_unwrap_unionall(VS)#e.g., two (p and q) for GARCH{p, q}
-    res =Array{ARCHModel, ndims}(ntuple(i->maxpq+1, ndims))
+function selectmodel(::Type{VS}, data::Vector{T}, dist::Type{SD}=StdNormal{T}, maxpq=3; criterion=bic, show_trace=false, kwargs...) where {VS<:VolatilitySpec, T<:AbstractFloat, SD<:StandardizedDistribution}
+    ndims = my_unwrap_unionall(VS)#e.g., two (p and q) for GARCH{p, q}
+    res = Array{ARCHModel, ndims}(ntuple(i->maxpq, ndims))
     Threads.@threads for ind in collect(CartesianRange(size(res)))
-        res[ind] = fit(VS{(ind.I .- 1)...}, data, dist)
+        res[ind] = fit(VS{ind.I...}, data, dist)
     end
-    println(res)
+    for ind in collect(CartesianRange(size(res))) #seperate loop because juno crashes otherwise
+        show_trace && println(split("$(VS{ind.I...})", ".")[2], " model has ", uppercase(split("$criterion", ".")[2]), " ", criterion(res[ind]), ".")
+    end
     crits = criterion.(res)
     _, ind = findmin(crits)
     return res[ind]
@@ -202,7 +204,7 @@ Base.eltype(::StandardizedDistribution{T})  where {T} = T
 
 #count the number of type vars. there's probably a better way.
 function my_unwrap_unionall(a::ANY)
-    count=0
+    count = 0
     while isa(a, UnionAll)
         a = a.body
         count += 1
