@@ -26,7 +26,8 @@ am5 = fit(GARCH{3, 0}, data)
 @test all(am3.coefs .== am2.coefs)
 @test all(isapprox(coef(am4), [0.8306902920885605, 0.9189514425541352, 0.04207946140844637, 3.8356660627658075], rtol=1e-4))
 
-@test_warn "inaccurate" stderr(am5);
+@test_warn "inaccurate" stderr(am5)
+@test_warn "inaccurate" stderr(ARCHModel(GARCH{3, 0}, data, [1., .1, .2, .3]))
 e = @test_throws ARCH.NumParamError ARCH.loglik!(ht, spec, StdNormal{}, data, [0., 0., 0., 0.])
 str = sprint(showerror, e.value)
 @test startswith(str, "incorrect number of parameters")
