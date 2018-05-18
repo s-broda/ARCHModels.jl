@@ -123,6 +123,7 @@ function stderr(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
             rethrow(e)
         end
     end
+    println((diag(Ji*V*Ji)))
     return sqrt.(diag(Ji*V*Ji)) #Huber sandwich
 end
 
