@@ -4,6 +4,7 @@ __precompile__()
 #plotting via timeseries
 #marketdata
 #PkgBenchmark
+#HAC s.e.s from CovariancesMatrices.jl?
 #loglik! etc should take distcoefs seperately
 #demean?
 #GARCH instances should carry params like distributions do (eg for simulate, but not for loglike, b/c of ForwardDiff), but then it needs to be parameterizedon float type
@@ -14,8 +15,8 @@ __precompile__()
 
 
 module ARCH
-
-using StatsBase: StatisticalModel
+using Reexport
+@reexport using StatsBase
 using StatsFuns: normccdf, normlogpdf, log2π, RFunctions.tdistrand
 using Optim
 using ForwardDiff
@@ -23,8 +24,8 @@ using Distributions
 using Roots
 
 import Base: show, showerror, Random.rand, eltype
-import StatsBase: loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderr
-export            loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderr
+import StatsBase: StatisticalModel, loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderr
+#export            StatisticalModel, loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderr
 export ARCHModel, VolatilitySpec, simulate, selectmodel, StdNormal, StdTDist
 
 abstract type VolatilitySpec end
@@ -114,7 +115,7 @@ function stderr(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
     V = J'J #outer product of scores
     H = ForwardDiff.hessian(g, vcat(am.coefs, am.dist.coefs))
     Ji = try
-        -inv(H) #inverse of observed Fisher information
+        -inv(H) #inverse of observed Fisher information. Note: B&W use expected information.
     catch e
         if e isa LinAlg.SingularException
             warn("Fisher information is singular; standard errors are inaccurate.")
