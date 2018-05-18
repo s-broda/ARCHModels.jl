@@ -124,7 +124,6 @@ function stderr(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
         end
     end
     v = diag(Ji*V*Ji)
-    println(v)
     any(v.<0) && warn("negative variance encountered; standard errors are inaccurate.")
     return sqrt.(abs.(v)) #Huber sandwich
 end
