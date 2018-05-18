@@ -24,7 +24,7 @@ using Distributions
 using Roots
 
 @static if Pkg.installed("StatsBase") >= v"0.22"
-    import StatsBase: stderror   
+    import StatsBase: stderror
 else
     import StatsBase: stderr
     const stderror = stderr
@@ -32,7 +32,6 @@ end
 
 import Base: show, showerror, Random.rand, eltype
 import StatsBase: StatisticalModel, loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable
-#export            StatisticalModel, loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable
 export ARCHModel, VolatilitySpec, simulate, selectmodel, StdNormal, StdTDist
 
 abstract type VolatilitySpec end
