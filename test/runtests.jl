@@ -15,6 +15,7 @@ fit!(am2)
 am3 = fit(am2)
 am4 = selectmodel(GARCH, datat, StdTDist)
 am5 = fit(GARCH{3, 0}, data)
+println(coef(am5))
 @test loglikelihood(ARCHModel(spec, data, coefs)) ==  ARCH.loglik!(ht, spec, StdNormal{}, data, coefs)
 @test nobs(am) == T
 @test dof(am) == 3
