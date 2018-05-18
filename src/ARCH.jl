@@ -112,12 +112,13 @@ function stderr(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
     g = x -> sum(ARCH.logliks(VS, typeof(am.dist), am.data, x))
     J = ForwardDiff.jacobian(f, vcat(am.coefs, am.dist.coefs))
     V = J'J #outer product of scores
+    H = ForwardDiff.hessian(g, vcat(am.coefs, am.dist.coefs))
     Ji = try
-        -inv(ForwardDiff.hessian(g, vcat(am.coefs, am.dist.coefs))) #inverse of observed Fisher information
+        -inv(H) #inverse of observed Fisher information
     catch e
         if e isa LinAlg.SingularException
             warn("Fisher information is singular; standard errors may be inaccurate.")
-            I
+            -pinv(H)
         else
             rethrow(e)
         end
