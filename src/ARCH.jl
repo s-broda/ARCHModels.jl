@@ -117,14 +117,15 @@ function stderr(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
         -inv(H) #inverse of observed Fisher information
     catch e
         if e isa LinAlg.SingularException
-            warn("Fisher information is singular; standard errors may be inaccurate.")
+            warn("Fisher information is singular; standard errors are inaccurate.")
             -pinv(H)
         else
             rethrow(e)
         end
     end
-    println((diag(Ji*V*Ji)))
-    return sqrt.(diag(Ji*V*Ji)) #Huber sandwich
+    v = diag(Ji*V*Ji)
+    any(v.<0) && warn("negative variance encountered; standard errors are inaccurate.")
+    return sqrt.(abs.(v)) #Huber sandwich
 end
 
 function sim!(ht::Vector{T1}, ::Type{VS}, dist::StandardizedDistribution, data::Vector{T1}, coefs::Vector{T1}) where {VS<:VolatilitySpec, T1<:AbstractFloat}
