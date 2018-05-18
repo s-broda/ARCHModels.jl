@@ -20,13 +20,13 @@ am4 = selectmodel(GARCH, datat, StdTDist)
 
 @test coefnames(GARCH{1, 1}) == ["ω", "β₁", "α₁"]
 @test all(isapprox.(coef(am), [0.9086850084210619, 0.9055267307122488, 0.050365843108442374], rtol=1e-4))
-@test all(isapprox.(stderr(am), [0.14583357347889914, 0.01035533071207874, 0.005222909457230848], rtol=1e-4))
+@test all(isapprox.(stderror(am), [0.14583357347889914, 0.01035533071207874, 0.005222909457230848], rtol=1e-4))
 @test all(am2.coefs .== am.coefs)
 @test all(am3.coefs .== am2.coefs)
 @test all(isapprox(coef(am4), [0.8306902920885605, 0.9189514425541352, 0.04207946140844637, 3.8356660627658075], rtol=1e-4))
 
-@test_warn "Fisher" stderr(ARCHModel(GARCH{3, 0}, data, [.1, .0, .0, .0]))
-@test_warn "negative" stderr(ARCHModel(GARCH{3, 0}, data[1:10], [1., .1, .2, .3]))
+@test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}, data, [.1, .0, .0, .0]))
+@test_warn "negative" stderror(ARCHModel(GARCH{3, 0}, data[1:10], [1., .1, .2, .3]))
 e = @test_throws ARCH.NumParamError ARCH.loglik!(ht, spec, StdNormal{}, data, [0., 0., 0., 0.])
 str = sprint(showerror, e.value)
 @test startswith(str, "incorrect number of parameters")

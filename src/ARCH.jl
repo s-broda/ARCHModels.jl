@@ -23,9 +23,16 @@ using ForwardDiff
 using Distributions
 using Roots
 
+@static if Pkg.installed("StatsBase") >= v"0.22"
+    import StatsBase: stderror   
+else
+    import StatsBase: stderr
+    const stderror = stderr
+end
+
 import Base: show, showerror, Random.rand, eltype
-import StatsBase: StatisticalModel, loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderr
-#export            StatisticalModel, loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable, stderr
+import StatsBase: StatisticalModel, loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable
+#export            StatisticalModel, loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable
 export ARCHModel, VolatilitySpec, simulate, selectmodel, StdNormal, StdTDist
 
 abstract type VolatilitySpec end
@@ -108,7 +115,7 @@ function logliks(spec, dist, data, coefs::Vector{T}) where {T}
     LLs = -log.(ht)/2+logkernel.(dist, data./sqrt.(ht), Ref{Vector{T}}(distcoefs))+logconst(dist, distcoefs)
 end
 
-function stderr(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
+function stderror(am::ARCHModel{VS}) where {VS<:VolatilitySpec}
     f = x -> ARCH.logliks(VS, typeof(am.dist), am.data, x)
     g = x -> sum(ARCH.logliks(VS, typeof(am.dist), am.data, x))
     J = ForwardDiff.jacobian(f, vcat(am.coefs, am.dist.coefs))
@@ -218,7 +225,7 @@ end
 
 function coeftable(am::ARCHModel)
     cc = coef(am)
-    se = stderr(am)
+    se = stderror(am)
     zz = cc ./ se
     CoefTable(hcat(cc, se, zz, 2.0 * normccdf.(abs.(zz))),
               ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
