@@ -49,5 +49,5 @@ function startingvals(::Type{<:StdTDist}, data::Array{T}) where {T}
     lower = convert(T, 2)
     upper = convert(T, 30)
     z = mean(abs.(data)./sqrt.(ht))
-    z > eabst(upper) ? [upper] : [find_zero(x->z-eabst(x), (lower, upper))]
+    z > eabst(upper) ? [upper] : [find_zero(x -> z-eabst(x), (lower, upper))]
 end
