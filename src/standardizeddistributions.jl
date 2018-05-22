@@ -5,7 +5,7 @@ end
 StdNormal(T::Type=Float64) = StdNormal{T}()
 rand(::StdNormal{T}) where {T} = randn(T)
 @inline logkernel(::Type{<:StdNormal}, x, coefs) = -abs2(x)/2
-@inline logconst(::Type{<:StdNormal}, coefs)  =  -log2π/2
+@inline logconst(::Type{<:StdNormal}, coefs::Vector{T}) where {T} =  -T(log2π)/2
 nparams(::Type{<:StdNormal}) = 0
 coefnames(::Type{<:StdNormal}) = String[]
 distname(::Type{<:StdNormal}) = "Gaussian"
