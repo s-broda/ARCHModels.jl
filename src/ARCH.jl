@@ -92,7 +92,7 @@ function loglik!(ht::Vector{T2}, ::Type{VS}, ::Type{SD}, data::Vector{<:Abstract
     garchcoefs, distcoefs = splitcoefs(coefs, VS, SD)
     T > r || error("Sample too small.")
     @inbounds begin
-        h0 = uncond(VS, coefs)
+        h0 = uncond(VS, garchcoefs)
         h0 > 0 || return T2(NaN)
         lh0 = log(h0)
         ht[1:r] .= h0
@@ -207,7 +207,7 @@ function loglik(::Type{SD}, data::Vector{<:AbstractFloat}, coefs::Vector{T2}) wh
     LL +=  T*logconst(SD, coefs)
 end#function
 
-Base.eltype(::StandardizedDistribution{T})  where {T} = T
+Base.eltype(::StandardizedDistribution{T}) where {T} = T
 
 #count the number of type vars. there's probably a better way.
 function my_unwrap_unionall(a::ANY)
