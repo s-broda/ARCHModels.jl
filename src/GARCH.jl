@@ -50,7 +50,7 @@ end
 function coefnames(::Type{<:GARCH{p,q}}) where {p, q}
     names = Array{String, 1}(p+q+1)
     names[1] = "ω"
-    names[2:p+1] .= (i->"β"*subscript(i)).([1:p...])
-    names[p+2:p+q+1] .= (i->"α"*subscript(i)).([1:q...])
+    names[2:p+1] .= (i -> "β"*subscript(i)).([1:p...])
+    names[p+2:p+q+1] .= (i -> "α"*subscript(i)).([1:q...])
     return names
 end
