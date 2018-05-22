@@ -71,7 +71,7 @@ dof(am::ARCHModel) = nparams(typeof(am.spec)) + nparams(typeof(am.dist))
 coef(am::ARCHModel)=vcat(am.spec.coefs, am.dist.coefs)
 coefnames(am::ARCHModel) = vcat(coefnames(typeof(am.spec)), coefnames(typeof(am.dist)))
 
-function simulate(spec, nobs, dist::StandardizedDistribution{T}=StdNormal()) where {T<:AbstractFloat}
+function simulate(spec::VolatilitySpec{T}, nobs, dist::StandardizedDistribution{T}=StdNormal{T}()) where {T<:AbstractFloat}
     const warmup = 100
     data = zeros(T, nobs+warmup)
     ht = zeros(T, nobs+warmup)
