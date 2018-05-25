@@ -5,7 +5,6 @@ __precompile__()
 #marketdata
 #PkgBenchmark
 #HAC s.e.s from CovariancesMatrices.jl?
-#loglik! etc should take distcoefs seperately
 #demean?
 #bic table
 #simulate ARCHModel
@@ -229,8 +228,26 @@ function coeftable(am::ARCHModel)
 end
 
 function show(io::IO, am::ARCHModel)
-    println(io, "\n", split("$(typeof(am.spec))", ".")[2], " model with ", distname(typeof(am.dist)), " errors, T=",
-        nobs(am), ".\n\n", coeftable(am))
+    cc = coef(am)
+    se = stderror(am)
+    ccg, ccd = splitcoefs(cc, typeof(am.spec), typeof(am.dist))
+    seg, sed = splitcoefs(se, typeof(am.spec), typeof(am.dist))
+    zzg = ccg ./ seg
+    zzd = ccd ./ sed
+    println(io, "\n", split("$(typeof(am.spec))", ".")[2], " model with ",
+            distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n\n",
+            "Volatility parameters:", "\n\n",
+            CoefTable(hcat(ccg, seg, zzg, 2.0 * normccdf.(abs.(zzg))),
+                      ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
+                      coefnames(typeof(am.spec)), 4
+                      )
+            )
+    length(sed) > 0 && println(io, "Distribution parameters:", "\n\n",
+                               CoefTable(hcat(ccd, sed, zzd, 2.0 * normccdf.(abs.(zzd))),
+                                         ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
+                                         coefnames(typeof(am.dist)), 4
+                                         )
+                              )
 end
 
 #from here https://stackoverflow.com/questions/46671965/printing-variable-subscripts-in-julia
