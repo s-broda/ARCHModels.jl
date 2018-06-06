@@ -5,7 +5,7 @@ end
 StdNormal(T::Type=Float64) = StdNormal{T}()
 rand(::StdNormal{T}) where {T} = randn(T)
 @inline logkernel(::Type{<:StdNormal}, x, coefs) = -abs2(x)/2
-@inline logconst(::Type{<:StdNormal}, coefs)  =  -log2π/2
+@inline logconst(::Type{<:StdNormal}, coefs::Vector{T}) where {T} =  -T(log2π)/2
 nparams(::Type{<:StdNormal}) = 0
 coefnames(::Type{<:StdNormal}) = String[]
 distname(::Type{<:StdNormal}) = "Gaussian"
@@ -49,5 +49,5 @@ function startingvals(::Type{<:StdTDist}, data::Array{T}) where {T}
     lower = convert(T, 2)
     upper = convert(T, 30)
     z = mean(abs.(data)./sqrt.(ht))
-    z > eabst(upper) ? [upper] : [find_zero(x->z-eabst(x), (lower, upper))]
+    z > eabst(upper) ? [upper] : [find_zero(x -> z-eabst(x), (lower, upper))]
 end
