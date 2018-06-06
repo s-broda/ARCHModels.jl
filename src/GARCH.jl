@@ -13,13 +13,13 @@ const _ARCH = GARCH{0}
 
 @inline presample(::Type{<:GARCH{p, q}}) where {p, q} = max(p, q)
 
-@inline function update!(ht, ::Type{<:GARCH{p,q}}, data, coefs, t) where {p, q}
-    ht[t] = coefs[1]
+@inline function update!(ht, ::Type{<:GARCH{p,q}}, MS::Type{<:MeanSpec}, data, garchcoefs, meancoefs, t) where {p, q}
+    ht[t] = garchcoefs[1]
     for i = 1:p
-        ht[t] += coefs[i+1]*ht[t-i]
+        ht[t] += garchcoefs[i+1]*ht[t-i]
     end
     for i = 1:q
-        ht[t] += coefs[i+1+p]*data[t-i]^2
+        ht[t] += garchcoefs[i+1+p]*(data[t-i]-mean(MS, meancoefs))^2
     end
     return nothing
 end

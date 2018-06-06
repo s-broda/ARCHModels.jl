@@ -13,14 +13,13 @@ am2 = ARCHModel(spec, data)
 fit!(am2)
 am3 = fit(am2)
 am4 = selectmodel(GARCH, datat, StdTDist)
-@test loglikelihood(ARCHModel(spec, data)) ==  ARCH.loglik!(ht, typeof(spec), StdNormal{}, data, spec.coefs)
+@test loglikelihood(ARCHModel(spec, data)) ==  ARCH.loglik!(ht, typeof(spec), StdNormal{Float64}, NoIntercept{Float64},  data, spec.coefs)
 @test nobs(am) == T
 @test dof(am) == 3
 
 @test coefnames(GARCH{1, 1}) == ["ω", "β₁", "α₁"]
 @test coefnames(am4) == ["ω", "β₁", "α₁", "ν"]
 @test all(coeftable(am4).cols[2] .== stderror(am4))
-
 
 @test all(isapprox.(coef(am), [0.9086850084210619, 0.9055267307122488, 0.050365843108442374], rtol=1e-4))
 @test all(isapprox.(stderror(am), [0.14583357347889914, 0.01035533071207874, 0.005222909457230848], rtol=1e-4))
@@ -30,7 +29,7 @@ am4 = selectmodel(GARCH, datat, StdTDist)
 
 @test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}([.1, .0, .0, .0]), data))
 @test_warn "negative" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), data[1:10]))
-e = @test_throws ARCH.NumParamError ARCH.loglik!(ht, typeof(spec), StdNormal{}, data, [0., 0., 0., 0.])
+e = @test_throws ARCH.NumParamError ARCH.loglik!(ht, typeof(spec), StdNormal{Float64}, NoIntercept{Float64}, data, [0., 0., 0., 0.])
 str = sprint(showerror, e.value)
 @test startswith(str, "incorrect number of parameters")
 @test_throws ARCH.NumParamError GARCH{1, 1}([.1])
