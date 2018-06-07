@@ -12,7 +12,7 @@ __precompile__()
 #sim should take data 2nd
 #actually pass instances everywhere, at least for mean
 #use kwargs more
-
+#constructors for dist/means should take vectors, not scalars.
 module ARCH
 using Reexport
 @reexport using StatsBase

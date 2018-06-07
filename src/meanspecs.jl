@@ -22,8 +22,9 @@ function mean(::Type{<:NoIntercept}, meancoefs::Vector{T}) where {T}
 end
 struct Intercept{T} <: MeanSpec{T}
     coefs::Vector{T}
-    Intercept{T}(coefs) where {T} = new{T}(coefs)
+    Intercept{T}(coefs) where {T} = new{T}([coefs])
 end
+Intercept(mu::T) where {T} = Intercept{T}(mu)
 nparams(::Type{<:Intercept}) = 1
 coefnames(::Type{<:Intercept}) = "μ"
 
