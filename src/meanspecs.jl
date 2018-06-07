@@ -26,7 +26,7 @@ struct Intercept{T} <: MeanSpec{T}
 end
 Intercept(mu::T) where {T} = Intercept{T}(mu)
 nparams(::Type{<:Intercept}) = 1
-coefnames(::Type{<:Intercept}) = "μ"
+coefnames(::Type{<:Intercept}) = ["μ"]
 
 function constraints(::Type{<:Intercept}, ::Type{T})  where {T<:AbstractFloat}
     lower = T[-Inf]
