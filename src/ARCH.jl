@@ -243,15 +243,16 @@ function show(io::IO, am::ARCHModel)
     zzg = ccg ./ seg
     zzd = ccd ./ sed
     zzm = ccm ./ sem
+    println(io, "\n", split("$(typeof(am.spec))", ".")[2], " model with ",
+            distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n\n")
+
     length(sem) > 0 && println(io, "Mean equation parameters:", "\n\n",
                                CoefTable(hcat(ccm, sem, zzm, 2.0 * normccdf.(abs.(zzm))),
                                          ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
                                          coefnames(typeof(am.meanspec)), 4
                                          )
                               )
-    println(io, "\n", split("$(typeof(am.spec))", ".")[2], " model with ",
-            distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n\n",
-            "Volatility parameters:", "\n\n",
+    println(io, "Volatility parameters:", "\n\n",
             CoefTable(hcat(ccg, seg, zzg, 2.0 * normccdf.(abs.(zzg))),
                       ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
                       coefnames(typeof(am.spec)), 4
