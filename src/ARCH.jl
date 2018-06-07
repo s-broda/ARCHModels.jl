@@ -10,6 +10,8 @@ __precompile__()
 #how to export arch?
 #what should simulate return?
 #sim should take data 2nd
+#actually pass instances everywhere, at least for mean
+#use kwargs more
 
 module ARCH
 using Reexport

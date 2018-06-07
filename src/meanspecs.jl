@@ -34,7 +34,7 @@ function constraints(::Type{<:Intercept}, ::Type{T})  where {T<:AbstractFloat}
 end
 
 function startingvals(::Type{<:Intercept}, data::Vector{T})  where {T<:AbstractFloat}
-    return mean(data)
+    return [mean(data)]
 end
 
 function mean(::Type{<:Intercept}, meancoefs::Vector{T}) where {T}
