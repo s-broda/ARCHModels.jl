@@ -16,7 +16,7 @@ fit!(am2)
 am3 = fit(am2)
 am4 = selectmodel(GARCH, datat; dist=StdTDist, meanspec=NoIntercept)
 am5 = selectmodel(GARCH, datam; dist=StdTDist, meanspec=Intercept)
-
+am6 = fit(GARCH{1, 1}, data)
 
 
 @test loglikelihood(ARCHModel(spec, data; meanspec=NoIntercept())) ==  ARCH.loglik!(ht, typeof(spec), StdNormal{Float64}, NoIntercept{Float64},  data, spec.coefs)
@@ -33,6 +33,7 @@ am5 = selectmodel(GARCH, datam; dist=StdTDist, meanspec=Intercept)
 @test all(am3.spec.coefs .== am2.spec.coefs)
 @test all(isapprox(coef(am4), [0.8306902920885605, 0.9189514425541352, 0.04207946140844637, 3.8356660627658075], rtol=1e-4))
 @test all(isapprox(coef(am5), [0.8306060010899426, 0.9189549832561451, 0.04208828412801287, 3.834870661953542, 2.991845199038339], rtol=1e-4))
+@test all(isapprox(coef(am6), [0.910518085511129, 0.9054119432933296, 0.050389241671739915, 0.027704786149577398], rtol=1e-4))
 @test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}([.1, .0, .0, .0]), data; meanspec=NoIntercept()))
 @test_warn "negative" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), data[1:10]; meanspec=NoIntercept()))
 e = @test_throws ARCH.NumParamError ARCH.loglik!(ht, typeof(spec), StdNormal{Float64}, NoIntercept{Float64}, data, [0., 0., 0., 0.])

@@ -170,7 +170,7 @@ function fit!(ht::Vector{T}, garchcoefs::Vector{T}, distcoefs::Vector{T}, meanco
     return nothing
 end
 
-fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T}, meanspec::Type{MS}=Intercept{T}, algorithm=BFGS, kwargs...) where {VS<:VolatilitySpec, SD<:StandardizedDistribution, MS<:MeanSpec, T<:AbstractFloat} = (ht = zeros(data); coefs = startingvals(VS, data); distcoefs = startingvals(SD, data); meancoefs = startingvals(MS, data); fit!(ht, coefs, distcoefs, meancoefs, VS, SD, MS, data, algorithm; kwargs...); return ARCHModel(VS(coefs), data, ht, SD(distcoefs...), MS(meancoefs...)))
+fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T}, meanspec::Type{MS}=Intercept{T}, algorithm=BFGS, kwargs...) where {VS<:VolatilitySpec, SD<:StandardizedDistribution, MS<:MeanSpec, T<:AbstractFloat} = (ht = zeros(data); coefs = startingvals(VS, data); distcoefs = startingvals(SD, data); meancoefs = startingvals(MS, data); fit!(ht, coefs, distcoefs, meancoefs, VS, SD, MS, data, algorithm; kwargs...); return ARCHModel(VS(coefs), data, ht, SD(distcoefs), MS(meancoefs)))
 fit!(AM::ARCHModel; algorithm=BFGS, kwargs...) = (AM.spec.coefs.=startingvals(typeof(AM.spec), AM.data); AM.dist.coefs.=startingvals(typeof(AM.dist), AM.data); AM.meanspec.coefs.=startingvals(typeof(AM.meanspec), AM.data); fit!(AM.ht, AM.spec.coefs, AM.dist.coefs, AM.meanspec.coefs, typeof(AM.spec), typeof(AM.dist), typeof(AM.meanspec), AM.data; algorithm=algorithm, kwargs...))
 fit(AM::ARCHModel; algorithm=BFGS, kwargs...) = (AM2=deepcopy(AM); fit!(AM2; algorithm=algorithm, kwargs...); return AM2)
 
