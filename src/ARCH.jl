@@ -11,7 +11,6 @@ __precompile__()
 #what should simulate return?
 #sim should take data 2nd
 #actually pass instances everywhere, at least for mean
-#constructors for dist/means should take vectors, not scalars.
 #test intercepts
 
 module ARCH
@@ -65,7 +64,7 @@ struct ARCHModel{T<:AbstractFloat, VS<:VolatilitySpec, SD<:StandardizedDistribut
     end
 end
 ARCHModel(spec::VS, data::Vector{T}, ht::Vector{T}, dist::SD, meanspec::MS) where {T<:AbstractFloat, VS<:VolatilitySpec, SD<:StandardizedDistribution, MS<:MeanSpec}  = ARCHModel{T, VS, SD, MS}(spec, data, ht, dist, meanspec)
-ARCHModel(spec, data::Vector{T}, ht::Vector{T} = zeros(data); dist=StdNormal{T}(), meanspec=Intercept{T}()) where {T} = ( AM = ARCHModel(spec, data, ht, dist, meanspec); loglik!(AM.ht, typeof(spec), typeof(dist), typeof(meanspec), AM.data, vcat(spec.coefs, dist.coefs, meanspec.coefs)); AM)
+ARCHModel(spec, data::Vector{T}, ht::Vector{T} = zeros(data); dist=StdNormal{T}(), meanspec=NoIntercept{T}()) where {T} = ( AM = ARCHModel(spec, data, ht, dist, meanspec); loglik!(AM.ht, typeof(spec), typeof(dist), typeof(meanspec), AM.data, vcat(spec.coefs, dist.coefs, meanspec.coefs)); AM)
 
 loglikelihood(am::ARCHModel) = loglik!(zeros(am.data), typeof(am.spec), typeof(am.dist), typeof(am.meanspec), am.data, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
 nobs(am::ARCHModel) = length(am.data)

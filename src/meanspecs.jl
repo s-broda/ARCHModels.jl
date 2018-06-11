@@ -1,9 +1,8 @@
 struct NoIntercept{T} <: MeanSpec{T}
     coefs::Vector{T}
-    NoIntercept{T}() where {T} = new{T}(T[])
 end
-NoIntercept(T::Type=Float64) = NoIntercept{T}()
-
+NoIntercept(T::Type=Float64) = NoIntercept(T[])
+NoIntercept{T}() where {T} = NoIntercept(T[])
 nparams(::Type{<:NoIntercept}) = 0
 coefnames(::Type{<:NoIntercept}) = String[]
 
@@ -22,9 +21,8 @@ function mean(::Type{<:NoIntercept}, meancoefs::Vector{T}) where {T}
 end
 struct Intercept{T} <: MeanSpec{T}
     coefs::Vector{T}
-    Intercept{T}(coefs) where {T} = new{T}([coefs])
 end
-Intercept(mu::T) where {T} = Intercept{T}(mu)
+Intercept(mu::T) where {T} = Intercept([mu])
 nparams(::Type{<:Intercept}) = 1
 coefnames(::Type{<:Intercept}) = ["μ"]
 
