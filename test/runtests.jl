@@ -24,7 +24,7 @@ am5 = selectmodel(GARCH, datam; dist=StdTDist, meanspec=Intercept)
 @test dof(am) == 3
 
 @test coefnames(GARCH{1, 1}) == ["ω", "β₁", "α₁"]
-@test coefnames(am4) == ["ω", "β₁", "α₁", "ν"]
+@test coefnames(am5) == ["ω", "β₁", "α₁", "ν", "μ"]
 @test all(coeftable(am4).cols[2] .== stderror(am4))
 
 @test all(isapprox.(coef(am), [0.9086850084210619, 0.9055267307122488, 0.050365843108442374], rtol=1e-4))
