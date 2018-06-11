@@ -7,12 +7,18 @@ srand(1);
 data = simulate(spec, T; meanspec=NoIntercept());
 srand(1);
 datat = simulate(spec, T; dist=StdTDist(4), meanspec=NoIntercept())
+srand(1);
+datam = simulate(spec, T; dist=StdTDist(4), meanspec=Intercept(3))
 ht = zeros(data);
 am = selectmodel(GARCH, data; dist=StdNormal, meanspec=NoIntercept)
-am2 = ARCHModel(spec, data, meanspec=NoIntercept())
+am2 = ARCHModel(spec, data)
 fit!(am2)
 am3 = fit(am2)
 am4 = selectmodel(GARCH, datat; dist=StdTDist, meanspec=NoIntercept)
+am5 = selectmodel(GARCH, datam; dist=StdTDist, meanspec=Intercept)
+
+
+
 @test loglikelihood(ARCHModel(spec, data; meanspec=NoIntercept())) ==  ARCH.loglik!(ht, typeof(spec), StdNormal{Float64}, NoIntercept{Float64},  data, spec.coefs)
 @test nobs(am) == T
 @test dof(am) == 3
@@ -26,7 +32,7 @@ am4 = selectmodel(GARCH, datat; dist=StdTDist, meanspec=NoIntercept)
 @test all(am2.spec.coefs .== am.spec.coefs)
 @test all(am3.spec.coefs .== am2.spec.coefs)
 @test all(isapprox(coef(am4), [0.8306902920885605, 0.9189514425541352, 0.04207946140844637, 3.8356660627658075], rtol=1e-4))
-
+@test all(isapprox(coef(am5), [0.8306060010899426, 0.9189549832561451, 0.04208828412801287, 3.834870661953542, 2.991845199038339], rtol=1e-4))
 @test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}([.1, .0, .0, .0]), data; meanspec=NoIntercept()))
 @test_warn "negative" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), data[1:10]; meanspec=NoIntercept()))
 e = @test_throws ARCH.NumParamError ARCH.loglik!(ht, typeof(spec), StdNormal{Float64}, NoIntercept{Float64}, data, [0., 0., 0., 0.])

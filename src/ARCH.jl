@@ -5,13 +5,11 @@ __precompile__()
 #marketdata
 #PkgBenchmark
 #HAC s.e.s from CovariancesMatrices.jl?
-#bic table
 #simulate ARCHModel
 #how to export arch?
 #what should simulate return?
 #sim should take data 2nd
 #actually pass instances everywhere, at least for mean
-#test intercepts
 
 module ARCH
 using Reexport

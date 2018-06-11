@@ -22,7 +22,8 @@ end
 struct Intercept{T} <: MeanSpec{T}
     coefs::Vector{T}
 end
-Intercept(mu::T) where {T} = Intercept([mu])
+Intercept(mu) = Intercept([mu])
+Intercept(mu::Integer) = Intercept(float(mu))
 nparams(::Type{<:Intercept}) = 1
 coefnames(::Type{<:Intercept}) = ["μ"]
 
