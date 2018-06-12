@@ -28,14 +28,14 @@ else
 end
 
 import Base: show, showerror, Random.rand, eltype, mean
-import StatsBase: StatisticalModel, loglikelihood, nobs, fit, fit!, adjr2, aic, bic, aicc, dof, coef, coefnames, coeftable, CoefTable
-export ARCHModel, VolatilitySpec, simulate, selectmodel, StdNormal, StdTDist, Intercept, NoIntercept
+import StatsBase: StatisticalModel, loglikelihood, nobs, fit, fit!, adjr2, aic,
+                  bic, aicc, dof, coef, coefnames, coeftable, CoefTable
+export ARCHModel, VolatilitySpec, simulate, selectmodel, StdNormal, StdTDist,
+       Intercept, NoIntercept
 
 abstract type VolatilitySpec{T} end
-abstract type StandardizedDistribution{T} <: Distribution{Univariate, Continuous}
-end
+abstract type StandardizedDistribution{T} <: Distribution{Univariate, Continuous} end
 abstract type MeanSpec{T} end
-
 
 struct NumParamError <: Exception
     expected::Int
@@ -47,10 +47,19 @@ struct LengthMismatchError <: Exception
     length2::Int
 end
 
-showerror(io::IO, e::NumParamError) = print(io, "incorrect number of parameters: expected $(e.expected), got $(e.got).")
-showerror(io::IO, e::LengthMismatchError) = print(io, "length of arrays does not match: $(e.length1) and $(e.length2).")
+function showerror(io::IO, e::NumParamError)
+    print(io, "incorrect number of parameters: expected $(e.expected), got $(e.got).")
+end
 
-struct ARCHModel{T<:AbstractFloat, VS<:VolatilitySpec, SD<:StandardizedDistribution{T}, MS<:MeanSpec{T}} <: StatisticalModel
+function showerror(io::IO, e::LengthMismatchError)
+    print(io, "length of arrays does not match: $(e.length1) and $(e.length2).")
+end
+
+struct ARCHModel{T<:AbstractFloat,
+                 VS<:VolatilitySpec,
+                 SD<:StandardizedDistribution{T},
+                 MS<:MeanSpec{T}
+                 } <: StatisticalModel
     spec::VS
     data::Vector{T}
     ht::Vector{T}
@@ -61,22 +70,57 @@ struct ARCHModel{T<:AbstractFloat, VS<:VolatilitySpec, SD<:StandardizedDistribut
         new(deepcopy(spec), copy(data), copy(ht), dist, meanspec)
     end
 end
-ARCHModel(spec::VS, data::Vector{T}, ht::Vector{T}, dist::SD, meanspec::MS) where {T<:AbstractFloat, VS<:VolatilitySpec, SD<:StandardizedDistribution, MS<:MeanSpec}  = ARCHModel{T, VS, SD, MS}(spec, data, ht, dist, meanspec)
-ARCHModel(spec, data::Vector{T}, ht::Vector{T} = zeros(data); dist=StdNormal{T}(), meanspec=NoIntercept{T}()) where {T} = ( AM = ARCHModel(spec, data, ht, dist, meanspec); loglik!(AM.ht, typeof(spec), typeof(dist), typeof(meanspec), AM.data, vcat(spec.coefs, dist.coefs, meanspec.coefs)); AM)
 
-loglikelihood(am::ARCHModel) = loglik!(zeros(am.data), typeof(am.spec), typeof(am.dist), typeof(am.meanspec), am.data, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
+function ARCHModel(spec::VS,
+          data::Vector{T},
+          ht::Vector{T},
+          dist::SD,
+          meanspec::MS
+          ) where {T<:AbstractFloat,
+                   VS<:VolatilitySpec,
+                   SD<:StandardizedDistribution,
+                   MS<:MeanSpec
+                   }
+    ARCHModel{T, VS, SD, MS}(spec, data, ht, dist, meanspec)
+end
+
+function ARCHModel(spec,
+          data::Vector{T},
+          ht::Vector{T} = zeros(data);
+          dist=StdNormal{T}(),
+          meanspec=NoIntercept{T}()
+          ) where {T}
+    AM = ARCHModel(spec, data, ht, dist, meanspec)
+    loglik!(AM.ht, typeof(spec), typeof(dist), typeof(meanspec), AM.data,
+            vcat(spec.coefs, dist.coefs, meanspec.coefs)
+            )
+    return AM
+end
+
+loglikelihood(am::ARCHModel) = loglik!(zeros(am.data), typeof(am.spec), typeof(am.dist),
+                                       typeof(am.meanspec), am.data,
+                                       vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs)
+                                       )
+
 nobs(am::ARCHModel) = length(am.data)
 dof(am::ARCHModel) = nparams(typeof(am.spec)) + nparams(typeof(am.dist)) + nparams(typeof(am.meanspec))
 coef(am::ARCHModel)=vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs)
-coefnames(am::ARCHModel) = vcat(coefnames(typeof(am.spec)), coefnames(typeof(am.dist)), coefnames(typeof(am.meanspec)))
+coefnames(am::ARCHModel) = vcat(coefnames(typeof(am.spec)),
+                                coefnames(typeof(am.dist)),
+                                coefnames(typeof(am.meanspec))
+                                )
 
-function simulate(spec::VolatilitySpec{T}, nobs; dist::StandardizedDistribution{T}=StdNormal{T}(), meanspec::MeanSpec{T}=Intercept{T}()) where {T<:AbstractFloat}
+function simulate(spec::VolatilitySpec{T}, nobs;
+                  dist::StandardizedDistribution{T}=StdNormal{T}(),
+                  meanspec::MeanSpec{T}=Intercept{T}()
+                  ) where {T<:AbstractFloat}
     const warmup = 100
     data = zeros(T, nobs+warmup)
     ht = zeros(T, nobs+warmup)
     sim!(ht, spec, dist, meanspec, data)
     data[warmup+1:warmup+nobs]
 end
+
 function splitcoefs(coefs, VS, SD, MS)
     ng = nparams(VS)
     nd = nparams(SD)
@@ -87,7 +131,11 @@ function splitcoefs(coefs, VS, SD, MS)
     meancoefs = coefs[ng+nd+1:ng+nd+nm]
     return garchcoefs, distcoefs, meancoefs
 end
-function loglik!(ht::Vector{T2}, ::Type{VS}, ::Type{SD}, ::Type{MS}, data::Vector{<:AbstractFloat}, coefs::Vector{T2}) where {VS<:VolatilitySpec, SD<:StandardizedDistribution, MS<:MeanSpec, T2}
+function loglik!(ht::Vector{T2}, ::Type{VS}, ::Type{SD}, ::Type{MS},
+                 data::Vector{<:AbstractFloat}, coefs::Vector{T2}
+                 ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
+                          MS<:MeanSpec, T2
+                          }
     T = length(data)
     r = presample(VS)
     garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, MS)
@@ -110,7 +158,9 @@ function logliks(spec, dist, meanspec, data, coefs::Vector{T}) where {T}
     garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, spec, dist, meanspec)
     ht = zeros(T, length(data))
     loglik!(ht, spec, dist, meanspec, data, coefs)
-    LLs = -log.(ht)/2+logkernel.(dist, (data-mean(meanspec, meancoefs))./sqrt.(ht), Ref{Vector{T}}(distcoefs))+logconst(dist, distcoefs)
+    LLs = -log.(ht)/2+logkernel.(dist, (data-mean(meanspec, meancoefs))./sqrt.(ht),
+                                 Ref{Vector{T}}(distcoefs)
+                                 ) + logconst(dist, distcoefs)
 end
 
 function stderror(am::ARCHModel)
@@ -134,7 +184,9 @@ function stderror(am::ARCHModel)
     return sqrt.(abs.(v)) #Huber sandwich
 end
 
-function sim!(ht::Vector{T1}, spec, dist::StandardizedDistribution{T1}, meanspec::MeanSpec{T1}, data::Vector{T1}) where {T1<:AbstractFloat}
+function sim!(ht::Vector{T1}, spec, dist::StandardizedDistribution{T1},
+              meanspec::MeanSpec{T1}, data::Vector{T1}
+              ) where {T1<:AbstractFloat}
     T =  length(data)
     r = presample(typeof(spec))
     @inbounds begin
@@ -151,7 +203,10 @@ function sim!(ht::Vector{T1}, spec, dist::StandardizedDistribution{T1}, meanspec
     return nothing
 end
 
-function fit!(ht::Vector{T}, garchcoefs::Vector{T}, distcoefs::Vector{T}, meancoefs::Vector{T}, ::Type{VS}, ::Type{SD}, ::Type{MS}, data::Vector{T}, algorithm=BFGS; kwargs...) where {VS<:VolatilitySpec, SD<:StandardizedDistribution, MS<:MeanSpec, T<:AbstractFloat}
+function fit!(ht::Vector{T}, garchcoefs::Vector{T}, distcoefs::Vector{T},
+              meancoefs::Vector{T}, ::Type{VS}, ::Type{SD}, ::Type{MS},
+              data::Vector{T}; algorithm=BFGS, kwargs...
+              ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution, MS<:MeanSpec, T<:AbstractFloat}
     obj = x -> -loglik!(ht, VS, SD, MS, data, x)
     lowergarch, uppergarch = constraints(VS, T)
     lowerdist, upperdist = constraints(SD, T)
@@ -170,26 +225,60 @@ function fit!(ht::Vector{T}, garchcoefs::Vector{T}, distcoefs::Vector{T}, meanco
     return nothing
 end
 
-fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T}, meanspec::Type{MS}=Intercept{T}, algorithm=BFGS, kwargs...) where {VS<:VolatilitySpec, SD<:StandardizedDistribution, MS<:MeanSpec, T<:AbstractFloat} = (ht = zeros(data); coefs = startingvals(VS, data); distcoefs = startingvals(SD, data); meancoefs = startingvals(MS, data); fit!(ht, coefs, distcoefs, meancoefs, VS, SD, MS, data, algorithm; kwargs...); return ARCHModel(VS(coefs), data, ht, SD(distcoefs), MS(meancoefs)))
-fit!(AM::ARCHModel; algorithm=BFGS, kwargs...) = (AM.spec.coefs.=startingvals(typeof(AM.spec), AM.data); AM.dist.coefs.=startingvals(typeof(AM.dist), AM.data); AM.meanspec.coefs.=startingvals(typeof(AM.meanspec), AM.data); fit!(AM.ht, AM.spec.coefs, AM.dist.coefs, AM.meanspec.coefs, typeof(AM.spec), typeof(AM.dist), typeof(AM.meanspec), AM.data; algorithm=algorithm, kwargs...))
-fit(AM::ARCHModel; algorithm=BFGS, kwargs...) = (AM2=deepcopy(AM); fit!(AM2; algorithm=algorithm, kwargs...); return AM2)
+function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T}, meanspec::Type{MS}=Intercept{T},
+    algorithm=BFGS, kwargs...
+    ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
+             MS<:MeanSpec, T<:AbstractFloat
+             }
+    ht = zeros(data)
+    coefs = startingvals(VS, data)
+    distcoefs = startingvals(SD, data)
+    meancoefs = startingvals(MS, data)
+    fit!(ht, coefs, distcoefs, meancoefs, VS, SD, MS, data; algorithm=algorithm, kwargs...)
+    return ARCHModel(VS(coefs), data, ht, SD(distcoefs), MS(meancoefs))
+end
+
+function fit!(AM::ARCHModel; algorithm=BFGS, kwargs...)
+    AM.spec.coefs.=startingvals(typeof(AM.spec), AM.data)
+    AM.dist.coefs.=startingvals(typeof(AM.dist), AM.data)
+    AM.meanspec.coefs.=startingvals(typeof(AM.meanspec), AM.data)
+    fit!(AM.ht, AM.spec.coefs, AM.dist.coefs, AM.meanspec.coefs, typeof(AM.spec),
+         typeof(AM.dist), typeof(AM.meanspec), AM.data; algorithm=algorithm, kwargs...
+         )
+end
+
+function fit(AM::ARCHModel; algorithm=BFGS, kwargs...)
+    AM2=deepcopy(AM)
+    fit!(AM2; algorithm=algorithm, kwargs...)
+    return AM2
+end
 
 
-function selectmodel(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T}, meanspec::Type{MS}=Intercept{T}, maxpq=3, criterion=bic, show_trace=false, kwargs...) where {VS<:VolatilitySpec, T<:AbstractFloat, SD<:StandardizedDistribution, MS<:MeanSpec}
+function selectmodel(::Type{VS}, data::Vector{T};
+                     dist::Type{SD}=StdNormal{T}, meanspec::Type{MS}=Intercept{T},
+                     maxpq=3, criterion=bic, show_trace=false, kwargs...
+                     ) where {VS<:VolatilitySpec, T<:AbstractFloat,
+                              SD<:StandardizedDistribution, MS<:MeanSpec
+                              }
     ndims = my_unwrap_unionall(VS)-1#e.g., two (p and q) for GARCH{p, q, T}
     res = Array{ARCHModel, ndims}(ntuple(i->maxpq, ndims))
     Threads.@threads for ind in collect(CartesianRange(size(res)))
         res[ind] = fit(VS{ind.I...}, data; dist=dist, meanspec=meanspec)
     end
     for ind in collect(CartesianRange(size(res))) #seperate loop because juno crashes otherwise
-        show_trace && println(split("$(VS{ind.I...})", ".")[2], " model has ", uppercase(split("$criterion", ".")[2]), " ", criterion(res[ind]), ".")
+        show_trace && println(split("$(VS{ind.I...})", ".")[2], " model has ",
+                              uppercase(split("$criterion", ".")[2]), " ",
+                              criterion(res[ind]), "."
+                              )
     end
     crits = criterion.(res)
     _, ind = findmin(crits)
     return res[ind]
 end
 
-function fit(::Type{SD}, data::Vector{T}; algorithm=BFGS, kwargs...) where {SD<:StandardizedDistribution, T<:AbstractFloat}
+function fit(::Type{SD}, data::Vector{T};
+             algorithm=BFGS, kwargs...
+             ) where {SD<:StandardizedDistribution, T<:AbstractFloat}
     nparams(SD) == 0 && return SD{T}()
     obj = x -> -loglik(SD, data, x)
     lower, upper = constraints(SD, T)
@@ -200,7 +289,9 @@ function fit(::Type{SD}, data::Vector{T}; algorithm=BFGS, kwargs...) where {SD<:
 end
 
 
-function loglik(::Type{SD}, data::Vector{<:AbstractFloat}, coefs::Vector{T2}) where {SD<:StandardizedDistribution, T2}
+function loglik(::Type{SD}, data::Vector{<:AbstractFloat},
+                coefs::Vector{T2}
+                ) where {SD<:StandardizedDistribution, T2}
     T = length(data)
     length(coefs) == nparams(SD) || throw(NumParamError(nparams(SD), length(coefs)))
     @inbounds begin
@@ -236,8 +327,12 @@ end
 function show(io::IO, am::ARCHModel)
     cc = coef(am)
     se = stderror(am)
-    ccg, ccd, ccm = splitcoefs(cc, typeof(am.spec), typeof(am.dist), typeof(am.meanspec))
-    seg, sed, sem = splitcoefs(se, typeof(am.spec), typeof(am.dist), typeof(am.meanspec))
+    ccg, ccd, ccm = splitcoefs(cc, typeof(am.spec),
+                               typeof(am.dist), typeof(am.meanspec)
+                               )
+    seg, sed, sem = splitcoefs(se, typeof(am.spec),
+                               typeof(am.dist), typeof(am.meanspec)
+                               )
     zzg = ccg ./ seg
     zzd = ccd ./ sed
     zzm = ccm ./ sem

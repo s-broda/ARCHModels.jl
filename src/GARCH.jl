@@ -2,7 +2,10 @@ export GARCH
 export _ARCH #ARCH conflicts with module name
 struct GARCH{p, q, T<:AbstractFloat} <: VolatilitySpec{T}
     coefs::Vector{T}
-    GARCH{p, q, T}(coefs::Vector{T}) where {p, q, T}  = (length(coefs) == nparams(GARCH{p, q})  || throw(NumParamError(nparams(GARCH{p, q}), length(coefs))); new{p, q, T}(coefs))
+    function GARCH{p, q, T}(coefs::Vector{T}) where {p, q, T}
+        length(coefs) == nparams(GARCH{p, q})  || throw(NumParamError(nparams(GARCH{p, q}), length(coefs)))
+        new{p, q, T}(coefs)
+    end
 end
 GARCH{p, q}(coefs::Vector{T}) where {p, q, T}  = GARCH{p, q, T}(coefs)
 
@@ -13,7 +16,9 @@ const _ARCH = GARCH{0}
 
 @inline presample(::Type{<:GARCH{p, q}}) where {p, q} = max(p, q)
 
-@inline function update!(ht, ::Type{<:GARCH{p,q}}, MS::Type{<:MeanSpec}, data, garchcoefs, meancoefs, t) where {p, q}
+@inline function update!(ht, ::Type{<:GARCH{p,q}}, MS::Type{<:MeanSpec},
+                         data, garchcoefs, meancoefs, t
+                         ) where {p, q}
     ht[t] = garchcoefs[1]
     for i = 1:p
         ht[t] += garchcoefs[i+1]*ht[t-i]
