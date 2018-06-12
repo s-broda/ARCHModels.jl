@@ -75,6 +75,7 @@ io = IOBuffer()
 str = sprint(io -> show(io, am))
 @test startswith(str, "\nGARCH{1,1")
 @test selectmodel(ARCH._ARCH, data).spec.coefs == fit(ARCH._ARCH{3}, data).spec.coefs
+@test typeof(StdNormal())==typeof(StdNormal(Float64[]))
 @test fit(StdNormal, data).coefs == Float64[]
 @test coefnames(StdNormal) == String[]
 @test ARCH.distname(StdNormal) == "Gaussian"
