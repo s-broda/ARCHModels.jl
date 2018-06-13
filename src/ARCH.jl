@@ -111,10 +111,10 @@ coefnames(am::ARCHModel) = vcat(coefnames(typeof(am.spec)),
                                 )
 
 function simulate(spec::VolatilitySpec{T}, nobs;
+                  warmup=100,
                   dist::StandardizedDistribution{T}=StdNormal{T}(),
                   meanspec::MeanSpec{T}=NoIntercept{T}()
                   ) where {T<:AbstractFloat}
-    const warmup = 100
     data = zeros(T, nobs+warmup)
     ht = zeros(T, nobs+warmup)
     sim!(ht, data, spec, dist, meanspec)
