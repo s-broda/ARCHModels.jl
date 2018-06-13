@@ -17,7 +17,7 @@ am3 = fit(am2)
 am4 = selectmodel(GARCH, datat; dist=StdTDist, meanspec=NoIntercept)
 am5 = selectmodel(GARCH, datam; dist=StdTDist)
 am6 = fit(GARCH{1, 1}, data)
-
+am7 = selectmodel(GARCH, data; maxpq=2)
 @test loglikelihood(ARCHModel(spec, data)) ==  ARCH.loglik!(ht,
                                                             typeof(spec),
                                                             StdNormal{Float64},
@@ -59,7 +59,13 @@ am6 = fit(GARCH{1, 1}, data)
                                0.050389241671739915,
                                0.027704786149577398], rtol=1e-4))
 
+@test all(isapprox(coef(am7), [0.9105180359631794,
+                               0.905411947022872,
+                               0.050389240320331465,
+                               0.027704784468756988], rtol=1e-4))
+                               
 @test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}([.1, .0, .0, .0]), data))
+
 @test_warn "negative" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), data[1:10]))
 e = @test_throws ARCH.NumParamError ARCH.loglik!(ht, typeof(spec), StdNormal{Float64},
                                                  NoIntercept{Float64}, data,

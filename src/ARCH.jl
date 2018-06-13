@@ -10,11 +10,11 @@ __precompile__()
 #how to export arch?
 #what should simulate return?
 #actually pass instances everywhere, at least for mean
-
+#EGARCH: fix simulate, test
 module ARCH
 using Reexport
 @reexport using StatsBase
-using StatsFuns: normccdf, normlogpdf, log2π, RFunctions.tdistrand
+using StatsFuns: normcdf, normccdf, normlogpdf, log2π, RFunctions.tdistrand
 using Optim
 using ForwardDiff
 using Distributions
@@ -36,6 +36,8 @@ export ARCHModel, VolatilitySpec, simulate, selectmodel, StdNormal, StdTDist,
 abstract type VolatilitySpec{T} end
 abstract type StandardizedDistribution{T} <: Distribution{Univariate, Continuous} end
 abstract type MeanSpec{T} end
+
+Base.@irrational sqrt2invpi 0.79788456080286535587 sqrt(big(2)/big(π))
 
 struct NumParamError <: Exception
     expected::Int
@@ -366,4 +368,5 @@ subscript(i::Integer) = i<0 ? error("$i is negative") : join('₀'+d for d in re
 include("meanspecs.jl")
 include("standardizeddistributions.jl")
 include("GARCH.jl")
+include("EGARCH.jl")
 end#module
