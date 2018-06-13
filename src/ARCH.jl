@@ -8,7 +8,6 @@ __precompile__()
 #simulate ARCHModel
 #how to export arch?
 #what should simulate return?
-#sim should take data 2nd
 #actually pass instances everywhere, at least for mean
 
 module ARCH
@@ -117,7 +116,7 @@ function simulate(spec::VolatilitySpec{T}, nobs;
     const warmup = 100
     data = zeros(T, nobs+warmup)
     ht = zeros(T, nobs+warmup)
-    sim!(ht, spec, dist, meanspec, data)
+    sim!(ht, data, spec, dist, meanspec)
     data[warmup+1:warmup+nobs]
 end
 
@@ -184,8 +183,9 @@ function stderror(am::ARCHModel)
     return sqrt.(abs.(v)) #Huber sandwich
 end
 
-function sim!(ht::Vector{T1}, spec, dist::StandardizedDistribution{T1},
-              meanspec::MeanSpec{T1}, data::Vector{T1}
+function sim!(ht::Vector{T1},  data::Vector{T1}, spec,
+              dist::StandardizedDistribution{T1},
+              meanspec::MeanSpec{T1}
               ) where {T1<:AbstractFloat}
     T =  length(data)
     r = presample(typeof(spec))
