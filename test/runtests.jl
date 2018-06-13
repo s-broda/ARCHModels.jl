@@ -4,18 +4,18 @@ using ARCH
 T = 10^4;
 spec = GARCH{1, 1}([1., .9, .05])
 srand(1);
-data = simulate(spec, T; meanspec=NoIntercept());
+data = simulate(spec, T);
 srand(1);
-datat = simulate(spec, T; dist=StdTDist(4), meanspec=NoIntercept())
+datat = simulate(spec, T; dist=StdTDist(4))
 srand(1);
 datam = simulate(spec, T; dist=StdTDist(4), meanspec=Intercept(3))
 ht = zeros(data);
-am = selectmodel(GARCH, data; dist=StdNormal, meanspec=NoIntercept)
+am = selectmodel(GARCH, data; meanspec=NoIntercept)
 am2 = ARCHModel(spec, data)
 fit!(am2)
 am3 = fit(am2)
 am4 = selectmodel(GARCH, datat; dist=StdTDist, meanspec=NoIntercept)
-am5 = selectmodel(GARCH, datam; dist=StdTDist, meanspec=Intercept)
+am5 = selectmodel(GARCH, datam; dist=StdTDist)
 am6 = fit(GARCH{1, 1}, data)
 
 @test loglikelihood(ARCHModel(spec, data)) ==  ARCH.loglik!(ht,

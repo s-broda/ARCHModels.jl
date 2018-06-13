@@ -1,4 +1,5 @@
 __precompile__()
+
 #Todo:
 #docs
 #plotting via timeseries
@@ -111,7 +112,7 @@ coefnames(am::ARCHModel) = vcat(coefnames(typeof(am.spec)),
 
 function simulate(spec::VolatilitySpec{T}, nobs;
                   dist::StandardizedDistribution{T}=StdNormal{T}(),
-                  meanspec::MeanSpec{T}=Intercept{T}()
+                  meanspec::MeanSpec{T}=NoIntercept{T}()
                   ) where {T<:AbstractFloat}
     const warmup = 100
     data = zeros(T, nobs+warmup)
@@ -365,5 +366,4 @@ subscript(i::Integer) = i<0 ? error("$i is negative") : join('₀'+d for d in re
 include("meanspecs.jl")
 include("standardizeddistributions.jl")
 include("GARCH.jl")
-
 end#module
