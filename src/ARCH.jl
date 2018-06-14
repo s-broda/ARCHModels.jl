@@ -10,6 +10,7 @@ __precompile__()
 #how to export arch?
 #what should simulate return?
 #actually pass instances everywhere, at least for mean
+#make lht and zt part of ARCHModel?
 module ARCH
 using Reexport
 @reexport using StatsBase
