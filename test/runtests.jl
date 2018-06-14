@@ -16,8 +16,11 @@ fit!(am2)
 am3 = fit(am2)
 am4 = selectmodel(GARCH, datat; dist=StdTDist, meanspec=NoIntercept)
 am5 = selectmodel(GARCH, datam; dist=StdTDist)
-am6 = fit(GARCH{1, 1}, data)
-am7 = selectmodel(GARCH, data; maxpq=2)
+am6 = fit(GARCH{1, 1}, data; maxpq=2)
+srand(1)
+datae = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), T; meanspec=Intercept(3))
+
+am7 = selectmodel(EGARCH, datae; maxpq=2)
 @test loglikelihood(ARCHModel(spec, data)) ==  ARCH.loglik!(ht,
                                                             typeof(spec),
                                                             StdNormal{Float64},
@@ -32,41 +35,41 @@ am7 = selectmodel(GARCH, data; maxpq=2)
 @test coefnames(am5) == ["ω", "β₁", "α₁", "ν", "μ"]
 @test all(coeftable(am4).cols[2] .== stderror(am4))
 
-@test all(isapprox.(coef(am), [0.9086850084210619,
-                               0.9055267307122488,
-                               0.050365843108442374
-                               ], rtol=1e-4))
+@test all(isapprox.(coef(am), [0.9086632896184081,
+                               0.9055268468427705,
+                               0.050367854809777915], rtol=1e-4))
 
-@test all(isapprox.(stderror(am), [0.14583357347889914,
-                                   0.01035533071207874,
-                                   0.005222909457230848], rtol=1e-4))
+@test all(isapprox.(stderror(am), [0.14582381264705224,
+                                   0.010354562480367474,
+                                   0.005222817398477784], rtol=1e-4))
 
 @test all(am2.spec.coefs .== am.spec.coefs)
 @test all(am3.spec.coefs .== am2.spec.coefs)
-@test all(isapprox(coef(am4), [0.8306902920885605,
-                               0.9189514425541352,
-                               0.04207946140844637,
-                               3.8356660627658075], rtol=1e-4))
+@test all(isapprox(coef(am4), [0.8307014299672306,
+                               0.9189503152734588,
+                               0.042080807758329355,
+                               3.835646488238764], rtol=1e-4))
 
-@test all(isapprox(coef(am5), [0.8306060010899426,
-                               0.9189549832561451,
-                               0.04208828412801287,
-                               3.834870661953542,
-                                2.991845199038339], rtol=1e-4))
+@test all(isapprox(coef(am5), [0.8306175556436268,
+                               0.9189538270625667,
+                               0.04208964132482301,
+                               3.8348509665880797,
+                               2.9918445831618024], rtol=1e-4))
 
-@test all(isapprox(coef(am6), [0.910518085511129,
-                               0.9054119432933296,
-                               0.050389241671739915,
-                               0.027704786149577398], rtol=1e-4))
+@test all(isapprox(coef(am6), [0.910496430719689,
+                               0.9054120402733519,
+                               0.05039127076312942,
+                               0.027705636765390795], rtol=1e-4))
 
-@test all(isapprox(coef(am7), [0.9105180359631794,
-                               0.905411947022872,
-                               0.050389240320331465,
-                               0.027704784468756988], rtol=1e-4))
-                               
+@test all(isapprox(coef(am7), [0.08502955535533116,
+                               0.004709708474515596,
+                               0.9164935566284109,
+                               0.09325947325535855,
+                               3.0137461089470308], rtol=1e-4))
+
 @test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}([.1, .0, .0, .0]), data))
 
-@test_warn "negative" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), data[1:10]))
+@test_warn "negative" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), data[2:10]))
 e = @test_throws ARCH.NumParamError ARCH.loglik!(ht, typeof(spec), StdNormal{Float64},
                                                  NoIntercept{Float64}, data,
                                                  [0., 0., 0., 0.]
