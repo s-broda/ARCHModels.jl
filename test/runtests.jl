@@ -10,18 +10,20 @@ datat = simulate(spec, T; dist=StdTDist(4))
 srand(1);
 datam = simulate(spec, T; dist=StdTDist(4), meanspec=Intercept(3))
 ht = zeros(data);
+lht = zeros(data);
+zt = zeros(data);
 am = selectmodel(GARCH, data; meanspec=NoIntercept)
 am2 = ARCHModel(spec, data)
 fit!(am2)
 am3 = fit(am2)
 am4 = selectmodel(GARCH, datat; dist=StdTDist, meanspec=NoIntercept)
 am5 = selectmodel(GARCH, datam; dist=StdTDist)
-am6 = fit(GARCH{1, 1}, data; maxpq=2)
+am6 = fit(GARCH{1, 1}, data)
 srand(1)
 datae = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), T; meanspec=Intercept(3))
 
 am7 = selectmodel(EGARCH, datae; maxpq=2)
-@test loglikelihood(ARCHModel(spec, data)) ==  ARCH.loglik!(ht,
+@test loglikelihood(ARCHModel(spec, data)) ==  ARCH.loglik!(ht, lht, zt,
                                                             typeof(spec),
                                                             StdNormal{Float64},
                                                             NoIntercept{Float64},

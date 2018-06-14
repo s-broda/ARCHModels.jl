@@ -92,13 +92,14 @@ function ARCHModel(spec,
           meanspec=NoIntercept{T}()
           ) where {T}
     AM = ARCHModel(spec, data, ht, dist, meanspec)
-    loglik!(AM.ht, typeof(spec), typeof(dist), typeof(meanspec), AM.data,
+    loglik!(AM.ht, zeros(AM.ht), zeros(AM.ht), typeof(spec), typeof(dist), typeof(meanspec), AM.data,
             vcat(spec.coefs, dist.coefs, meanspec.coefs)
             )
     return AM
 end
 
-loglikelihood(am::ARCHModel) = loglik!(zeros(am.data), typeof(am.spec), typeof(am.dist),
+loglikelihood(am::ARCHModel) = loglik!(zeros(am.data), zeros(am.data), zeros(am.data),
+                                       typeof(am.spec), typeof(am.dist),
                                        typeof(am.meanspec), am.data,
                                        vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs)
                                        )
@@ -132,7 +133,7 @@ function splitcoefs(coefs, VS, SD, MS)
     meancoefs = coefs[ng+nd+1:ng+nd+nm]
     return garchcoefs, distcoefs, meancoefs
 end
-function loglik!(ht::Vector{T2}, ::Type{VS}, ::Type{SD}, ::Type{MS},
+function loglik!(ht::Vector{T2}, lht::Vector{T2}, zt::Vector{T2},  ::Type{VS}, ::Type{SD}, ::Type{MS},
                  data::Vector{<:AbstractFloat}, coefs::Vector{T2}
                  ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
                           MS<:MeanSpec, T2
@@ -145,10 +146,12 @@ function loglik!(ht::Vector{T2}, ::Type{VS}, ::Type{SD}, ::Type{MS},
         h0 = uncond(VS, garchcoefs)
         h0 > 0 || return T2(NaN)
         ht[1:r] .= h0
+        lht[1:r] .= log(h0)
+        zt[1:r] .= (data[1:r].-mean(MS, meancoefs))./sqrt.(ht[1:r])
         LL = zero(T2)
         @fastmath for t = 1:T
-            t > r && update!(ht, VS, MS, data, garchcoefs, meancoefs, t)
-            LL += -log(ht[t])/2 + logkernel(SD, (data[t]-mean(MS, meancoefs))/sqrt(ht[t]), distcoefs)
+            t > r && update!(ht, lht, zt, VS, MS, data, garchcoefs, meancoefs, t)
+            LL += -lht[t]/2 + logkernel(SD, zt[t], distcoefs)
         end#for
     end#inbounds
     LL += T*logconst(SD, distcoefs)
@@ -157,10 +160,10 @@ end#function
 function logliks(spec, dist, meanspec, data, coefs::Vector{T}) where {T}
     garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, spec, dist, meanspec)
     ht = zeros(T, length(data))
-    loglik!(ht, spec, dist, meanspec, data, coefs)
-    LLs = -log.(ht)/2+logkernel.(dist, (data-mean(meanspec, meancoefs))./sqrt.(ht),
-                                 Ref{Vector{T}}(distcoefs)
-                                 ) + logconst(dist, distcoefs)
+    lht = zeros(T, length(data))
+    zt = zeros(T, length(data))
+    loglik!(ht, lht, zt, spec, dist, meanspec, data, coefs)
+    LLs = -lht./2+logkernel.(dist, zt, Ref{Vector{T}}(distcoefs)) + logconst(dist, distcoefs)
 end
 
 function stderror(am::ARCHModel)
@@ -198,18 +201,18 @@ function sim!(ht::Vector{T1},  data::Vector{T1}, spec,
         data[1:r] .*= sqrt(h0)
         data[1:r] .+= mean(typeof(meanspec), meanspec.coefs)
         @fastmath for t = r+1:T
-            update!(ht, typeof(spec), typeof(meanspec), data, spec.coefs, meanspec.coefs, t)
+            update!(ht, zeros(ht), zeros(ht), typeof(spec), typeof(meanspec), data, spec.coefs, meanspec.coefs, t)
             data[t] = mean(typeof(meanspec), meanspec.coefs) + sqrt(ht[t])*rand(dist)
         end
     end
     return nothing
 end
 
-function fit!(ht::Vector{T}, garchcoefs::Vector{T}, distcoefs::Vector{T},
+function fit!(ht::Vector{T}, lht::Vector{T}, zt::Vector{T}, garchcoefs::Vector{T}, distcoefs::Vector{T},
               meancoefs::Vector{T}, ::Type{VS}, ::Type{SD}, ::Type{MS},
               data::Vector{T}; algorithm=BFGS, kwargs...
               ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution, MS<:MeanSpec, T<:AbstractFloat}
-    obj = x -> -loglik!(ht, VS, SD, MS, data, x)
+    obj = x -> -loglik!(ht, lht, zt, VS, SD, MS, data, x)
     lowergarch, uppergarch = constraints(VS, T)
     lowerdist, upperdist = constraints(SD, T)
     lowermean, uppermean = constraints(MS, T)
@@ -233,10 +236,12 @@ function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T}, meanspec:
              MS<:MeanSpec, T<:AbstractFloat
              }
     ht = zeros(data)
+    lht = zeros(data)
+    zt = zeros(data)
     coefs = startingvals(VS, data)
     distcoefs = startingvals(SD, data)
     meancoefs = startingvals(MS, data)
-    fit!(ht, coefs, distcoefs, meancoefs, VS, SD, MS, data; algorithm=algorithm, kwargs...)
+    fit!(ht, lht, zt, coefs, distcoefs, meancoefs, VS, SD, MS, data; algorithm=algorithm, kwargs...)
     return ARCHModel(VS(coefs), data, ht, SD(distcoefs), MS(meancoefs))
 end
 
@@ -244,7 +249,7 @@ function fit!(AM::ARCHModel; algorithm=BFGS, kwargs...)
     AM.spec.coefs.=startingvals(typeof(AM.spec), AM.data)
     AM.dist.coefs.=startingvals(typeof(AM.dist), AM.data)
     AM.meanspec.coefs.=startingvals(typeof(AM.meanspec), AM.data)
-    fit!(AM.ht, AM.spec.coefs, AM.dist.coefs, AM.meanspec.coefs, typeof(AM.spec),
+    fit!(AM.ht, zeros(AM.ht), zeros(AM.ht), AM.spec.coefs, AM.dist.coefs, AM.meanspec.coefs, typeof(AM.spec),
          typeof(AM.dist), typeof(AM.meanspec), AM.data; algorithm=algorithm, kwargs...
          )
 end
