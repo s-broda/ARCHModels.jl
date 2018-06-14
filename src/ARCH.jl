@@ -195,6 +195,7 @@ function sim!(ht::Vector{T1},  data::Vector{T1}, spec,
     @inbounds begin
         h0 = uncond(typeof(spec), spec.coefs)
         h0 > 0 || error("Model is nonstationary.")
+        ht[1:r] .= h0
         rand!(dist, @view data[1:r])
         data[1:r] .*= sqrt(h0)
         data[1:r] .+= mean(typeof(meanspec), meanspec.coefs)
