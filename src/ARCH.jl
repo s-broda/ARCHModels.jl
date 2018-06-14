@@ -10,7 +10,6 @@ __precompile__()
 #how to export arch?
 #what should simulate return?
 #actually pass instances everywhere, at least for mean
-#EGARCH: fix simulate, test
 module ARCH
 using Reexport
 @reexport using StatsBase
@@ -145,7 +144,6 @@ function loglik!(ht::Vector{T2}, ::Type{VS}, ::Type{SD}, ::Type{MS},
     @inbounds begin
         h0 = uncond(VS, garchcoefs)
         h0 > 0 || return T2(NaN)
-        lh0 = log(h0)
         ht[1:r] .= h0
         LL = zero(T2)
         @fastmath for t = 1:T
