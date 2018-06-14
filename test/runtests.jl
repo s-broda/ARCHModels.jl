@@ -67,9 +67,9 @@ am7 = selectmodel(EGARCH, datae; maxpq=2)
                                0.09325947325535855,
                                3.0137461089470308], rtol=1e-4))
 
-@test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}([.1, .0, .0, .0]), data))
+@test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), [.1, .2, .3, .4, .5, .6, .7]))
 
-@test_warn "negative" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), data[2:10]))
+@test_warn "negative" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
 e = @test_throws ARCH.NumParamError ARCH.loglik!(ht, typeof(spec), StdNormal{Float64},
                                                  NoIntercept{Float64}, data,
                                                  [0., 0., 0., 0.]
