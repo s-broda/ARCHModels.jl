@@ -66,6 +66,7 @@ am7 = selectmodel(EGARCH, datae; maxpq=2)
                                0.9164935566284109,
                                0.09325947325535855,
                                3.0137461089470308], rtol=1e-4))
+@test coefnames(EGARCH{2, 2, 2}) == ["ω", "γ₁", "γ₂", "β₁", "β₂", "α₁", "α₂"]
 
 @test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), [.1, .2, .3, .4, .5, .6, .7]))
 
