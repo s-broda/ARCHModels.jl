@@ -216,7 +216,7 @@ end
 
 function fit!(ht::Vector{T}, lht::Vector{T}, zt::Vector{T}, garchcoefs::Vector{T}, distcoefs::Vector{T},
               meancoefs::Vector{T}, ::Type{VS}, ::Type{SD}, ::Type{MS},
-              data::Vector{T}; algorithm=BFGS, kwargs...
+              data::Vector{T}; algorithm=BFGS(), kwargs...
               ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution, MS<:MeanSpec, T<:AbstractFloat}
     obj = x -> -loglik!(ht, lht, zt, VS, SD, MS, data, x)
     lowergarch, uppergarch = constraints(VS, T)
@@ -225,7 +225,7 @@ function fit!(ht::Vector{T}, lht::Vector{T}, zt::Vector{T}, garchcoefs::Vector{T
     lower = vcat(lowergarch, lowerdist, lowermean)
     upper = vcat(uppergarch, upperdist, uppermean)
     coefs = vcat(garchcoefs, distcoefs, meancoefs)
-    res = optimize(obj, coefs, lower, upper, Fminbox{algorithm}(); kwargs...)
+    res = optimize(obj, lower, upper, coefs, Fminbox(algorithm); kwargs...)
     coefs .= res.minimizer
     ng = nparams(VS)
     ns = nparams(SD)
@@ -237,7 +237,7 @@ function fit!(ht::Vector{T}, lht::Vector{T}, zt::Vector{T}, garchcoefs::Vector{T
 end
 
 function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T}, meanspec::Type{MS}=Intercept{T},
-    algorithm=BFGS, kwargs...
+    algorithm=BFGS(), kwargs...
     ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
              MS<:MeanSpec, T<:AbstractFloat
              }
@@ -251,7 +251,7 @@ function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T}, meanspec:
     return ARCHModel(VS(coefs), data, ht, SD(distcoefs), MS(meancoefs))
 end
 
-function fit!(AM::ARCHModel; algorithm=BFGS, kwargs...)
+function fit!(AM::ARCHModel; algorithm=BFGS(), kwargs...)
     AM.spec.coefs.=startingvals(typeof(AM.spec), AM.data)
     AM.dist.coefs.=startingvals(typeof(AM.dist), AM.data)
     AM.meanspec.coefs.=startingvals(typeof(AM.meanspec), AM.data)
@@ -260,7 +260,7 @@ function fit!(AM::ARCHModel; algorithm=BFGS, kwargs...)
          )
 end
 
-function fit(AM::ARCHModel; algorithm=BFGS, kwargs...)
+function fit(AM::ARCHModel; algorithm=BFGS(), kwargs...)
     AM2=deepcopy(AM)
     fit!(AM2; algorithm=algorithm, kwargs...)
     return AM2
@@ -290,13 +290,13 @@ function selectmodel(::Type{VS}, data::Vector{T};
 end
 
 function fit(::Type{SD}, data::Vector{T};
-             algorithm=BFGS, kwargs...
+             algorithm=BFGS(), kwargs...
              ) where {SD<:StandardizedDistribution, T<:AbstractFloat}
     nparams(SD) == 0 && return SD{T}()
     obj = x -> -loglik(SD, data, x)
     lower, upper = constraints(SD, T)
     x0 = startingvals(SD, data)
-    res = optimize(obj, x0, lower, upper, Fminbox{algorithm}(); kwargs...)
+    res = optimize(obj, lower, upper, x0, Fminbox(algorithm); kwargs...)
     coefs = res.minimizer
     return SD(coefs...)
 end
