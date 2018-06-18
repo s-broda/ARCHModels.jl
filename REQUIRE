@@ -1,8 +1,8 @@
-julia 0.6
+julia 0.6 0.7-
 Reexport
 StatsBase
 StatsFuns
-Optim
+Optim 0.15.0
 ForwardDiff
 Distributions
 Roots

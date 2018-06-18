@@ -12,22 +12,20 @@ EGARCH{o, p, q}(coefs::Vector{T}) where {o, p, q, T}  = EGARCH{o, p, q, T}(coefs
 
 @inline presample(::Type{<:EGARCH{o, p, q}}) where {o, p, q} = max(o, p, q)
 
-@inline function update!(ht, ::Type{<:EGARCH{o, p ,q}}, MS::Type{<:MeanSpec},
+@inline function update!(ht, lht, zt, ::Type{<:EGARCH{o, p ,q}}, MS::Type{<:MeanSpec},
                          data, garchcoefs, meancoefs, t
                          ) where {o, p, q}
-    lht = garchcoefs[1]
+    lht[t] = garchcoefs[1]
     for i = 1:o
-        z = (data[t-i]-mean(MS, meancoefs))/sqrt(ht[t-i])
-        lht += garchcoefs[i+1]*z
+        lht[t] += garchcoefs[i+1]*zt[t-i]
     end
     for i = 1:p
-        lht += garchcoefs[i+1+o]*log(ht[t-i])
+        lht[t] += garchcoefs[i+1+o]*lht[t-i]
     end
     for i = 1:q
-        z = (data[t-i]-mean(MS, meancoefs))/sqrt(ht[t-i])
-        lht += garchcoefs[i+1+o+p]*(abs(z) - sqrt2invpi)
+        lht[t] += garchcoefs[i+1+o+p]*(abs(zt[t-i]) - sqrt2invpi)
     end
-    ht[t] = exp(lht)
+    ht[t] = exp(lht[t])
     return nothing
 end
 
