@@ -16,7 +16,7 @@ const _ARCH = GARCH{0}
 
 @inline presample(::Type{<:GARCH{p, q}}) where {p, q} = max(p, q)
 
-@inline function update!(ht, ::Type{<:GARCH{p,q}}, MS::Type{<:MeanSpec},
+@inline function update!(ht, lht, zt, ::Type{<:GARCH{p,q}}, MS::Type{<:MeanSpec},
                          data, garchcoefs, meancoefs, t
                          ) where {p, q}
     ht[t] = garchcoefs[1]
@@ -26,6 +26,7 @@ const _ARCH = GARCH{0}
     for i = 1:q
         ht[t] += garchcoefs[i+1+p]*(data[t-i]-mean(MS, meancoefs))^2
     end
+    lht[t] = log(ht[t])
     return nothing
 end
 
@@ -35,6 +36,7 @@ end
         den -= coefs[i+1]
     end
     h0 = coefs[1]/den
+    h0 = 0.22112984708922742
 end
 
 function startingvals(::Type{<:GARCH{p,q}}, data::Array{T}) where {p, q, T}

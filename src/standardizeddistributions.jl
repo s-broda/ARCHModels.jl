@@ -47,7 +47,9 @@ function startingvals(::Type{<:StdTDist}, data::Array{T}) where {T}
     ##alteratively, could use mean of log(abs(t)):
     #elogabst(ν)=log(ν-2)/2-digamma(ν/2)/2+digamma(1/2)/2
     ht = zeros(data)
-    loglik!(ht, GARCH{1, 1}, StdNormal, Intercept, data, vcat(startingvals(GARCH{1, 1}, data), startingvals(Intercept, data)))
+    lht = zeros(data)
+    zt = zeros(data)
+    loglik!(ht, lht, zt, GARCH{1, 1}, StdNormal, Intercept, data, vcat(startingvals(GARCH{1, 1}, data), startingvals(Intercept, data)))
     lower = convert(T, 2)
     upper = convert(T, 30)
     z = mean(abs.(data.-mean(data))./sqrt.(ht))
