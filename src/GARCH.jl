@@ -36,7 +36,6 @@ end
         den -= coefs[i+1]
     end
     h0 = coefs[1]/den
-    h0 = 0.22112984708922742
 end
 
 function startingvals(::Type{<:GARCH{p,q}}, data::Array{T}) where {p, q, T}
