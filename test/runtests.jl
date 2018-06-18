@@ -1,6 +1,15 @@
 using Base.Test
 
 using ARCH
+#=
+Data from [1]. See [2] for a comparsion of GARCH software based on this data.
+[1] Bollerslev, T. and Ghysels, E. (1996), Periodic Autoregressive Conditional Heteroscedasticity, Journal of Business and Economic Statistics (14), pp. 139-151.
+[2] Brooks, C., Burke, S. P., and Persand, G. (2001), Benchmarks and the accuracy of GARCH model estimation, International Journal of Forecasting (17), pp. 45-56.
+=#
+#using HTTP
+#res=HTTP.get("http://people.stern.nyu.edu/wgreene/Text/Edition7/TableF20-1.txt")
+#r=convert.(Float64, readcsv(IOBuffer(res.body))[2:end])
+
 T = 10^4;
 spec = GARCH{1, 1}([1., .9, .05])
 srand(1);
@@ -73,7 +82,7 @@ am7 = selectmodel(EGARCH, datae; maxpq=2)
 @test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), [.1, .2, .3, .4, .5, .6, .7]))
 
 @test_warn "negative" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
-e = @test_throws ARCH.NumParamError ARCH.loglik!(ht, typeof(spec), StdNormal{Float64},
+e = @test_throws ARCH.NumParamError ARCH.loglik!(ht, lht, zt, typeof(spec), StdNormal{Float64},
                                                  NoIntercept{Float64}, data,
                                                  [0., 0., 0., 0.]
                                                  )

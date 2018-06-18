@@ -27,7 +27,6 @@ const _ARCH = GARCH{0}
         ht[t] += garchcoefs[i+1+p]*(data[t-i]-mean(MS, meancoefs))^2
     end
     lht[t] = log(ht[t])
-    zt[t] = (data[t]-mean(MS, meancoefs))/sqrt(ht[t])
     return nothing
 end
 
@@ -37,6 +36,7 @@ end
         den -= coefs[i+1]
     end
     h0 = coefs[1]/den
+    h0 = 0.22112984708922742
 end
 
 function startingvals(::Type{<:GARCH{p,q}}, data::Array{T}) where {p, q, T}

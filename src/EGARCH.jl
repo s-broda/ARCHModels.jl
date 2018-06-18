@@ -26,7 +26,6 @@ EGARCH{o, p, q}(coefs::Vector{T}) where {o, p, q, T}  = EGARCH{o, p, q, T}(coefs
         lht[t] += garchcoefs[i+1+o+p]*(abs(zt[t-i]) - sqrt2invpi)
     end
     ht[t] = exp(lht[t])
-    zt[t] = (data[t]-mean(MS, meancoefs))/sqrt(ht[t])
     return nothing
 end
 

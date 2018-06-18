@@ -120,7 +120,9 @@ function simulate(spec::VolatilitySpec{T}, nobs;
                   ) where {T<:AbstractFloat}
     data = zeros(T, nobs+warmup)
     ht = zeros(T, nobs+warmup)
-    sim!(ht, data, spec, dist, meanspec)
+    lht = zeros(T, nobs+warmup)
+    zt = zeros(T, nobs+warmup)
+    sim!(ht, lht, zt, data, spec, dist, meanspec)
     data[warmup+1:warmup+nobs]
 end
 
@@ -152,6 +154,7 @@ function loglik!(ht::Vector{T2}, lht::Vector{T2}, zt::Vector{T2},  ::Type{VS}, :
         LL = zero(T2)
         @fastmath for t = 1:T
             t > r && update!(ht, lht, zt, VS, MS, data, garchcoefs, meancoefs, t)
+            zt[t] = (data[t]-mean(MS, meancoefs))/sqrt(ht[t])
             LL += -lht[t]/2 + logkernel(SD, zt[t], distcoefs)
         end#for
     end#inbounds
@@ -188,7 +191,7 @@ function stderror(am::ARCHModel)
     return sqrt.(abs.(v)) #Huber sandwich
 end
 
-function sim!(ht::Vector{T1},  data::Vector{T1}, spec,
+function sim!(ht::Vector{T1}, lht::Vector{T1}, zt::Vector{T1}, data::Vector{T1}, spec,
               dist::StandardizedDistribution{T1},
               meanspec::MeanSpec{T1}
               ) where {T1<:AbstractFloat}
@@ -198,12 +201,14 @@ function sim!(ht::Vector{T1},  data::Vector{T1}, spec,
         h0 = uncond(typeof(spec), spec.coefs)
         h0 > 0 || error("Model is nonstationary.")
         ht[1:r] .= h0
-        rand!(dist, @view data[1:r])
-        data[1:r] .*= sqrt(h0)
+        lht[1:r] .= log(h0)
+        rand!(dist, @view zt[1:r])
+        data[1:r] .= sqrt(h0).*zt[1:r]
         data[1:r] .+= mean(typeof(meanspec), meanspec.coefs)
         @fastmath for t = r+1:T
-            update!(ht, zeros(ht), zeros(ht), typeof(spec), typeof(meanspec), data, spec.coefs, meanspec.coefs, t)
-            data[t] = mean(typeof(meanspec), meanspec.coefs) + sqrt(ht[t])*rand(dist)
+            update!(ht, lht, zt, typeof(spec), typeof(meanspec), data, spec.coefs, meanspec.coefs, t)
+            zt[t] = rand(dist)
+            data[t] = mean(typeof(meanspec), meanspec.coefs) + sqrt(ht[t])*zt[t]
         end
     end
     return nothing
