@@ -30,6 +30,21 @@ const _ARCH = GARCH{0}
     return nothing
 end
 
+@inline function bufupdate!(ht, lht, zt, ::Type{<:GARCH{p,q}}, MS::Type{<:MeanSpec},
+                         data, garchcoefs, meancoefs, t
+                         ) where {p, q}
+    mht = garchcoefs[1]
+    for i = 1:p
+        mht += garchcoefs[i+1]*ht[end-i+1]
+    end
+    for i = 1:q
+        mht += garchcoefs[i+1+p]*(data[t-i]-mean(MS, meancoefs))^2
+    end
+    push!(ht, mht)
+    push!(lht, mht>0? log(mht) : -mht)
+    return nothing
+end
+
 @inline function uncond(::Type{<:GARCH{p, q}}, coefs::Vector{T}) where {p, q, T}
     den=one(T)
     for i = 1:p+q

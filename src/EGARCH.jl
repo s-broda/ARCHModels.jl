@@ -26,6 +26,25 @@ EGARCH{o, p, q}(coefs::Vector{T}) where {o, p, q, T}  = EGARCH{o, p, q, T}(coefs
         lht[t] += garchcoefs[i+1+o+p]*(abs(zt[t-i]) - sqrt2invpi)
     end
     ht[t] = exp(lht[t])
+    zt[t] = (data[t]-mean(MS, meancoefs))/sqrt(ht[t])
+    return nothing
+end
+
+@inline function bufupdate!(ht, lht, zt, ::Type{<:EGARCH{o, p ,q}}, MS::Type{<:MeanSpec},
+                         data, garchcoefs, meancoefs, t
+                         ) where {o, p, q}
+    mlht = garchcoefs[1]
+    for i = 1:o
+        mlht += garchcoefs[i+1]*zt[end-i+1]
+    end
+    for i = 1:p
+        mlht += garchcoefs[i+1+o]*lht[end-i+1]
+    end
+    for i = 1:q
+        mlht += garchcoefs[i+1+o+p]*(abs(zt[end-i+1]) - sqrt2invpi)
+    end
+    push!(lht, mlht)
+    push!(ht, exp(mlht))
     return nothing
 end
 

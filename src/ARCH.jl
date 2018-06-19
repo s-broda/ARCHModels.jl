@@ -26,7 +26,8 @@ else
     import StatsBase: stderr
     const stderror = stderr
 end
-
+include("circular_buffer.jl")# no bounds checks
+#using DataStructures: CircularBuffer
 import Base: show, showerror, Random.rand, eltype, mean
 import StatsBase: StatisticalModel, loglikelihood, nobs, fit, fit!, adjr2, aic,
                   bic, aicc, dof, coef, coefnames, coeftable, CoefTable
@@ -126,7 +127,7 @@ function simulate(spec::VolatilitySpec{T}, nobs;
     data[warmup+1:warmup+nobs]
 end
 
-function splitcoefs(coefs, VS, SD, MS)
+@inline function splitcoefs(coefs, VS, SD, MS)
     ng = nparams(VS)
     nd = nparams(SD)
     nm = nparams(MS)
@@ -136,7 +137,39 @@ function splitcoefs(coefs, VS, SD, MS)
     meancoefs = coefs[ng+nd+1:ng+nd+nm]
     return garchcoefs, distcoefs, meancoefs
 end
-function loglik!(ht::Vector{T2}, lht::Vector{T2}, zt::Vector{T2},  ::Type{VS}, ::Type{SD}, ::Type{MS},
+function bufloglik(::Type{VS}, ::Type{SD}, ::Type{MS},
+                 data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}
+                 ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
+                          MS<:MeanSpec, T2
+                          }
+    T = length(data)
+    r = presample(VS)
+    garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, MS)
+    T > r || error("Sample too small.")
+    ht = CircularBuffer{T2}(r)
+    lht = CircularBuffer{T2}(r)
+    zt = CircularBuffer{T2}(r)
+    @inbounds begin
+        h0 = uncond(VS, garchcoefs)
+        h0 > 0 || return T2(NaN)
+        LL = zero(T2)
+        for t = 1:T
+            if t > r
+                bufupdate!(ht, lht, zt, VS, MS, data, garchcoefs, meancoefs, t)
+            else
+                push!(ht, h0)
+                push!(lht, log(h0))
+            end
+            ht[end] < 0 && return T2(NaN)
+            push!(zt, (data[t]-mean(MS, meancoefs))/sqrt(ht[end]))
+            LL += -lht[end]/2 + logkernel(SD, zt[end], distcoefs)
+        end#for
+    end#inbounds
+    LL += T*logconst(SD, distcoefs)
+end#function
+
+function loglik!(ht::Vector{T2}, lht::Vector{T2}, zt::Vector{T2},
+                 ::Type{VS}, ::Type{SD}, ::Type{MS},
                  data::Vector{<:AbstractFloat}, coefs::Vector{T2}
                  ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
                           MS<:MeanSpec, T2
@@ -214,26 +247,18 @@ function sim!(ht::Vector{T1}, lht::Vector{T1}, zt::Vector{T1}, data::Vector{T1},
     return nothing
 end
 
-function fit!(ht::Vector{T}, lht::Vector{T}, zt::Vector{T}, garchcoefs::Vector{T}, distcoefs::Vector{T},
-              meancoefs::Vector{T}, ::Type{VS}, ::Type{SD}, ::Type{MS},
+function fitbuf(::Type{VS}, ::Type{SD}, ::Type{MS},
               data::Vector{T}; algorithm=BFGS(), kwargs...
               ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution, MS<:MeanSpec, T<:AbstractFloat}
-    obj = x -> -loglik!(ht, lht, zt, VS, SD, MS, data, x)
+    obj = x -> -bufloglik(VS, SD, MS, data, x)
     lowergarch, uppergarch = constraints(VS, T)
     lowerdist, upperdist = constraints(SD, T)
     lowermean, uppermean = constraints(MS, T)
     lower = vcat(lowergarch, lowerdist, lowermean)
     upper = vcat(uppergarch, upperdist, uppermean)
-    coefs = vcat(garchcoefs, distcoefs, meancoefs)
+    coefs = vcat(startingvals(VS, data), startingvals(SD, data), startingvals(MS, data))
     res = optimize(obj, lower, upper, coefs, Fminbox(algorithm); kwargs...)
-    coefs .= res.minimizer
-    ng = nparams(VS)
-    ns = nparams(SD)
-    nm = nparams(MS)
-    garchcoefs .= coefs[1:ng]
-    distcoefs .= coefs[ng+1:ng+ns]
-    meancoefs .= coefs[ng+ns+1:ng+ns+nm]
-    return nothing
+    return  Optim.minimizer(res)
 end
 
 function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T}, meanspec::Type{MS}=Intercept{T},
@@ -258,6 +283,28 @@ function fit!(AM::ARCHModel; algorithm=BFGS(), kwargs...)
     fit!(AM.ht, zeros(AM.ht), zeros(AM.ht), AM.spec.coefs, AM.dist.coefs, AM.meanspec.coefs, typeof(AM.spec),
          typeof(AM.dist), typeof(AM.meanspec), AM.data; algorithm=algorithm, kwargs...
          )
+end
+
+function fit!(ht::Vector{T}, lht::Vector{T}, zt::Vector{T}, garchcoefs::Vector{T}, distcoefs::Vector{T},
+              meancoefs::Vector{T}, ::Type{VS}, ::Type{SD}, ::Type{MS},
+              data::Vector{T}; algorithm=BFGS(), kwargs...
+              ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution, MS<:MeanSpec, T<:AbstractFloat}
+    obj = x -> -loglik!(ht, lht, zt, VS, SD, MS, data, x)
+    lowergarch, uppergarch = constraints(VS, T)
+    lowerdist, upperdist = constraints(SD, T)
+    lowermean, uppermean = constraints(MS, T)
+    lower = vcat(lowergarch, lowerdist, lowermean)
+    upper = vcat(uppergarch, upperdist, uppermean)
+    coefs = vcat(garchcoefs, distcoefs, meancoefs)
+    res = optimize(obj, lower, upper, coefs, Fminbox(algorithm); kwargs...)
+    coefs .= res.minimizer
+    ng = nparams(VS)
+    ns = nparams(SD)
+    nm = nparams(MS)
+    garchcoefs .= coefs[1:ng]
+    distcoefs .= coefs[ng+1:ng+ns]
+    meancoefs .= coefs[ng+ns+1:ng+ns+nm]
+    return nothing
 end
 
 function fit(AM::ARCHModel; algorithm=BFGS(), kwargs...)
