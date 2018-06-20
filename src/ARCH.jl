@@ -19,7 +19,7 @@ using Optim
 using ForwardDiff
 using Distributions
 using Roots
-
+using Compat #for circular_buffer
 @static if Pkg.installed("StatsBase") >= v"0.22"
     import StatsBase: stderror
 else
@@ -137,18 +137,16 @@ end
     meancoefs = coefs[ng+nd+1:ng+nd+nm]
     return garchcoefs, distcoefs, meancoefs
 end
-function bufloglik(::Type{VS}, ::Type{SD}, ::Type{MS},
-                 data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}
-                 ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
+@inline function bufloglik!(ht::AbstractVector{T2}, lht::AbstractVector{T2}, zt::AbstractVector{T2},
+                    ::Type{VS}, ::Type{SD}, ::Type{MS},
+                    data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}
+                    ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
                           MS<:MeanSpec, T2
                           }
     T = length(data)
     r = presample(VS)
     garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, MS)
     T > r || error("Sample too small.")
-    ht = CircularBuffer{T2}(r)
-    lht = CircularBuffer{T2}(r)
-    zt = CircularBuffer{T2}(r)
     @inbounds begin
         h0 = uncond(VS, garchcoefs)
         h0 > 0 || return T2(NaN)
@@ -168,6 +166,18 @@ function bufloglik(::Type{VS}, ::Type{SD}, ::Type{MS},
     LL += T*logconst(SD, distcoefs)
 end#function
 
+function bufloglik(spec::Type{VS}, dist::Type{SD}, meanspec::Type{MS},
+                   data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}
+                   ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
+                            MS<:MeanSpec, T2
+                            }
+    r = presample(VS)
+    ht = CircularBuffer{T2}(r)
+    lht = CircularBuffer{T2}(r)
+    zt = CircularBuffer{T2}(r)
+    bufloglik!(ht, lht, zt, spec, dist, meanspec, data, coefs)
+
+end
 function loglik!(ht::Vector{T2}, lht::Vector{T2}, zt::Vector{T2},
                  ::Type{VS}, ::Type{SD}, ::Type{MS},
                  data::Vector{<:AbstractFloat}, coefs::Vector{T2}
