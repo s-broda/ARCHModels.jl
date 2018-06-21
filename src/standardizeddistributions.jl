@@ -46,9 +46,9 @@ function startingvals(::Type{<:StdTDist}, data::Array{T}) where {T}
     eabst(ν)=2*sqrt(ν-2)/(ν-1)/beta(ν/2, 1/2)
     ##alteratively, could use mean of log(abs(t)):
     #elogabst(ν)=log(ν-2)/2-digamma(ν/2)/2+digamma(1/2)/2
-    ht = zeros(data)
-    lht = zeros(data)
-    zt = zeros(data)
+    ht = T[]
+    lht = T[]
+    zt = T[]
     loglik!(ht, lht, zt, GARCH{1, 1}, StdNormal, Intercept, data, vcat(startingvals(GARCH{1, 1}, data), startingvals(Intercept, data)))
     lower = convert(T, 2)
     upper = convert(T, 30)
