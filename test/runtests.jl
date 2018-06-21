@@ -102,3 +102,4 @@ data = rand(StdTDist(4), 10000)
 @test fit(StdTDist, data).coefs[1] ≈ 3.972437329588246 rtol=1e-4
 @test coefnames(StdTDist) == ["ν"]
 @test ARCH.distname(StdTDist) == "Student's t"
+@test typeof(NoIntercept()) == NoIntercept{Float64}
