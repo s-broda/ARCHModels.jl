@@ -15,17 +15,18 @@ EGARCH{o, p, q}(coefs::Vector{T}) where {o, p, q, T}  = EGARCH{o, p, q, T}(coefs
 @inline function update!(ht, lht, zt, ::Type{<:EGARCH{o, p ,q}}, MS::Type{<:MeanSpec},
                          data, garchcoefs, meancoefs, t
                          ) where {o, p, q}
-    lht[t] = garchcoefs[1]
+    mlht = garchcoefs[1]
     for i = 1:o
-        lht[t] += garchcoefs[i+1]*zt[t-i]
+        mlht += garchcoefs[i+1]*zt[end-i+1]
     end
     for i = 1:p
-        lht[t] += garchcoefs[i+1+o]*lht[t-i]
+        mlht += garchcoefs[i+1+o]*lht[end-i+1]
     end
     for i = 1:q
-        lht[t] += garchcoefs[i+1+o+p]*(abs(zt[t-i]) - sqrt2invpi)
+        mlht += garchcoefs[i+1+o+p]*(abs(zt[end-i+1]) - sqrt2invpi)
     end
-    ht[t] = exp(lht[t])
+    push!(lht, mlht)
+    push!(ht, exp(mlht))
     return nothing
 end
 

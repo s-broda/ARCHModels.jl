@@ -19,14 +19,15 @@ const _ARCH = GARCH{0}
 @inline function update!(ht, lht, zt, ::Type{<:GARCH{p,q}}, MS::Type{<:MeanSpec},
                          data, garchcoefs, meancoefs, t
                          ) where {p, q}
-    ht[t] = garchcoefs[1]
+    mht = garchcoefs[1]
     for i = 1:p
-        ht[t] += garchcoefs[i+1]*ht[t-i]
+        mht += garchcoefs[i+1]*ht[end-i+1]
     end
     for i = 1:q
-        ht[t] += garchcoefs[i+1+p]*(data[t-i]-mean(MS, meancoefs))^2
+        mht += garchcoefs[i+1+p]*(data[t-i]-mean(MS, meancoefs))^2
     end
-    lht[t] = log(ht[t])
+    push!(ht, mht)
+    push!(lht, mht>0? log(mht) : -mht)
     return nothing
 end
 

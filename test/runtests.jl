@@ -3,7 +3,7 @@ using Base.Test
 using ARCH
 #=
 Data from [1]. See [2] for a comparsion of GARCH software based on this data.
-[1] Bollerslev, T. and Ghysels, E. (1996), Periodic Autoregressive Conditional Heteroscedasticity, Journal of Business and Economic Statistics (14), pp. 139-151. https://doi.org/10.2307/1392425 
+[1] Bollerslev, T. and Ghysels, E. (1996), Periodic Autoregressive Conditional Heteroscedasticity, Journal of Business and Economic Statistics (14), pp. 139-151. https://doi.org/10.2307/1392425
 [2] Brooks, C., Burke, S. P., and Persand, G. (2001), Benchmarks and the accuracy of GARCH model estimation, International Journal of Forecasting (17), pp. 45-56. https://doi.org/10.1016/S0169-2070(00)00070-4
 =#
 #using HTTP
@@ -18,9 +18,9 @@ srand(1);
 datat = simulate(spec, T; dist=StdTDist(4))
 srand(1);
 datam = simulate(spec, T; dist=StdTDist(4), meanspec=Intercept(3))
-ht = zeros(data);
-lht = zeros(data);
-zt = zeros(data);
+ht = Float64[]
+lht = Float64[]
+zt = Float64[]
 am = selectmodel(GARCH, data; meanspec=NoIntercept)
 am2 = ARCHModel(spec, data)
 fit!(am2)
@@ -89,9 +89,6 @@ e = @test_throws ARCH.NumParamError ARCH.loglik!(ht, lht, zt, typeof(spec), StdN
 str = sprint(showerror, e.value)
 @test startswith(str, "incorrect number of parameters")
 @test_throws ARCH.NumParamError GARCH{1, 1}([.1])
-e = @test_throws ARCH.LengthMismatchError ARCHModel(spec, data, ht[1:10])
-str = sprint(showerror, e.value)
-@test startswith(str, "length of arrays does not match")
 io = IOBuffer()
 str = sprint(io -> show(io, am))
 @test startswith(str, "\nGARCH{1,1")
