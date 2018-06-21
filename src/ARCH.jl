@@ -13,7 +13,7 @@ __precompile__()
 #implement the remaining interface of StatisticalModel
 #implement conditionalvariances/volas, stdresids
 #use testsets
-#make a PR towards DataStructures
+#remove circular_buffer.jl as soon as https://github.com/JuliaCollections/DataStructures.jl/pull/390 gets merged and tagged.
 module ARCH
 using Reexport
 @reexport using StatsBase
