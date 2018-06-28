@@ -277,17 +277,19 @@ function selectmodel(::Type{VS}, data::Vector{T};
                      ) where {VS<:VolatilitySpec, T<:AbstractFloat,
                               SD<:StandardizedDistribution, MS<:MeanSpec
                               }
+    mylock=Threads.SpinLock()
     ndims = my_unwrap_unionall(VS)-1#e.g., two (p and q) for GARCH{p, q, T}
     res = Array{ARCHModel, ndims}(ntuple(i->maxpq, ndims))
     Threads.@threads for ind in collect(CartesianRange(size(res)))
         res[ind] = fit(VS{ind.I...}, data; dist=dist, meanspec=meanspec)
-    end
-    #seperate loop because juno crashes otherwise (IO not threadsafe)
-    for ind in collect(CartesianRange(size(res)))
-        show_trace && println(split("$(VS{ind.I...})", ".")[2], " model has ",
+        if show_trace
+            lock(mylock)
+            println(split("$(VS{ind.I...})", ".")[2], " model has ",
                               uppercase(split("$criterion", ".")[2]), " ",
                               criterion(res[ind]), "."
                               )
+            unlock(mylock)
+        end
     end
     crits = criterion.(res)
     _, ind = findmin(crits)
