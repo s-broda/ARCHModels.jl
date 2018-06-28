@@ -284,7 +284,7 @@ function selectmodel(::Type{VS}, data::Vector{T};
         res[ind] = fit(VS{ind.I...}, data; dist=dist, meanspec=meanspec)
         if show_trace
             lock(mylock)
-            println(split("$(VS{ind.I...})", ".")[2], " model has ",
+            println(modname(VS{ind.I...}), " model has ",
                               uppercase(split("$criterion", ".")[2]), " ",
                               criterion(res[ind]), "."
                               )
@@ -356,7 +356,7 @@ function show(io::IO, am::ARCHModel)
     zzg = ccg ./ seg
     zzd = ccd ./ sed
     zzm = ccm ./ sem
-    println(io, "\n", split("$(typeof(am.spec))", ".")[2], " model with ",
+    println(io, "\n", modname(typeof(am.spec)), " model with ",
             distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n\n")
 
     length(sem) > 0 && println(io, "Mean equation parameters:", "\n\n",
@@ -381,6 +381,11 @@ end
 
 #from here https://stackoverflow.com/questions/46671965/printing-variable-subscripts-in-julia
 subscript(i::Integer) = i<0 ? error("$i is negative") : join('₀'+d for d in reverse(digits(i)))
+
+function modname(::Type{VS}) where VS<:VolatilitySpec
+    s = split("$(VS)", ".")[2]
+    s = s[1:findlast(s, ',')-1] * '}'
+end
 
 include("meanspecs.jl")
 include("standardizeddistributions.jl")
