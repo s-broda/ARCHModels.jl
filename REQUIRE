@@ -6,4 +6,5 @@ Optim 0.15.0
 ForwardDiff
 Distributions
 Roots
+DataStructures 0.9.0
 Compat
