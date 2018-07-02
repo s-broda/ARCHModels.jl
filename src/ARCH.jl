@@ -13,6 +13,7 @@ __precompile__()
 #implement the remaining interface of StatisticalModel
 #implement conditionalvariances/volas, stdresids
 #use testsets
+#remove circular_buffer.jl as soon as https://github.com/JuliaCollections/DataStructures.jl/pull/390 gets merged and tagged.
 module ARCH
 using Reexport
 @reexport using StatsBase
@@ -21,9 +22,11 @@ using Optim
 using ForwardDiff
 using Distributions
 using Roots
-using DataStructures
-
+using Compat #for circular_buffer
 import StatsBase: stderror
+import DataStructures: CircularBuffer, _buffer_index_checked, _buffer_index,
+                       capacity, isfull
+include("circular_buffer.jl")# no bounds checks
 import Base: show, showerror, Random.rand, eltype, mean
 import StatsBase: StatisticalModel, loglikelihood, nobs, fit, fit!, adjr2, aic,
                   bic, aicc, dof, coef, coefnames, coeftable, CoefTable
