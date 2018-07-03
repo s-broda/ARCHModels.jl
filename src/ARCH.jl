@@ -284,7 +284,7 @@ function selectmodel(::Type{VS}, data::Vector{T};
         res[ind] = fit(VS{ind.I...}, data; dist=dist, meanspec=meanspec)
         if show_trace
             lock(mylock)
-            println(modname(VS{ind.I...}), " model has ",
+            Core.println(modname(VS{ind.I...}), " model has ",
                               uppercase(split("$criterion", ".")[2]), " ",
                               criterion(res[ind]), "."
                               )
