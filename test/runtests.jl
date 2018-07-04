@@ -91,7 +91,7 @@ str = sprint(showerror, e.value)
 @test_throws ARCH.NumParamError GARCH{1, 1}([.1])
 io = IOBuffer()
 str = sprint(io -> show(io, am))
-@test startswith(str, "\nGARCH{1,1")
+@test startswith(str, "\nGARCH{1,1}")
 @test selectmodel(ARCH._ARCH, data).spec.coefs == fit(ARCH._ARCH{3}, data).spec.coefs
 @test typeof(StdNormal())==typeof(StdNormal(Float64[]))
 @test fit(StdNormal, data).coefs == Float64[]
