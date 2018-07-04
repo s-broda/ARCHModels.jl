@@ -14,6 +14,7 @@ __precompile__()
 #implement conditionalvariances/volas, stdresids
 #use testsets
 #remove circular_buffer.jl as soon as https://github.com/JuliaCollections/DataStructures.jl/pull/390 gets merged and tagged.
+#make variance targeting an option?
 module ARCH
 using Reexport
 @reexport using StatsBase
