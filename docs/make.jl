@@ -1,3 +1,4 @@
+push!(LOAD_PATH,"../src/")
 using Documenter, ARCH
 makedocs(modules=[ARCH],
         doctest=true)

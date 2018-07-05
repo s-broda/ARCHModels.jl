@@ -1,6 +1,1 @@
-#My Types
-
-```@docs
-ARCH.ARCHModel
-ARCH.VolatilitySpec
-```
+## Type Hierarchy
