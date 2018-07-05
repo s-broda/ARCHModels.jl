@@ -6,12 +6,17 @@
      <changefreq>daily</changefreq>
     </url>
     <url>
+     <loc>/quickstart/</loc>
+     <lastmod>2018-07-05</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
      <loc>/types/</loc>
      <lastmod>2018-07-05</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/functions/</loc>
+     <loc>/idx/</loc>
      <lastmod>2018-07-05</lastmod>
      <changefreq>daily</changefreq>
     </url>

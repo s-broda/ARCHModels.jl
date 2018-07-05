@@ -59,7 +59,7 @@
         
             <li><a class="toctree-l3" href="#contents">Contents</a></li>
         
-            <li><a class="toctree-l3" href="#index">Index</a></li>
+            <li><a class="toctree-l3" href="#acknowledgements">Acknowledgements</a></li>
         
         </ul>
     
@@ -69,17 +69,23 @@
           
             <li class="toctree-l1">
 		
-    <span class="caption-text">Basics</span>
+    <a class="" href="quickstart/">Quick Start Guide</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Manual</span>
     <ul class="subnav">
                 <li class="">
                     
-    <a class="" href="types/">Title 1</a>
-                </li>
-                <li class="">
-                    
-    <a class="" href="functions/">Title 2</a>
+    <a class="" href="types/">Type Hierarchy</a>
                 </li>
     </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="idx/">Index</a>
 	    </li>
           
         </ul>
@@ -119,14 +125,28 @@
               
                 <p><a id='The-ARCH-Package-1'></a></p>
 <h1 id="the-arch-package">The ARCH Package</h1>
-<p>This project has received funding from the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (grant agreement No. 750559).</p>
-<p><img src="assets/LOGO_ERC-FLAG_EU_.jpg" width="240"></p>
+<p>ARCH (Autoregressive Conditional Heteroskedasticty) models are a class of models designed to capture a feature of financial returns data known as <em>volatility clustering</em>, <em>i.e.</em>, the fact that large (in absolute value) returns tend to cluster together, such as during periods of financial turmoil, which then alternate with relatively calmer periods.</p>
+<p>The basic ARCH model was introduced by Engle (1982, Econometrica, pp. 987–1008), who in 2003 was awarded a Nobel Memorial Prize in Economic Sciences for its development. Today, the most popular variant is the generalized ARCH, or GARCH, model and its various extensions, due to Bollerslev (1986, Journal of Econometrics, pp. 307 - 327). The basic GARCH(1,1) model for a sample of daily asset returns ${r_t}_{t\in{1,\ldots,T}}$ is</p>
+<p><code>math r_t=\sigma_tz_t,\quad z_t\sim\mathrm{N}(0,1),\quad
+\sigma_t^2=\omega+\alpha r_{t-1}^2+\beta \sigma_{t-1}^2,\quad \omega, \alpha, \beta&gt;0,\quad \alpha+\beta&lt;1.</code></p>
+<p>This can be extended by including additional lags of past squared returns and volatilities: the GARCH(p, q) model  has $q$ of the former and $p$ of the latter.</p>
 <p><a id='Contents-1'></a></p>
 <h2 id="contents">Contents</h2>
-<pre><code>- [My Functions](functions.md#My-Functions-1)
+<pre><code>- [Quick Start Guide](quickstart.md#Quick-Start-Guide-1)
 </code></pre>
-<p><a id='Index-1'></a></p>
-<h2 id="index">Index</h2>
+<ul>
+<li><a href="idx/#Index-1">Index</a></li>
+<li><a href=".#The-ARCH-Package-1">The ARCH Package</a><ul>
+<li><a href=".#Contents-1">Contents</a></li>
+<li><a href=".#Acknowledgements-1">Acknowledgements</a></li>
+<li><a href="types/#Type-Hierarchy-1">Type Hierarchy</a></li>
+</ul>
+</li>
+</ul>
+<p><a id='Acknowledgements-1'></a></p>
+<h2 id="acknowledgements">Acknowledgements</h2>
+<p>This project has received funding from the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (grant agreement No. 750559).</p>
+<p><img src="assets/LOGO_ERC-FLAG_EU_.jpg" width="240"></p>
               
             </div>
           </div>
@@ -134,7 +154,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="types/" class="btn btn-neutral float-right" title="Title 1">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="quickstart/" class="btn btn-neutral float-right" title="Quick Start Guide">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
     </div>
@@ -164,7 +184,7 @@
       
       
       
-        <span style="margin-left: 15px"><a href="types/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="quickstart/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
@@ -180,5 +200,5 @@
 
 <!--
 MkDocs version : 0.17.4
-Build Date UTC : 2018-07-05 09:54:19
+Build Date UTC : 2018-07-05 16:52:47
 -->
