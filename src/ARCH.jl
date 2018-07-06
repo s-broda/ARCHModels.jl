@@ -11,6 +11,7 @@ __precompile__()
 #what should simulate return?
 #actually pass instances everywhere, at least for mean
 #implement the remaining interface of StatisticalModel
+#only show stderrors etc if model has been estimated
 #implement conditionalvariances/volas, stdresids
 #use testsets
 #remove circular_buffer.jl as soon as https://github.com/JuliaCollections/DataStructures.jl/pull/390 gets merged and tagged.
@@ -32,11 +33,26 @@ include("circular_buffer.jl")# no bounds checks
 import Base: show, showerror, Random.rand, eltype, mean
 import StatsBase: StatisticalModel, loglikelihood, nobs, fit, fit!, adjr2, aic,
                   bic, aicc, dof, coef, coefnames, coeftable, CoefTable
-export ARCHModel, VolatilitySpec, simulate, selectmodel, StdNormal, StdTDist,
-       Intercept, NoIntercept
+export ARCHModel, VolatilitySpec, StandardizedDistribution, MeanSpec,
+       simulate, selectmodel, StdNormal, StdTDist, Intercept, NoIntercept
+"""
+    VolatilitySpec{T}
 
+Abstract supertype that volatility specifications inherit from.
+"""
 abstract type VolatilitySpec{T} end
+
+"""
+    StandardizedDistribution{T} <: Distributions.Distribution{Univariate, Continuous}
+
+Abstract supertype that standardized distributions inherit from.
+"""
 abstract type StandardizedDistribution{T} <: Distribution{Univariate, Continuous} end
+
+"""
+    MeanSpec{T}
+Abstract supertype that mean specifications inherit from.
+"""
 abstract type MeanSpec{T} end
 
 Base.@irrational sqrt2invpi 0.79788456080286535587 sqrt(big(2)/big(π))
@@ -50,6 +66,11 @@ function showerror(io::IO, e::NumParamError)
     print(io, "incorrect number of parameters: expected $(e.expected), got $(e.got).")
 end
 
+"""
+    ARCHModel(spec::VolatilitySpec, data::Vector, dist=StdNormal(), meanspec=NoIntercept())
+
+Create an ARCHModel.
+"""
 struct ARCHModel{T<:AbstractFloat,
                  VS<:VolatilitySpec,
                  SD<:StandardizedDistribution{T},
@@ -66,22 +87,14 @@ end
 
 function ARCHModel(spec::VS,
           data::Vector{T},
-          dist::SD,
-          meanspec::MS
+          dist::SD=StdNormal{T}(),
+          meanspec::MS=NoIntercept{T}()
           ) where {T<:AbstractFloat,
                    VS<:VolatilitySpec,
                    SD<:StandardizedDistribution,
                    MS<:MeanSpec
                    }
     ARCHModel{T, VS, SD, MS}(spec, data, dist, meanspec)
-end
-
-function ARCHModel(spec,
-          data::Vector{T},
-          dist=StdNormal{T}(),
-          meanspec=NoIntercept{T}()
-          ) where {T}
-    AM = ARCHModel(spec, data, dist, meanspec)
 end
 
 loglikelihood(am::ARCHModel) = loglik(typeof(am.spec), typeof(am.dist),
