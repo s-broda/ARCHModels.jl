@@ -11,7 +11,6 @@ __precompile__()
 #what should simulate return?
 #actually pass instances everywhere, at least for mean
 #implement the remaining interface of StatisticalModel
-#only show stderrors etc if model has been estimated
 #implement conditionalvariances/volas, stdresids
 #use testsets
 #remove circular_buffer.jl as soon as https://github.com/JuliaCollections/DataStructures.jl/pull/390 gets merged and tagged.
@@ -67,11 +66,24 @@ function showerror(io::IO, e::NumParamError)
 end
 
 """
-    ARCHModel(spec::VolatilitySpec, data::Vector, dist=StdNormal(), meanspec=NoIntercept())
+    ARCHModel(spec::VolatilitySpec, data::Vector, dist=StdNormal(),
+	          meanspec=NoIntercept(), fitted=false
+              )
 
 Create an ARCHModel.
+
+# Example:
+```jldoctest
+julia> ARCHModel(GARCH{1, 1}([1., .9, .05]), rand(10))
+
+GARCH{1,1} model with Gaussian errors, T=10.
+
+
+               ω  β₁   α₁
+Parameters:  1.0 0.9 0.05
+```
 """
-struct ARCHModel{T<:AbstractFloat,
+mutable struct ARCHModel{T<:AbstractFloat,
                  VS<:VolatilitySpec,
                  SD<:StandardizedDistribution{T},
                  MS<:MeanSpec{T}
@@ -80,21 +92,23 @@ struct ARCHModel{T<:AbstractFloat,
     data::Vector{T}
     dist::SD
     meanspec::MS
-    function ARCHModel{T, VS, SD, MS}(spec, data, dist, meanspec) where {T, VS, SD, MS}
-        new(spec, data, dist, meanspec)
+	fitted::Bool
+    function ARCHModel{T, VS, SD, MS}(spec, data, dist, meanspec, fitted) where {T, VS, SD, MS}
+        new(spec, data, dist, meanspec, fitted)
     end
 end
 
 function ARCHModel(spec::VS,
           data::Vector{T},
           dist::SD=StdNormal{T}(),
-          meanspec::MS=NoIntercept{T}()
+          meanspec::MS=NoIntercept{T}(),
+		  fitted::Bool=false
           ) where {T<:AbstractFloat,
                    VS<:VolatilitySpec,
                    SD<:StandardizedDistribution,
                    MS<:MeanSpec
                    }
-    ARCHModel{T, VS, SD, MS}(spec, data, dist, meanspec)
+    ARCHModel{T, VS, SD, MS}(spec, data, dist, meanspec, fitted)
 end
 
 loglikelihood(am::ARCHModel) = loglik(typeof(am.spec), typeof(am.dist),
@@ -111,6 +125,7 @@ coefnames(am::ARCHModel) = vcat(coefnames(typeof(am.spec)),
                                 coefnames(typeof(am.dist)),
                                 coefnames(typeof(am.meanspec))
                                 )
+isfitted(am::ARCHModel) = am.fitted
 
 function simulate(spec::VolatilitySpec{T2}, nobs;
                   warmup=100,
@@ -265,7 +280,7 @@ function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
     distcoefs = startingvals(SD, data)
     meancoefs = startingvals(MS, data)
     fit!(coefs, distcoefs, meancoefs, VS, SD, MS, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
-    return ARCHModel(VS(coefs), data, SD(distcoefs), MS(meancoefs))
+    return ARCHModel(VS(coefs), data, SD(distcoefs), MS(meancoefs), true)
 end
 
 function fit!(AM::ARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
@@ -276,6 +291,7 @@ function fit!(AM::ARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
          typeof(AM.dist), typeof(AM.meanspec), AM.data; algorithm=algorithm,
          autodiff=autodiff, kwargs...
          )
+	AM.fitted=true
 end
 
 
@@ -371,27 +387,34 @@ function show(io::IO, am::ARCHModel)
     zzg = ccg ./ seg
     zzd = ccd ./ sed
     zzm = ccm ./ sem
-    println(io, "\n", modname(typeof(am.spec)), " model with ",
-            distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n\n")
+	if isfitted(am)
+	    println(io, "\n", modname(typeof(am.spec)), " model with ",
+	            distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n\n")
 
-    length(sem) > 0 && println(io, "Mean equation parameters:", "\n\n",
-                               CoefTable(hcat(ccm, sem, zzm, 2.0 * normccdf.(abs.(zzm))),
-                                         ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
-                                         coefnames(typeof(am.meanspec)), 4
-                                         )
-                              )
-    println(io, "Volatility parameters:", "\n\n",
-            CoefTable(hcat(ccg, seg, zzg, 2.0 * normccdf.(abs.(zzg))),
-                      ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
-                      coefnames(typeof(am.spec)), 4
-                      )
-            )
-    length(sed) > 0 && println(io, "Distribution parameters:", "\n\n",
-                               CoefTable(hcat(ccd, sed, zzd, 2.0 * normccdf.(abs.(zzd))),
-                                         ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
-                                         coefnames(typeof(am.dist)), 4
-                                         )
-                              )
+	    length(sem) > 0 && println(io, "Mean equation parameters:", "\n\n",
+	                               CoefTable(hcat(ccm, sem, zzm, 2.0 * normccdf.(abs.(zzm))),
+	                                         ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
+	                                         coefnames(typeof(am.meanspec)), 4
+	                                         )
+	                              )
+	    println(io, "Volatility parameters:", "\n\n",
+	            CoefTable(hcat(ccg, seg, zzg, 2.0 * normccdf.(abs.(zzg))),
+	                      ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
+	                      coefnames(typeof(am.spec)), 4
+	                      )
+	            )
+	    length(sed) > 0 && println(io, "Distribution parameters:", "\n\n",
+	                               CoefTable(hcat(ccd, sed, zzd, 2.0 * normccdf.(abs.(zzd))),
+	                                         ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
+	                                         coefnames(typeof(am.dist)), 4
+	                                         )
+	                              )
+
+   else
+	   println(io, "\n", modname(typeof(am.spec)), " model with ",
+			   distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n\n")
+	   println(io, CoefTable(coef(am), coefnames(am), ["Parameters:"]))
+   end
 end
 
 #from here https://stackoverflow.com/questions/46671965/printing-variable-subscripts-in-julia
