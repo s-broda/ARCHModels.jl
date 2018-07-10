@@ -39,6 +39,7 @@ T = 10^4;
 end
 
 @testset "StatisticalModel" begin
+    #not implemented: adjr2, deviance, mss, nulldeviance, r2, rss, weights
     srand(1);
     spec = GARCH{1, 1}([1., .9, .05])
     data = simulate(spec, T);
@@ -55,6 +56,23 @@ end
     @test nobs(am) == T
     @test dof(am) == 3
     @test coefnames(GARCH{1, 1}) == ["ω", "β₁", "α₁"]
+    @test aic(am) ≈ 58369.082969298106 rtol=1e-4
+    @test bic(am) ≈ 58390.713990414035 rtol=1e-4
+    @test aicc(am) ≈ 58369.085370258494 rtol=1e-4
+    @test all(coef(am) .== am.spec.coefs)
+    @test all(isapprox(confint(am), [0.6228537382166024 1.1944723245606814;
+                                    0.8852323068993577 0.9258214298904262;
+                                    0.040131313548448275 0.060604377407810675],
+                       rtol=1e-4)
+                       )
+    @test all(isapprox(informationmatrix(am; expected=false), [0.15326216336912968 2.9536982257433135 2.618124940552642;
+                                                               2.9536982257433135 58.956837321202826 53.74888605159925;
+                                                               2.618124940552642 53.74888605159925 53.29656483617587],
+                       rtol=1e-4)
+                       )
+    @test_throws ErrorException informationmatrix(am)
+    @test all(isapprox(score(am), [-4.091261171623728e-6 3.524550271549742e-5 -6.989366926291041e-5], rtol=1e-4))
+    @test islinear(am::ARCHModel) == false
 end
 
 @testset "MeanSpecs" begin
@@ -92,7 +110,7 @@ end
     srand(1);
     data = simulate(GARCH{1, 1}([1., .9, .05]), T);
     @test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), [.1, .2, .3, .4, .5, .6, .7]))
-    @test_warn "negative" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
+    @test_warn "non-positive" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
     e = @test_throws ARCH.NumParamError ARCH.loglik!(Float64[], Float64[], Float64[], GARCH{1, 1}, StdNormal{Float64},
                                                      NoIntercept{Float64}, data,
                                                      [0., 0., 0., 0.]

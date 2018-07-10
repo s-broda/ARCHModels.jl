@@ -10,7 +10,6 @@ __precompile__()
 #how to export arch?
 #what should simulate return?
 #actually pass instances everywhere, at least for mean
-#implement the remaining interface of StatisticalModel
 #implement conditionalvariances/volas, stdresids
 #remove circular_buffer.jl as soon as https://github.com/JuliaCollections/DataStructures.jl/pull/390 gets merged and tagged.
 #make variance targeting an option?
@@ -29,8 +28,10 @@ import DataStructures: CircularBuffer, _buffer_index_checked, _buffer_index,
                        capacity, isfull
 include("circular_buffer.jl")# no bounds checks
 import Base: show, showerror, Random.rand, eltype, mean
-import StatsBase: StatisticalModel, loglikelihood, nobs, fit, fit!, adjr2, aic,
-                  bic, aicc, dof, coef, coefnames, coeftable, CoefTable
+import StatsBase: StatisticalModel, loglikelihood, nobs, fit, fit!, confint, aic,
+                  bic, aicc, dof, coef, coefnames, coeftable, CoefTable,
+				  informationmatrix, islinear, score, vcov
+
 export ARCHModel, VolatilitySpec, StandardizedDistribution, MeanSpec,
        simulate, selectmodel, StdNormal, StdTDist, Intercept, NoIntercept
 """
@@ -124,6 +125,10 @@ coefnames(am::ARCHModel) = vcat(coefnames(typeof(am.spec)),
                                 coefnames(typeof(am.dist)),
                                 coefnames(typeof(am.meanspec))
                                 )
+islinear(am::ARCHModel) = false
+function confint(am::ARCHModel, level::Real=0.95)
+    hcat(coef(am), coef(am)) + stderror(am)*quantile(Normal(),(1. -level)/2.)*[1. -1.]
+end
 isfitted(am::ARCHModel) = am.fitted
 
 function simulate(spec::VolatilitySpec{T2}, nobs;
@@ -223,27 +228,41 @@ function logliks(spec, dist, meanspec, data, coefs::Vector{T}) where {T}
     LLs = -lht./2+logkernel.(dist, zt, Ref{Vector{T}}(distcoefs)) + logconst(dist, distcoefs)
 end
 
-function stderror(am::ARCHModel)
-    f = x -> ARCH.logliks(typeof(am.spec), typeof(am.dist), typeof(am.meanspec), am.data, x)
-    g = x -> sum(ARCH.logliks(typeof(am.spec), typeof(am.dist), typeof(am.meanspec), am.data, x))
-    J = ForwardDiff.jacobian(f, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
-    V = J'J #outer product of scores
-    H = ForwardDiff.hessian(g, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
+function informationmatrix(am::ARCHModel; expected::Bool=true)
+	expected && error("expected informationmatrix is not implemented for ARCHModel. Use expected=false.")
+	g = x -> sum(ARCH.logliks(typeof(am.spec), typeof(am.dist), typeof(am.meanspec), am.data, x))
+	H = ForwardDiff.hessian(g, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
+	J = -H/nobs(am)
+end
+
+function scores(am::ARCHModel)
+	f = x -> ARCH.logliks(typeof(am.spec), typeof(am.dist), typeof(am.meanspec), am.data, x)
+	S = ForwardDiff.jacobian(f, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
+end
+
+score(am::ARCHModel) = sum(scores(am), 1)
+
+
+function vcov(am::ARCHModel)
+	S = scores(am)
+    V = S'S/nobs(am)
+    J = informationmatrix(am; expected=false) #Note: B&W use expected information.
     Ji = try
-        -inv(H) #inverse of observed Fisher information. Note: B&W use expected information.
+        inv(J)
     catch e
         if e isa LinAlg.SingularException
-            warn("Fisher information is singular; standard errors are inaccurate.")
-            -pinv(H)
+            warn("Fisher information is singular; vcov matrix is inaccurate.")
+            pinv(J)
         else
             rethrow(e)
         end
     end
-    v = diag(Ji*V*Ji)
-    any(v.<0) && warn("negative variance encountered; standard errors are inaccurate.")
-    return sqrt.(abs.(v)) #Huber sandwich
+    v = Ji*V*Ji/nobs(am) #Huber sandwich
+    all(diag(v).>0) || warn("non-positive variance encountered; vcov matrix is inaccurate.")
+    v
 end
 
+stderror(am::ARCHModel) = sqrt.(abs.(diag(vcov(am))))
 
 function fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
               meancoefs::Vector{T}, ::Type{VS}, ::Type{SD}, ::Type{MS},
