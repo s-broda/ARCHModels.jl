@@ -21,18 +21,19 @@ datam = simulate(spec, T; dist=StdTDist(4), meanspec=Intercept(3))
 ht = Float64[]
 lht = Float64[]
 zt = Float64[]
-am = selectmodel(GARCH, data; meanspec=NoIntercept)
+am = selectmodel(GARCH, data; meanspec=NoIntercept, show_trace=true)
 am2 = ARCHModel(spec, data)
 fit!(am2)
 am3 = fit(am2)
-am4 = selectmodel(GARCH, datat; dist=StdTDist, meanspec=NoIntercept)
-am5 = selectmodel(GARCH, datam; dist=StdTDist)
+am4 = selectmodel(GARCH, datat; dist=StdTDist, meanspec=NoIntercept, show_trace=true)
+am5 = selectmodel(GARCH, datam; dist=StdTDist, show_trace=true)
 am6 = fit(GARCH{1, 1}, data)
 srand(1)
 datae = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), T; meanspec=Intercept(3))
 
 am7 = selectmodel(EGARCH, datae; maxlags=2, show_trace=true)
 @test isfitted(am) == true
+@test isfitted(am2) == true
 @test loglikelihood(ARCHModel(spec, data)) ==  ARCH.loglik!(ht, lht, zt,
                                                             typeof(spec),
                                                             StdNormal{Float64},
