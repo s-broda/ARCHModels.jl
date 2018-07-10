@@ -31,7 +31,7 @@ am6 = fit(GARCH{1, 1}, data)
 srand(1)
 datae = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), T; meanspec=Intercept(3))
 
-am7 = selectmodel(EGARCH, datae; maxlags=2)
+am7 = selectmodel(EGARCH, datae; maxlags=2, show_trace=true)
 @test isfitted(am) == true
 @test loglikelihood(ARCHModel(spec, data)) ==  ARCH.loglik!(ht, lht, zt,
                                                             typeof(spec),
