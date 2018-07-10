@@ -304,13 +304,13 @@ end
 
 function selectmodel(::Type{VS}, data::Vector{T};
                      dist::Type{SD}=StdNormal{T}, meanspec::Type{MS}=Intercept{T},
-                     maxpq=3, criterion=bic, show_trace=false, kwargs...
+                     maxlags=3, criterion=bic, show_trace=false, kwargs...
                      ) where {VS<:VolatilitySpec, T<:AbstractFloat,
                               SD<:StandardizedDistribution, MS<:MeanSpec
                               }
     mylock=Threads.SpinLock()
     ndims = my_unwrap_unionall(VS)-1#e.g., two (p and q) for GARCH{p, q, T}
-    res = Array{ARCHModel, ndims}(ntuple(i->maxpq, ndims))
+    res = Array{ARCHModel, ndims}(ntuple(i->maxlags, ndims))
     Threads.@threads for ind in collect(CartesianRange(size(res)))
         res[ind] = fit(VS{ind.I...}, data; dist=dist, meanspec=meanspec)
         if show_trace
