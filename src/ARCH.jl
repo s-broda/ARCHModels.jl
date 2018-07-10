@@ -12,7 +12,6 @@ __precompile__()
 #actually pass instances everywhere, at least for mean
 #implement the remaining interface of StatisticalModel
 #implement conditionalvariances/volas, stdresids
-#use testsets
 #remove circular_buffer.jl as soon as https://github.com/JuliaCollections/DataStructures.jl/pull/390 gets merged and tagged.
 #make variance targeting an option?
 # Float16/32 don't seem to work anymore. Problem in Optim?
