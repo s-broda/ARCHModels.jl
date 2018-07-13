@@ -19,6 +19,9 @@ T = 10^4;
     am00.data .= 0.
     simulate!(am00)
     @test all(am00.data .== am0.data)
+    srand(1)
+    am00 = simulate(am0)
+    @test all(am00.data .== am0.data)
     am = selectmodel(GARCH, am0.data; meanspec=NoIntercept, show_trace=true)
     @test isfitted(am) == true
     @test all(isapprox.(coef(am), [0.9086632896184081,
