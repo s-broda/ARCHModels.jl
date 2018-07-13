@@ -6,7 +6,6 @@ __precompile__()
 #marketdata
 #PkgBenchmark
 #HAC s.e.s from CovariancesMatrices.jl?
-#simulate ARCHModel
 #how to export arch?
 #what should simulate return?
 #actually pass instances everywhere, at least for mean
@@ -66,7 +65,7 @@ function showerror(io::IO, e::NumParamError)
 end
 
 """
-    ARCHModel(spec::VolatilitySpec, data::Vector, dist=StdNormal(),
+    ARCHModel(spec::VolatilitySpec, data::Vector; dist=StdNormal(),
 	          meanspec=NoIntercept(), fitted=false
               )
 
@@ -130,6 +129,10 @@ function confint(am::ARCHModel, level::Real=0.95)
     hcat(coef(am), coef(am)) + stderror(am)*quantile(Normal(),(1. -level)/2.)*[1. -1.]
 end
 isfitted(am::ARCHModel) = am.fitted
+
+function simulate(am::ARCHModel; warmup=100)
+    simulate(am.spec, nobs(am); warmup=warmup, dist=am.dist, meanspec=am.meanspec)
+end
 
 function simulate(spec::VolatilitySpec{T2}, nobs;
                   warmup=100,
