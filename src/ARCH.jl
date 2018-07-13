@@ -7,7 +7,6 @@ __precompile__()
 #PkgBenchmark
 #HAC s.e.s from CovariancesMatrices.jl?
 #how to export arch?
-#what should simulate return?
 #actually pass instances everywhere, at least for mean
 #implement conditionalvariances/volas, stdresids
 #remove circular_buffer.jl as soon as https://github.com/JuliaCollections/DataStructures.jl/pull/390 gets merged and tagged.
@@ -32,7 +31,9 @@ import StatsBase: StatisticalModel, loglikelihood, nobs, fit, fit!, confint, aic
 				  informationmatrix, islinear, score, vcov
 
 export ARCHModel, VolatilitySpec, StandardizedDistribution, MeanSpec,
-       simulate, selectmodel, StdNormal, StdTDist, Intercept, NoIntercept
+       simulate, simulate!, selectmodel, StdNormal, StdTDist, Intercept,
+       NoIntercept
+
 """
     VolatilitySpec{T}
 
@@ -134,13 +135,26 @@ function simulate(am::ARCHModel; warmup=100)
     simulate(am.spec, nobs(am); warmup=warmup, dist=am.dist, meanspec=am.meanspec)
 end
 
-function simulate(spec::VolatilitySpec{T2}, nobs;
+function simulate(spec::VolatilitySpec{T2}, nobs; warmup=100, dist::StandardizedDistribution{T2}=StdNormal{T2}(),
+                  meanspec::MeanSpec{T2}=NoIntercept{T2}()
+                  ) where {T2<:AbstractFloat}
+    data = zeros(T2, nobs)
+    _simulate!(data,  spec; warmup=warmup, dist=dist, meanspec=meanspec)
+    ARCHModel(spec, data, dist, meanspec, false)
+end
+
+function simulate!(am::ARCHModel; warmup=100)
+    _simulate!(am.data, am.spec; warmup=warmup, dist=am.dist, meanspec=am.meanspec)
+    am
+end
+
+function _simulate!(data::Vector{T2}, spec::VolatilitySpec{T2};
                   warmup=100,
                   dist::StandardizedDistribution{T2}=StdNormal{T2}(),
                   meanspec::MeanSpec{T2}=NoIntercept{T2}()
                   ) where {T2<:AbstractFloat}
-    T = nobs+warmup
-    data = zeros(T2, T)
+    append!(data, zeros(T2, warmup))
+    T = length(data)
     r = presample(typeof(spec))
     ht = CircularBuffer{T2}(r)
     lht = CircularBuffer{T2}(r)
@@ -161,7 +175,7 @@ function simulate(spec::VolatilitySpec{T2}, nobs;
             data[t] = mean(typeof(meanspec), meanspec.coefs) + sqrt(ht[end])*zt[end]
         end
     end
-    data[warmup+1:warmup+nobs]
+    deleteat!(data, 1:warmup)
 end
 
 @inline function splitcoefs(coefs, VS, SD, MS)
@@ -313,6 +327,7 @@ function fit!(AM::ARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
          autodiff=autodiff, kwargs...
          )
 	AM.fitted=true
+    AM
 end
 
 

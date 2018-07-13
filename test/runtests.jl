@@ -13,8 +13,13 @@ T = 10^4;
 @testset "GARCH" begin
     srand(1);
     spec = GARCH{1, 1}([1., .9, .05])
-    data = simulate(spec, T);
-    am = selectmodel(GARCH, data; meanspec=NoIntercept, show_trace=true)
+    am0 = simulate(spec, T);
+    am00 = deepcopy(am0)
+    srand(1)
+    am00.data .= 0.
+    simulate!(am00)
+    @test all(am00.data .== am0.data)
+    am = selectmodel(GARCH, am0.data; meanspec=NoIntercept, show_trace=true)
     @test isfitted(am) == true
     @test all(isapprox.(coef(am), [0.9086632896184081,
                                    0.9055268468427705,
@@ -22,7 +27,7 @@ T = 10^4;
     @test all(isapprox.(stderror(am), [0.14582381264705224,
                                        0.010354562480367474,
                                        0.005222817398477784], rtol=1e-4))
-    am2 = ARCHModel(spec, data)
+    am2 = ARCHModel(spec, am0.data)
     @test isfitted(am2) == false
     io = IOBuffer()
     str = sprint(io -> show(io, am2))
@@ -42,15 +47,15 @@ end
     #not implemented: adjr2, deviance, mss, nulldeviance, r2, rss, weights
     srand(1);
     spec = GARCH{1, 1}([1., .9, .05])
-    data = simulate(spec, T);
-    am = fit(GARCH{1, 1}, data; meanspec=NoIntercept)
-    @test loglikelihood(ARCHModel(spec, data)) ==  ARCH.loglik!(Float64[],
+    am = simulate(spec, T)
+    fit!(am)
+    @test loglikelihood(am) ==  ARCH.loglik!(Float64[],
                                                                 Float64[],
                                                                 Float64[],
                                                                 typeof(spec),
                                                                 StdNormal{Float64},
                                                                 NoIntercept{Float64},
-                                                                data,
+                                                                am.data,
                                                                 spec.coefs
                                                                 )
     @test nobs(am) == T
@@ -78,8 +83,8 @@ end
 @testset "MeanSpecs" begin
     srand(1);
     spec = GARCH{1, 1}([1., .9, .05])
-    data = simulate(spec, T; meanspec=Intercept(0.))
-    am = fit(GARCH{1, 1}, data)
+    am = simulate(spec, T; meanspec=Intercept(0.))
+    fit!(am)
     @test all(isapprox(coef(am), [0.910496430719689,
                                    0.9054120402733519,
                                    0.05039127076312942,
@@ -90,14 +95,14 @@ end
 @testset "ARCH" begin
     srand(1);
     spec = _ARCH{2}([1., .3, .4]);
-    dataA = simulate(spec, T);
-    @test selectmodel(_ARCH, dataA).spec.coefs == fit(_ARCH{2}, dataA).spec.coefs
+    am = simulate(spec, T);
+    @test selectmodel(_ARCH, am.data).spec.coefs == fit(_ARCH{2}, am.data).spec.coefs
 end
 
 @testset "EGARCH" begin
     srand(1)
-    datae = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), T; meanspec=Intercept(3))
-    am7 = selectmodel(EGARCH, datae; maxlags=2, show_trace=true)
+    am = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), T; meanspec=Intercept(3))
+    am7 = selectmodel(EGARCH, am.data; maxlags=2, show_trace=true)
     @test all(isapprox(coef(am7), [0.08502955535533116,
                                    0.004709708474515596,
                                    0.9164935566284109,
@@ -107,12 +112,10 @@ end
 end
 
 @testset "Errors" begin
-    srand(1);
-    data = simulate(GARCH{1, 1}([1., .9, .05]), T);
     @test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), [.1, .2, .3, .4, .5, .6, .7]))
     @test_warn "non-positive" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
     e = @test_throws ARCH.NumParamError ARCH.loglik!(Float64[], Float64[], Float64[], GARCH{1, 1}, StdNormal{Float64},
-                                                     NoIntercept{Float64}, data,
+                                                     NoIntercept{Float64}, zeros(T),
                                                      [0., 0., 0., 0.]
                                                      )
     str = sprint(showerror, e.value)
@@ -137,9 +140,9 @@ end
         @test coefnames(StdTDist) == ["ν"]
         @test ARCH.distname(StdTDist) == "Student's t"
         srand(1);
-        datat = simulate(spec, T; dist=StdTDist(4))
+        datat = simulate(spec, T; dist=StdTDist(4)).data
         srand(1);
-        datam = simulate(spec, T; dist=StdTDist(4), meanspec=Intercept(3))
+        datam = simulate(spec, T; dist=StdTDist(4), meanspec=Intercept(3)).data
         am4 = selectmodel(GARCH, datat; dist=StdTDist, meanspec=NoIntercept, show_trace=true)
         am5 = selectmodel(GARCH, datam; dist=StdTDist, show_trace=true)
         @test coefnames(am5) == ["ω", "β₁", "α₁", "ν", "μ"]
