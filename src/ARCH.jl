@@ -126,10 +126,19 @@ coefnames(am::ARCHModel) = vcat(coefnames(typeof(am.spec)),
                                 coefnames(typeof(am.meanspec))
                                 )
 islinear(am::ARCHModel) = false
+
 function confint(am::ARCHModel, level::Real=0.95)
     hcat(coef(am), coef(am)) + stderror(am)*quantile(Normal(),(1. -level)/2.)*[1. -1.]
 end
+
 isfitted(am::ARCHModel) = am.fitted
+
+"""
+    simulate(am::ARCHModel; warmup=100)
+    simulate(spec::VolatilitySpec{T2}, nobs; warmup=100, dist=StdNormal(), meanspec=NoIntercept())
+Simulate an ARCHModel.
+"""
+function simulate end
 
 function simulate(am::ARCHModel; warmup=100)
     simulate(am.spec, nobs(am); warmup=warmup, dist=am.dist, meanspec=am.meanspec)
@@ -143,6 +152,10 @@ function simulate(spec::VolatilitySpec{T2}, nobs; warmup=100, dist::Standardized
     ARCHModel(spec, data, dist, meanspec, false)
 end
 
+"""
+    simulate!(am::ARCHModel; warmup=100)
+Simulate an ARCHModel, modifying `am` in place.
+"""
 function simulate!(am::ARCHModel; warmup=100)
     _simulate!(am.data, am.spec; warmup=warmup, dist=am.dist, meanspec=am.meanspec)
     am
