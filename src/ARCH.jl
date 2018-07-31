@@ -7,6 +7,7 @@ __precompile__()
 #PkgBenchmark
 #HAC s.e.s from CovariancesMatrices.jl?
 #how to export arch?
+#Forecasting
 #actually pass instances everywhere, at least for mean
 #implement conditionalvariances/volas, stdresids
 #remove circular_buffer.jl as soon as https://github.com/JuliaCollections/DataStructures.jl/pull/390 gets merged and tagged.
