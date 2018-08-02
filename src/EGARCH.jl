@@ -55,7 +55,7 @@ function constraints(::Type{<:EGARCH{o, p,q}}, ::Type{T}) where {o, p, q, T}
     upper = zeros(T, o+p+q+1)
     lower .=  T(-Inf)
     upper .= T(Inf)
-    lower[1] = zero(T)
+    lower[1] = T(-Inf)
     lower[o+2:o+p+1] .= zero(T)
     upper[o+2:o+p+1] .= one(T)
     return lower, upper
