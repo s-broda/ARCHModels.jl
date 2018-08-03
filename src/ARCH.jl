@@ -11,7 +11,6 @@ __precompile__()
 #actually pass instances everywhere, at least for mean
 #implement conditionalvariances/volas, stdresids
 #remove circular_buffer.jl as soon as https://github.com/JuliaCollections/DataStructures.jl/pull/390 gets merged and tagged.
-#make variance targeting an option?
 # Float16/32 don't seem to work anymore. Problem in Optim?
 #support missing data? timeseries?
 module ARCH
@@ -220,7 +219,8 @@ end
     garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, MS)
     T > r || error("Sample too small.")
     @inbounds begin
-        h0 = uncond(VS, garchcoefs)
+        #h0 = uncond(VS, garchcoefs)
+        h0 = var(data)
         h0 > 0 || return T2(NaN)
         LL = zero(T2)
         for t = 1:T
