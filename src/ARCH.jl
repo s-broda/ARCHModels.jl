@@ -22,12 +22,11 @@ using ForwardDiff
 using Distributions
 using Roots
 using Compat #for circular_buffer
-import StatsBase: stderror
 import DataStructures: CircularBuffer, _buffer_index_checked, _buffer_index,
                        capacity, isfull
 include("circular_buffer.jl")# no bounds checks
 import Base: show, showerror, Random.rand, eltype, mean
-import StatsBase: StatisticalModel, loglikelihood, nobs, fit, fit!, confint, aic,
+import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, confint, aic,
                   bic, aicc, dof, coef, coefnames, coeftable, CoefTable,
 				  informationmatrix, islinear, score, vcov
 
