@@ -6,7 +6,7 @@ ARCH (Autoregressive Conditional Heteroskedasticity) models are a class of model
 
 # Installation
 
-The package is not registered yet; to install it, do `Pkg.clone("https://github.com/s-broda/ARCH.jl")`. Only Julia 0.6 is supported at the moment.
+The package is not registered yet; to install it in Julia 0.7 or 1.0, do `add https://github.com/s-broda/ARCH.jl` in the pkg repl mode. For Julia 0.6, check out the 0.6 branch.
 
 # Acknowledgements
 
