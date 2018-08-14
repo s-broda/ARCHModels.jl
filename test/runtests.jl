@@ -161,7 +161,7 @@ end
     #@test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), [.1, .2, .3, .4, .5, .6, .7]))
     #with unconditional as presample:
     #@test_warn "non-positive" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
-    @test_warn "non-positive" stderror(ARCHModel(GARCH{3, 0}(0*[1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
+    @test_logs (:warn, "non-positive variance encountered; vcov matrix is inaccurate.") stderror(ARCHModel(GARCH{3, 0}(0*[1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
     e = @test_throws ARCH.NumParamError ARCH.loglik!(Float64[], Float64[], Float64[], GARCH{1, 1}, StdNormal{Float64},
                                                      NoIntercept{Float64}, zeros(T),
                                                      [0., 0., 0., 0.]
