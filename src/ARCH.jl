@@ -1,5 +1,3 @@
-__precompile__()
-
 #Todo:
 #docs
 #plotting via timeseries
