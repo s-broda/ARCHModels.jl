@@ -4,7 +4,7 @@ os:
   - linux
   - osx
 julia:
-  - 0.6
+  - 1.0
 #  - nightly
 notifications:
   email: false
@@ -27,11 +27,11 @@ git:
 
 ## uncomment the following lines to override the default test script
 script:
-  - julia -e 'Pkg.clone(pwd()); Pkg.build("ARCH"); Pkg.test("ARCH"; coverage=true)'
+  - julia -e 'using Pkg; Pkg.add(pwd()); Pkg.build("ARCH"); Pkg.test("ARCH"; coverage=true)'
 after_success:
-  - julia -e 'Pkg.add("Documenter")'
-  - julia -e 'cd(Pkg.dir("ARCH")); include(joinpath("docs", "make.jl"))'
+  - julia -e 'using Pkg; Pkg.add("Documenter")'
+  - julia -e 'import ARCH; cd(joinpath(dirname(pathof(ARCH)), "..")); include(joinpath("docs", "make.jl"))'
   # push coverage results to Coveralls
-  - julia -e 'cd(Pkg.dir("ARCH")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  - julia -e 'import ARCH; cd(joinpath(dirname(pathof(ARCH)), "..")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
   # push coverage results to Codecov
-  - julia -e 'cd(Pkg.dir("ARCH")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+  - julia -e 'import ARCH; cd(joinpath(dirname(pathof(ARCH)), "..")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
