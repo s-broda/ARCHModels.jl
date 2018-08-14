@@ -27,7 +27,7 @@ const _ARCH = GARCH{0}
         mht += garchcoefs[i+1+p]*(data[t-i]-mean(MS, meancoefs))^2
     end
     push!(ht, mht)
-    push!(lht, mht>0? log(mht) : -mht)
+    push!(lht, (mht > 0) ? log(mht) : -mht)
     return nothing
 end
 
@@ -41,8 +41,8 @@ end
 
 function startingvals(::Type{<:GARCH{p,q}}, data::Array{T}) where {p, q, T}
     x0 = zeros(T, p+q+1)
-    x0[2:p+1] = 0.9/p
-    x0[p+2:end] = 0.05/q
+    x0[2:p+1] .= 0.9/p
+    x0[p+2:end] .= 0.05/q
     x0[1] = var(data)*(one(T)-sum(x0))
     return x0
 end
@@ -55,7 +55,7 @@ function constraints(::Type{<:GARCH{p,q}}, ::Type{T}) where {p, q, T}
 end
 
 function coefnames(::Type{<:GARCH{p,q}}) where {p, q}
-    names = Array{String, 1}(p+q+1)
+    names = Array{String, 1}(undef, p+q+1)
     names[1] = "ω"
     names[2:p+1] .= (i -> "β"*subscript(i)).([1:p...])
     names[p+2:p+q+1] .= (i -> "α"*subscript(i)).([1:q...])
