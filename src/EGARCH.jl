@@ -43,9 +43,9 @@ end
 function startingvals(spec::Type{<:EGARCH{o, p, q}}, data::Array{T}) where {o, p, q, T}
     x0 = zeros(T, o+p+q+1)
     x0[1]=1
-    x0[2:o+1] = 0
-    x0[o+2:o+p+1] = 0.9/p
-    x0[o+p+2:end] = 0.05/q
+    x0[2:o+1] .= 0
+    x0[o+2:o+p+1] .= 0.9/p
+    x0[o+p+2:end] .= 0.05/q
     x0[1] = var(data)/uncond(spec, x0)
     return x0
 end
@@ -62,7 +62,7 @@ function constraints(::Type{<:EGARCH{o, p,q}}, ::Type{T}) where {o, p, q, T}
 end
 
 function coefnames(::Type{<:EGARCH{o, p, q}}) where {o, p, q}
-    names = Array{String, 1}(o+p+q+1)
+    names = Array{String, 1}(undef, o+p+q+1)
     names[1] = "ω"
     names[2:o+1] .= (i -> "γ"*subscript(i)).([1:o...])
     names[o+2:o+p+1] .= (i -> "β"*subscript(i)).([1:p...])

@@ -1,6 +1,7 @@
-using Base.Test
+using Test
 
 using ARCH
+using Random
 #=
 Data from [1]. See [2] for a comparsion of GARCH software based on this data.
 [1] Bollerslev, T. and Ghysels, E. (1996), Periodic Autoregressive Conditional Heteroscedasticity, Journal of Business and Economic Statistics (14), pp. 139-151. https://doi.org/10.2307/1392425
@@ -11,15 +12,15 @@ Data from [1]. See [2] for a comparsion of GARCH software based on this data.
 #r=convert.(Float64, readcsv(IOBuffer(res.body))[2:end])
 T = 10^4;
 @testset "GARCH" begin
-    srand(1);
+    Random.seed!(1)
     spec = GARCH{1, 1}([1., .9, .05])
     am0 = simulate(spec, T);
     am00 = deepcopy(am0)
-    srand(1)
+    Random.seed!(1)
     am00.data .= 0.
     simulate!(am00)
     @test all(am00.data .== am0.data)
-    srand(1)
+    Random.seed!(1)
     am00 = simulate(am0)
     @test all(am00.data .== am0.data)
     am = selectmodel(GARCH, am0.data; meanspec=NoIntercept, show_trace=true)
@@ -57,7 +58,7 @@ end
 
 @testset "StatisticalModel" begin
     #not implemented: adjr2, deviance, mss, nulldeviance, r2, rss, weights
-    srand(1);
+    Random.seed!(1);
     spec = GARCH{1, 1}([1., .9, .05])
     am = simulate(spec, T)
     fit!(am)
@@ -112,7 +113,7 @@ end
 end
 
 @testset "MeanSpecs" begin
-    srand(1);
+    Random.seed!(1);
     spec = GARCH{1, 1}([1., .9, .05])
     am = simulate(spec, T; meanspec=Intercept(0.))
     fit!(am)
@@ -130,14 +131,14 @@ end
 end
 
 @testset "ARCH" begin
-    srand(1);
+    Random.seed!(1);
     spec = _ARCH{2}([1., .3, .4]);
     am = simulate(spec, T);
     @test selectmodel(_ARCH, am.data).spec.coefs == fit(_ARCH{2}, am.data).spec.coefs
 end
 
 @testset "EGARCH" begin
-    srand(1)
+    Random.seed!(1)
     am = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), T; meanspec=Intercept(3))
     am7 = selectmodel(EGARCH, am.data; maxlags=2, show_trace=true)
     #with unconditional as presample:
@@ -160,7 +161,7 @@ end
     #@test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), [.1, .2, .3, .4, .5, .6, .7]))
     #with unconditional as presample:
     #@test_warn "non-positive" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
-    stderror(ARCHModel(GARCH{3, 0}(0*[1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
+    @test_warn "non-positive" stderror(ARCHModel(GARCH{3, 0}(0*[1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
     e = @test_throws ARCH.NumParamError ARCH.loglik!(Float64[], Float64[], Float64[], GARCH{1, 1}, StdNormal{Float64},
                                                      NoIntercept{Float64}, zeros(T),
                                                      [0., 0., 0., 0.]
@@ -172,7 +173,7 @@ end
 
 @testset "Distributions" begin
     @testset "Gaussian" begin
-        srand(1)
+        Random.seed!(1)
         data = rand(T)
         @test typeof(StdNormal())==typeof(StdNormal(Float64[]))
         @test fit(StdNormal, data).coefs == Float64[]
@@ -180,15 +181,15 @@ end
         @test ARCH.distname(StdNormal) == "Gaussian"
     end
     @testset "Student" begin
-        srand(1)
-        data = rand(StdTDist(4), 10000)
+        Random.seed!(1)
+        data = rand(StdTDist(4), T)
         spec = GARCH{1, 1}([1., .9, .05])
         @test fit(StdTDist, data).coefs[1] ≈ 3.972437329588246 rtol=1e-4
         @test coefnames(StdTDist) == ["ν"]
         @test ARCH.distname(StdTDist) == "Student's t"
-        srand(1);
+        Random.seed!(1);
         datat = simulate(spec, T; dist=StdTDist(4)).data
-        srand(1);
+        Random.seed!(1);
         datam = simulate(spec, T; dist=StdTDist(4), meanspec=Intercept(3)).data
         am4 = selectmodel(GARCH, datat; dist=StdTDist, meanspec=NoIntercept, show_trace=true)
         am5 = selectmodel(GARCH, datam; dist=StdTDist, show_trace=true)

@@ -10,23 +10,23 @@ __precompile__()
 #Forecasting
 #actually pass instances everywhere, at least for mean
 #implement conditionalvariances/volas, stdresids
-#remove circular_buffer.jl as soon as https://github.com/JuliaCollections/DataStructures.jl/pull/390 gets merged and tagged.
 # Float16/32 don't seem to work anymore. Problem in Optim?
 #support missing data? timeseries?
 module ARCH
 using Reexport
 @reexport using StatsBase
 using StatsFuns: normcdf, normccdf, normlogpdf, log2π, RFunctions.tdistrand
+using SpecialFunctions: beta, lgamma
 using Optim
 using ForwardDiff
 using Distributions
 using Roots
-using Compat #for circular_buffer
+using LinearAlgebra
+using DataStructures: CircularBuffer
 import StatsBase: stderror
-import DataStructures: CircularBuffer, _buffer_index_checked, _buffer_index,
-                       capacity, isfull
-include("circular_buffer.jl")# no bounds checks
-import Base: show, showerror, Random.rand, eltype, mean
+import Base: show, showerror, eltype
+import Statistics: mean
+import Random: rand
 import StatsBase: StatisticalModel, loglikelihood, nobs, fit, fit!, confint, aic,
                   bic, aicc, dof, coef, coefnames, coeftable, CoefTable,
 				  informationmatrix, islinear, score, vcov
@@ -129,7 +129,7 @@ coefnames(am::ARCHModel) = vcat(coefnames(typeof(am.spec)),
 islinear(am::ARCHModel) = false
 
 function confint(am::ARCHModel, level::Real=0.95)
-    hcat(coef(am), coef(am)) + stderror(am)*quantile(Normal(),(1. -level)/2.)*[1. -1.]
+    hcat(coef(am), coef(am)) .+ stderror(am)*quantile(Normal(),(1. -level)/2.)*[1. -1.]
 end
 
 isfitted(am::ARCHModel) = am.fitted
@@ -257,7 +257,7 @@ function logliks(spec, dist, meanspec, data, coefs::Vector{T}) where {T}
     lht = T[]
     zt = T[]
     loglik!(ht, lht, zt, spec, dist, meanspec, data, coefs)
-    LLs = -lht./2+logkernel.(dist, zt, Ref{Vector{T}}(distcoefs)) + logconst(dist, distcoefs)
+    LLs = -lht./2 .+ logkernel.(dist, zt, Ref{Vector{T}}(distcoefs)) .+ logconst(dist, distcoefs)
 end
 
 function informationmatrix(am::ARCHModel; expected::Bool=true)
@@ -272,7 +272,7 @@ function scores(am::ARCHModel)
 	S = ForwardDiff.jacobian(f, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
 end
 
-score(am::ARCHModel) = sum(scores(am), 1)
+score(am::ARCHModel) = sum(scores(am), dims=1)
 
 
 function vcov(am::ARCHModel)
@@ -282,15 +282,15 @@ function vcov(am::ARCHModel)
     Ji = try
         inv(J)
     catch e
-        if e isa LinAlg.SingularException
-            warn("Fisher information is singular; vcov matrix is inaccurate.")
+        if e isa LinearAlgebra.SingularException
+            @warn "Fisher information is singular; vcov matrix is inaccurate."
             pinv(J)
         else
             rethrow(e)
         end
     end
     v = Ji*V*Ji/nobs(am) #Huber sandwich
-    all(diag(v).>0) || warn("non-positive variance encountered; vcov matrix is inaccurate.")
+    all(diag(v).>0) || @warn "non-positive variance encountered; vcov matrix is inaccurate."
     v
 end
 
@@ -361,8 +361,8 @@ function selectmodel(::Type{VS}, data::Vector{T};
                               }
     mylock=Threads.SpinLock()
     ndims = my_unwrap_unionall(VS)-1#e.g., two (p and q) for GARCH{p, q, T}
-    res = Array{ARCHModel, ndims}(ntuple(i->maxlags, ndims))
-    Threads.@threads for ind in collect(CartesianRange(size(res)))
+    res = Array{ARCHModel, ndims}(undef, ntuple(i->maxlags, ndims))
+    Threads.@threads for ind in collect(CartesianIndices(size(res)))
         res[ind] = fit(VS{ind.I...}, data; dist=dist, meanspec=meanspec)
         if show_trace
             lock(mylock)
@@ -408,7 +408,7 @@ end#function
 Base.eltype(::StandardizedDistribution{T}) where {T} = T
 
 #count the number of type vars. there's probably a better way.
-function my_unwrap_unionall(a::ANY)
+function my_unwrap_unionall(@nospecialize a)
     count = 0
     while isa(a, UnionAll)
         a = a.body
@@ -472,8 +472,8 @@ end
 subscript(i::Integer) = i<0 ? error("$i is negative") : join('₀'+d for d in reverse(digits(i)))
 
 function modname(::Type{VS}) where VS<:VolatilitySpec
-    s = split("$(VS)", ".")[2]
-    s = s[1:findlast(s, ',')-1] * '}'
+    s = "$(VS)"
+    s = s[1:findlast(isequal(','), s)-1] * '}'
 end
 
 include("meanspecs.jl")
