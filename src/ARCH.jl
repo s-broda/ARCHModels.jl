@@ -21,11 +21,10 @@ using Distributions
 using Roots
 using LinearAlgebra
 using DataStructures: CircularBuffer
-import StatsBase: stderror
 import Base: show, showerror, eltype
 import Statistics: mean
 import Random: rand
-import StatsBase: StatisticalModel, loglikelihood, nobs, fit, fit!, confint, aic,
+import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, confint, aic,
                   bic, aicc, dof, coef, coefnames, coeftable, CoefTable,
 				  informationmatrix, islinear, score, vcov
 
