@@ -72,7 +72,7 @@ Create an ARCHModel.
 
 # Example:
 ```jldoctest
-julia> ARCHModel(GARCH{1, 1}([1., .9, .05]), rand(10))
+julia> ARCHModel(GARCH{1, 1}([1., .9, .05]), randn(10))
 
 GARCH{1,1} model with Gaussian errors, T=10.
 
