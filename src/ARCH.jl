@@ -293,7 +293,7 @@ end
 
 stderror(am::ARCHModel) = sqrt.(abs.(diag(vcov(am))))
 
-function fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
+function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
               meancoefs::Vector{T}, ::Type{VS}, ::Type{SD}, ::Type{MS},
               data::Vector{T}; algorithm=BFGS(), autodiff=:forward, kwargs...
               ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
@@ -326,7 +326,7 @@ function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
     coefs = startingvals(VS, data)
     distcoefs = startingvals(SD, data)
     meancoefs = startingvals(MS, data)
-    fit!(coefs, distcoefs, meancoefs, VS, SD, MS, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
+    _fit!(coefs, distcoefs, meancoefs, VS, SD, MS, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
     return ARCHModel(VS(coefs), data, SD(distcoefs), MS(meancoefs), true)
 end
 
@@ -334,7 +334,7 @@ function fit!(AM::ARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
     AM.spec.coefs.=startingvals(typeof(AM.spec), AM.data)
     AM.dist.coefs.=startingvals(typeof(AM.dist), AM.data)
     AM.meanspec.coefs.=startingvals(typeof(AM.meanspec), AM.data)
-    fit!(AM.spec.coefs, AM.dist.coefs, AM.meanspec.coefs, typeof(AM.spec),
+    _fit!(AM.spec.coefs, AM.dist.coefs, AM.meanspec.coefs, typeof(AM.spec),
          typeof(AM.dist), typeof(AM.meanspec), AM.data; algorithm=algorithm,
          autodiff=autodiff, kwargs...
          )
