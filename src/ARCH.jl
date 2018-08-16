@@ -317,6 +317,59 @@ function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
     return nothing
 end
 
+"""
+    fit(VS::Type{<:VolatilitySpec}, data; dist=StdNormal, meanspec=Intercept,
+        algorithm=BFGS(), autodiff=:forward, kwargs...)
+
+Fit the ARCH model specified by `VS` to data. Keyword arguments `algorithm`,
+`autodiff`, and `kwargs` are passed on to the optimizer.
+
+# Examples:
+##  GARCH{1, 1} model  with intercept, Gaussian errors
+```jldoctest
+julia> Random.seed!(1);  am = simulate(GARCH{1, 1}([1., .9, .05]), 10^4);
+
+julia> fit(GARCH{1, 1}, am.data)
+
+GARCH{1,1} model with Gaussian errors, T=10000.
+
+
+Mean equation parameters:
+
+      Estimate Std.Error  z value Pr(>|z|)
+μ    0.0277078 0.0435526 0.636192   0.5247
+
+Volatility parameters:
+
+      Estimate  Std.Error z value Pr(>|z|)
+ω     0.910479   0.146171 6.22886    <1e-9
+β₁    0.905417  0.0103798  87.229   <1e-99
+α₁   0.0503472 0.00523329 9.62057   <1e-21
+```
+
+## EGARCH{1, 1, 1} model without intercept, Student's t errors.
+```jldoctest
+julia> Random.seed!(1); am = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), 10^4; dist=StdTDist(3.));
+
+julia> fit(EGARCH{1, 1, 1}, am.data; meanspec=NoIntercept, dist=StdTDist)
+
+EGARCH{1,1,1} model with Student's t errors, T=10000.
+
+
+Volatility parameters:
+
+       Estimate Std.Error  z value Pr(>|z|)
+ω     0.0987805 0.0250686  3.94041    <1e-4
+γ₁   0.00365422 0.0107549 0.339773   0.7340
+β₁     0.907199 0.0248543  36.5007   <1e-99
+α₁     0.105628 0.0181297  5.82623    <1e-8
+
+Distribution parameters:
+
+     Estimate Std.Error z value Pr(>|z|)
+ν     2.93066 0.0961986 30.4647   <1e-99
+```
+"""
 function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
              meanspec::Type{MS}=Intercept{T}, algorithm=BFGS(),
              autodiff=:forward, kwargs...
@@ -330,23 +383,34 @@ function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
     return ARCHModel(VS(coefs), data, SD(distcoefs), MS(meancoefs), true)
 end
 
-function fit!(AM::ARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
-    AM.spec.coefs.=startingvals(typeof(AM.spec), AM.data)
-    AM.dist.coefs.=startingvals(typeof(AM.dist), AM.data)
-    AM.meanspec.coefs.=startingvals(typeof(AM.meanspec), AM.data)
-    _fit!(AM.spec.coefs, AM.dist.coefs, AM.meanspec.coefs, typeof(AM.spec),
-         typeof(AM.dist), typeof(AM.meanspec), AM.data; algorithm=algorithm,
+"""
+    fit!(am::ARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
+
+Fit the ARCHModel specified by `am`, modifying `am` in place. Keyword arguments
+are passed on to the optimizer.
+"""
+function fit!(am::ARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
+    am.spec.coefs.=startingvals(typeof(am.spec), am.data)
+    am.dist.coefs.=startingvals(typeof(am.dist), am.data)
+    am.meanspec.coefs.=startingvals(typeof(am.meanspec), am.data)
+    _fit!(am.spec.coefs, am.dist.coefs, am.meanspec.coefs, typeof(am.spec),
+         typeof(am.dist), typeof(am.meanspec), am.data; algorithm=algorithm,
          autodiff=autodiff, kwargs...
          )
-	AM.fitted=true
-    AM
+	am.fitted=true
+    am
 end
 
+"""
+    fit(am::ARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
 
-function fit(AM::ARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
-    AM2=deepcopy(AM)
-    fit!(AM2; algorithm=algorithm, autodiff=autodiff, kwargs...)
-    return AM2
+Fit the ARCHModel specified by `am` and return the result in a new instance of
+ARCHModel. Keyword arguments are passed on to the optimizer.
+"""
+function fit(am::ARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
+    am2=deepcopy(am)
+    fit!(am2; algorithm=algorithm, autodiff=autodiff, kwargs...)
+    return am2
 end
 
 
