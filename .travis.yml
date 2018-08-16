@@ -27,7 +27,7 @@ git:
 
 ## uncomment the following lines to override the default test script
 script:
-  - julia -e 'using Pkg; Pkg.add(pwd()); Pkg.build("ARCH"); Pkg.test("ARCH"; coverage=true)'
+  - julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.test("ARCH"; coverage=true)'
 after_success:
   - julia -e 'using Pkg; Pkg.add("Documenter")'
   - julia -e 'import ARCH; cd(joinpath(dirname(pathof(ARCH)), "..")); include(joinpath("docs", "make.jl"))'
