@@ -212,6 +212,7 @@ end
                                   MS<:MeanSpec, T1<:AbstractFloat, T2
                                   }
     garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, MS)
+    #the below 6 lines can be removed when using Fminbox
     lowergarch, uppergarch = constraints(VS, T1)
     lowerdist, upperdist = constraints(SD, T1)
     lowermean, uppermean = constraints(MS, T1)
@@ -222,7 +223,7 @@ end
     r = presample(VS)
     T > r || error("Sample too small.")
     @inbounds begin
-        h0 = var(data)
+        h0 = var(data) # could be moved outside
         #h0 = uncond(VS, garchcoefs)
         #h0 > 0 || return T2(NaN)
         LL = zero(T2)
@@ -306,12 +307,14 @@ function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
                        MS<:MeanSpec, T<:AbstractFloat
                        }
     obj = x -> -loglik(VS, SD, MS, data, x)
-    #lowergarch, uppergarch = constraints(VS, T)
-    #lowerdist, upperdist = constraints(SD, T)
-    #lowermean, uppermean = constraints(MS, T)
-    #lower = vcat(lowergarch, lowerdist, lowermean)
-    #upper = vcat(uppergarch, upperdist, uppermean)
     coefs = vcat(garchcoefs, distcoefs, meancoefs)
+    #for fminbox:
+    # lowergarch, uppergarch = constraints(VS, T)
+    # lowerdist, upperdist = constraints(SD, T)
+    # lowermean, uppermean = constraints(MS, T)
+    # lower = vcat(lowergarch, lowerdist, lowermean)
+    # upper = vcat(uppergarch, upperdist, uppermean)
+    # res = optimize(obj, lower, upper, coefs, Fminbox(algorithm); autodiff=autodiff, kwargs...)
     res = optimize(obj, coefs, algorithm; autodiff=autodiff, kwargs...)
     coefs .= Optim.minimizer(res)
     ng = nparams(VS)
