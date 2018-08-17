@@ -207,18 +207,24 @@ end
 #dimensional array of the right type.
 @inline function loglik!(ht::AbstractVector{T2}, lht::AbstractVector{T2},
                          zt::AbstractVector{T2}, ::Type{VS}, ::Type{SD}, ::Type{MS},
-                         data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}
+                         data::Vector{T1}, coefs::AbstractVector{T2}
                          ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
-                                  MS<:MeanSpec, T2
+                                  MS<:MeanSpec, T1<:AbstractFloat, T2
                                   }
+    garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, MS)
+    lowergarch, uppergarch = constraints(VS, T1)
+    lowerdist, upperdist = constraints(SD, T1)
+    lowermean, uppermean = constraints(MS, T1)
+    lower = vcat(lowergarch, lowerdist, lowermean)
+    upper = vcat(uppergarch, upperdist, uppermean)
+    all(lower.<coefs.<upper) || return T2(-Inf)
     T = length(data)
     r = presample(VS)
-    garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, MS)
     T > r || error("Sample too small.")
     @inbounds begin
-        #h0 = uncond(VS, garchcoefs)
         h0 = var(data)
-        h0 > 0 || return T2(NaN)
+        #h0 = uncond(VS, garchcoefs)
+        #h0 > 0 || return T2(NaN)
         LL = zero(T2)
         for t = 1:T
             if t > r
@@ -300,13 +306,13 @@ function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
                        MS<:MeanSpec, T<:AbstractFloat
                        }
     obj = x -> -loglik(VS, SD, MS, data, x)
-    lowergarch, uppergarch = constraints(VS, T)
-    lowerdist, upperdist = constraints(SD, T)
-    lowermean, uppermean = constraints(MS, T)
-    lower = vcat(lowergarch, lowerdist, lowermean)
-    upper = vcat(uppergarch, upperdist, uppermean)
+    #lowergarch, uppergarch = constraints(VS, T)
+    #lowerdist, upperdist = constraints(SD, T)
+    #lowermean, uppermean = constraints(MS, T)
+    #lower = vcat(lowergarch, lowerdist, lowermean)
+    #upper = vcat(uppergarch, upperdist, uppermean)
     coefs = vcat(garchcoefs, distcoefs, meancoefs)
-    res = optimize(obj, lower, upper, coefs, Fminbox(algorithm); autodiff=autodiff, kwargs...)
+    res = optimize(obj, coefs, algorithm; autodiff=autodiff, kwargs...)
     coefs .= Optim.minimizer(res)
     ng = nparams(VS)
     ns = nparams(SD)
@@ -536,6 +542,33 @@ function modname(::Type{VS}) where VS<:VolatilitySpec
     s = "$(VS)"
     s = s[1:findlast(isequal(','), s)-1] * '}'
 end
+
+# the following serve as a benchmark
+function fastfit(data)
+    obj = x-> fastmLL(x, data, var(data))
+    optimize(obj,
+             startingvals(GARCH{1, 1}, data),
+             BFGS(), autodiff=:forward
+             ).minimizer
+end
+
+function fastmLL(coef::AbstractVector{T2}, data, h) where {T2}
+    T = length(data)
+    @inbounds a = data[1]
+    a2 = a*a
+    LL = zero(T2)
+    LL += log(abs(h))+a2/h
+    @inbounds for t = 2:T
+        h = coef[1]+coef[2]*h+coef[3]*a2
+        h < 0 && return T2(Inf)
+        a = data[t]
+        a2 = a*a
+        LL += log(abs(h))+a2/h
+    end
+    LL += T*T2(1.8378770664093453) #log2π
+    LL *= .5
+end
+
 
 include("meanspecs.jl")
 include("standardizeddistributions.jl")

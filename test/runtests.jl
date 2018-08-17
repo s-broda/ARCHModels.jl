@@ -108,7 +108,7 @@ end
     @test_throws ErrorException informationmatrix(am)
     #with unconditional as presample:
     #@test all(isapprox(score(am), [-4.091261171623728e-6 3.524550271549742e-5 -6.989366926291041e-5], rtol=1e-4))
-    @test all(isapprox(score(am), [3.6864547574566586e-6 0.00023365398931218806 0.0001171200858038901], rtol=1e-4))
+    @test all(isapprox(score(am), [0. 0. 0.], atol=1e-3))
     @test islinear(am::ARCHModel) == false
 end
 
@@ -157,11 +157,12 @@ end
 end
 
 @testset "Errors" begin
-    #haven't found a case yet. the below works with unconditional as presample:
+    #with unconditional as presample:
     #@test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), [.1, .2, .3, .4, .5, .6, .7]))
+    @test_logs (:warn, "Fisher information is singular; vcov matrix is inaccurate.") stderror(ARCHModel(GARCH{1, 0}( [1.0, .1]), [0., 1.]))
     #with unconditional as presample:
     #@test_warn "non-positive" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
-    @test_logs (:warn, "non-positive variance encountered; vcov matrix is inaccurate.") stderror(ARCHModel(GARCH{3, 0}(0*[1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
+    @test_logs (:warn, "non-positive variance encountered; vcov matrix is inaccurate.") stderror(ARCHModel(GARCH{1, 0}( [1.0, .1]), [1., 1.]))
     e = @test_throws ARCH.NumParamError ARCH.loglik!(Float64[], Float64[], Float64[], GARCH{1, 1}, StdNormal{Float64},
                                                      NoIntercept{Float64}, zeros(T),
                                                      [0., 0., 0., 0.]
