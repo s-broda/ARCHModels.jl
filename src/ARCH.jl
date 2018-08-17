@@ -552,44 +552,7 @@ include("GARCH.jl")
 include("EGARCH.jl")
 
 
-# the following serve as a benchmark
-#GARCH{2, 2}
-function fastfit2(data)
-    obj = x-> fastmLL2(x, data, var(data))
-    optimize(obj,
-             startingvals(GARCH{2, 2}, data),
-             BFGS(), autodiff=:forward, Optim.Options(x_tol=1e-4)
-             )
-end
-
-#GARCH{2, 2}
-function fastmLL2(coef::AbstractVector{T2}, data, h) where {T2}
-    h1 = h
-    h2 = h
-    T = length(data)
-    LL = zero(T2)
-    @inbounds a2 = data[1]
-    asq2 = a2*a2
-    LL += log(abs(h2))+asq2/h2
-    @inbounds a1 = data[2]
-    asq1 = a1*a1
-    LL += log(abs(h1))+asq1/h1
-    @inbounds for t = 3:T
-        h = coef[1]+coef[2]*h1+coef[3]*h2+coef[4]*asq1+coef[5]*asq2
-        h < 0 && return T2(Inf)
-        h2 = h1
-        asq2 = asq1
-        h1 = h
-        a1 = data[t]
-        asq1 = a1*a1
-        LL += log(abs(h1))+asq1/h1
-    end
-    LL += T*T2(1.8378770664093453) #log2π
-    LL *= .5
-end
 using Base.Cartesian: @nexprs
-
-#general
 function fastfit(VS, data)
     obj = x-> fastmLL(VS, x, data, var(data))
     optimize(obj,
@@ -613,7 +576,6 @@ function _fastmLL(VS::Type{GARCH{p,q, T1}}) where {p, q, T1}
                 h = coefs[1]
                 @nexprs $p i -> (h += coefs[i+1]*h_i)
                 @nexprs $q i -> (h += coefs[i+$(1+p)]*asq_i)
-                h < 0 && return T2(Inf)
                 @nexprs $(r-1) i-> (h_{$r+1-i}=h_{$r-i})
                 @nexprs $(r-1) i-> (asq_{$r+1-i}=asq_{$r-i})
                 h_1 = h
@@ -627,7 +589,32 @@ function _fastmLL(VS::Type{GARCH{p,q, T1}}) where {p, q, T1}
     end
 end
 @generated function fastmLL(::Type{VS}, coefs::AbstractVector{T2}, data::Vector{T1}, h) where {VS, T2, T1}
-return _fastmLL(VS{T1})
+    return _fastmLL(VS{T1})
 end
+##example: GARCH{2, 2}
+# function fastmLL2(coef::AbstractVector{T2}, data, h) where {T2}
+#     h1 = h
+#     h2 = h
+#     T = length(data)
+#     LL = zero(T2)
+#     @inbounds a2 = data[1]
+#     asq2 = a2*a2
+#     LL += log(abs(h2))+asq2/h2
+#     @inbounds a1 = data[2]
+#     asq1 = a1*a1
+#     LL += log(abs(h1))+asq1/h1
+#     @inbounds for t = 3:T
+#         h = coef[1]+coef[2]*h1+coef[3]*h2+coef[4]*asq1+coef[5]*asq2
+#         h < 0 && return T2(Inf)
+#         h2 = h1
+#         asq2 = asq1
+#         h1 = h
+#         a1 = data[t]
+#         asq1 = a1*a1
+#         LL += log(abs(h1))+asq1/h1
+#     end
+#     LL += T*T2(1.8378770664093453) #log2π
+#     LL *= .5
+# end
 
 end#module
