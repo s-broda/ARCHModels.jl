@@ -546,35 +546,86 @@ function modname(::Type{VS}) where VS<:VolatilitySpec
     s = s[1:findlast(isequal(','), s)-1] * '}'
 end
 
-# the following serve as a benchmark
-function fastfit(data)
-    obj = x-> fastmLL(x, data, var(data))
-    optimize(obj,
-             startingvals(GARCH{1, 1}, data),
-             BFGS(), autodiff=:forward
-             ).minimizer
-end
-
-function fastmLL(coef::AbstractVector{T2}, data, h) where {T2}
-    T = length(data)
-    @inbounds a = data[1]
-    a2 = a*a
-    LL = zero(T2)
-    LL += log(abs(h))+a2/h
-    @inbounds for t = 2:T
-        h = coef[1]+coef[2]*h+coef[3]*a2
-        h < 0 && return T2(Inf)
-        a = data[t]
-        a2 = a*a
-        LL += log(abs(h))+a2/h
-    end
-    LL += T*T2(1.8378770664093453) #log2π
-    LL *= .5
-end
-
-
 include("meanspecs.jl")
 include("standardizeddistributions.jl")
 include("GARCH.jl")
 include("EGARCH.jl")
+
+
+# the following serve as a benchmark
+#GARCH{2, 2}
+function fastfit2(data)
+    obj = x-> fastmLL2(x, data, var(data))
+    optimize(obj,
+             startingvals(GARCH{2, 2}, data),
+             BFGS(), autodiff=:forward, Optim.Options(x_tol=1e-4)
+             )
+end
+
+#GARCH{2, 2}
+function fastmLL2(coef::AbstractVector{T2}, data, h) where {T2}
+    h1 = h
+    h2 = h
+    T = length(data)
+    LL = zero(T2)
+    @inbounds a2 = data[1]
+    asq2 = a2*a2
+    LL += log(abs(h2))+asq2/h2
+    @inbounds a1 = data[2]
+    asq1 = a1*a1
+    LL += log(abs(h1))+asq1/h1
+    @inbounds for t = 3:T
+        h = coef[1]+coef[2]*h1+coef[3]*h2+coef[4]*asq1+coef[5]*asq2
+        h < 0 && return T2(Inf)
+        h2 = h1
+        asq2 = asq1
+        h1 = h
+        a1 = data[t]
+        asq1 = a1*a1
+        LL += log(abs(h1))+asq1/h1
+    end
+    LL += T*T2(1.8378770664093453) #log2π
+    LL *= .5
+end
+using Base.Cartesian: @nexprs
+
+#general
+function fastfit(VS, data)
+    obj = x-> fastmLL(VS, x, data, var(data))
+    optimize(obj,
+             startingvals(VS, data),
+             BFGS(), autodiff=:forward, Optim.Options(x_tol=1e-4)
+             )
+end
+
+
+function _fastmLL(::Type{GARCH{p,q}}) where {p, q}
+    r=max(p, q)
+    quote
+        @inbounds begin
+            @nexprs $r i -> h_i=h
+            T = length(data)
+            LL = zero(T2)
+            @nexprs $r i -> (a_{$r+1-i} = data[i]; asq_{$r+1-i} = a_{$r+1-i}*a_{$r+1-i}; LL += log(abs(h_{$r+1-i}))+asq_{$r+1-i}/h_{$r+1-i})
+            for t = $r+1:T
+                h = coefs[1]
+                @nexprs $p i -> (h += coefs[i+1]*h_i)
+                @nexprs $q i -> (h += coefs[i+$(1+p)]*asq_i)
+                h < 0 && return T2(Inf)
+                @nexprs $(r-1) i-> (h_{$r+1-i}=h_{$r-i})
+                @nexprs $(r-1) i-> (asq_{$r+1-i}=asq_{$r-i})
+                h_1 = h
+                a_1 = data[t]
+                asq_1 = a_1*a_1
+                LL += log(abs(h_1))+asq_1/h_1
+            end
+        end
+        LL += T*T2(1.8378770664093453) #log2π
+        LL *= .5
+    end
+end
+@generated function fastmLL(::Type{VS}, coefs::AbstractVector{T2}, data, h) where {VS, T2}
+return _fastmLL(VS)
+end
+
 end#module
