@@ -599,9 +599,11 @@ function fastfit(VS, data)
 end
 
 
-function _fastmLL(::Type{GARCH{p,q}}) where {p, q}
+function _fastmLL(VS::Type{GARCH{p,q, T1}}) where {p, q, T1}
     r=max(p, q)
     quote
+        lower, upper = constraints(VS, T1)
+        all(lower.<coefs.<upper) || return T2(-Inf)
         @inbounds begin
             @nexprs $r i -> h_i=h
             T = length(data)
@@ -624,8 +626,8 @@ function _fastmLL(::Type{GARCH{p,q}}) where {p, q}
         LL *= .5
     end
 end
-@generated function fastmLL(::Type{VS}, coefs::AbstractVector{T2}, data, h) where {VS, T2}
-return _fastmLL(VS)
+@generated function fastmLL(::Type{VS}, coefs::AbstractVector{T2}, data::Vector{T1}, h) where {VS, T2, T1}
+return _fastmLL(VS{T1})
 end
 
 end#module
