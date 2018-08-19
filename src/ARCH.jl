@@ -592,29 +592,30 @@ end
     return _fastmLL(VS{T1})
 end
 ##example: GARCH{2, 2}
-# function fastmLL2(coef::AbstractVector{T2}, data, h) where {T2}
-#     h1 = h
-#     h2 = h
-#     T = length(data)
-#     LL = zero(T2)
-#     @inbounds a2 = data[1]
-#     asq2 = a2*a2
-#     LL += log(abs(h2))+asq2/h2
-#     @inbounds a1 = data[2]
-#     asq1 = a1*a1
-#     LL += log(abs(h1))+asq1/h1
-#     @inbounds for t = 3:T
-#         h = coef[1]+coef[2]*h1+coef[3]*h2+coef[4]*asq1+coef[5]*asq2
-#         h < 0 && return T2(Inf)
-#         h2 = h1
-#         asq2 = asq1
-#         h1 = h
-#         a1 = data[t]
-#         asq1 = a1*a1
-#         LL += log(abs(h1))+asq1/h1
-#     end
-#     LL += T*T2(1.8378770664093453) #log2π
-#     LL *= .5
-# end
+function fastmLL2(coef::AbstractVector{T2}, data, h) where {T2}
+    h1 = h
+    h2 = h
+    T = length(data)
+    FF = Float64[]
+    LL = zero(T2)
+    @inbounds a2 = data[1]
+    asq2 = a2*a2
+    LL += .5*log(abs(h2))-logkernel(StdNormal{Float64}, a2/sqrt(h2), FF)
+    @inbounds a1 = data[2]
+    asq1 = a1*a1
+    LL += .5*log(abs(h1))-logkernel(StdNormal{Float64}, a1/sqrt(h1), FF)
+
+    @inbounds for t = 3:T
+        h = coef[1]+coef[2]*h1+coef[3]*h2+coef[4]*asq1+coef[5]*asq2
+        h < 0 && return T2(Inf)
+        h2 = h1
+        asq2 = asq1
+        h1 = h
+        a1 = data[t]
+        asq1 = a1*a1
+        LL += .5*log(abs(h1))-logkernel(StdNormal{Float64}, a1/sqrt(h1), FF)
+    end
+    LL -= T*logconst(StdNormal, FF)
+end
 
 end#module
