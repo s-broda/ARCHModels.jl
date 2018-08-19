@@ -10,6 +10,8 @@
 #implement conditionalvariances/volas, stdresids
 # Float16/32 don't seem to work anymore. Problem in Optim?
 #support missing data? timeseries?
+#https://github.com/JuliaLang/julia/issues/28647
+
 module ARCH
 using Reexport
 @reexport using StatsBase
