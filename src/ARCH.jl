@@ -430,7 +430,69 @@ function fit(am::ARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
     return am2
 end
 
+"""
+    selectmodel(::Type{VS}, data; kwargs...) -> ARCHModel
 
+Fit the volatility specification `VS` with varying lag lengths and return that which
+minimizes the [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion).
+
+# Keyword arguments:
+- `dist=StdNormal`: the error distribution.
+- `meanspec=Intercept`: the mean specification.
+- `maxlags=3`: maximum lag length to try in each parameter of `VS`.
+- `criterion=bic`: function that takes an `ARCHModel` and returns the criterion to minimize.
+- `show_trace=false`: print `criterion` to screen for each estimated model.
+- `algorithm=BFGS(), autodiff=:forward, kwargs...`: passed on to the optimizer.
+
+# Examples:
+```jldoctest
+julia> using Random; Random.seed!(1); data = simulate(GARCH{1, 2}([1., .7, .1, .1]), 10^4).data;
+
+julia> selectmodel(GARCH, data; maxlags=2, show_trace=true)
+GARCH{1,1} model has BIC 50460.8.
+GARCH{1,2} model has BIC 50424.4.
+GARCH{2,2} model has BIC 50432.2.
+GARCH{2,1} model has BIC 50474.4.
+
+GARCH{1,2} model with Gaussian errors, T=10000.
+
+
+Mean equation parameters:
+
+      Estimate Std.Error  z value Pr(>|z|)
+μ    0.0244617 0.0270085 0.905705   0.3651
+
+Volatility parameters:
+
+     Estimate Std.Error z value Pr(>|z|)
+ω    0.923224 0.0945196 9.76755   <1e-21
+β₁   0.712557 0.0191164 37.2746   <1e-99
+α₁    0.08817 0.0116818 7.54761   <1e-13
+α₂    0.11182 0.0164452 6.79955   <1e-10
+
+julia>  selectmodel(EGARCH{0, p, q} where {p, q}, data; maxlags=2, criterion=aic, show_trace=true) # symmetric EGARCH
+EGARCH{0,1,2} model has AIC 50445.4.
+EGARCH{0,2,1} model has AIC 50990.9.
+EGARCH{0,1,1} model has AIC 50482.4.
+EGARCH{0,2,2} model has AIC 50585.6.
+
+EGARCH{0,1,2} model with Gaussian errors, T=10000.
+
+
+Mean equation parameters:
+
+      Estimate Std.Error  z value Pr(>|z|)
+μ    0.0229086 0.0263989 0.867786   0.3855
+
+Volatility parameters:
+
+     Estimate Std.Error z value Pr(>|z|)
+ω    0.204397 0.0203417 10.0482   <1e-23
+β₁   0.907583 0.0090583 100.194   <1e-99
+α₁   0.196247 0.0216006 9.08526   <1e-18
+α₂    0.15037  0.023943 6.28036    <1e-9
+```
+"""
 function selectmodel(::Type{VS}, data::Vector{T};
                      dist::Type{SD}=StdNormal{T}, meanspec::Type{MS}=Intercept{T},
                      maxlags=3, criterion=bic, show_trace=false, algorithm=BFGS(),
