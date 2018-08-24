@@ -520,6 +520,12 @@ function selectmodel(::Type{VS}, data::Vector{T};
     return res[ind]
 end
 
+"""
+    fit(::Type{SD}, data; algorithm=BFGS(), kwargs...)
+
+Fit a standardized distribution to the data, using the MLE. Keyword arguments
+are passed on to the optimizer.
+"""
 function fit(::Type{SD}, data::Vector{T};
              algorithm=BFGS(), kwargs...
              ) where {SD<:StandardizedDistribution, T<:AbstractFloat}
@@ -547,6 +553,7 @@ function loglik(::Type{SD}, data::Vector{<:AbstractFloat},
     LL += T*logconst(SD, coefs)
 end#function
 
+#for rand to work
 Base.eltype(::StandardizedDistribution{T}) where {T} = T
 
 #count the number of type vars. there's probably a better way.
