@@ -10,7 +10,6 @@
 #implement conditionalvariances/volas, stdresids
 # Float16/32 don't seem to work anymore. Problem in Optim?
 #support missing data? timeseries?
-#https://github.com/JuliaLang/julia/issues/28647
 
 module ARCH
 using Reexport
@@ -66,6 +65,28 @@ function showerror(io::IO, e::NumParamError)
 end
 
 """
+    ARCHModel{T<:AbstractFloat,
+              VS<:VolatilitySpec,
+              SD<:StandardizedDistribution{T},
+              MS<:MeanSpec{T}
+              } <: StatisticalModel
+"""
+mutable struct ARCHModel{T<:AbstractFloat,
+                 VS<:VolatilitySpec,
+                 SD<:StandardizedDistribution{T},
+                 MS<:MeanSpec{T}
+                 } <: StatisticalModel
+    spec::VS
+    data::Vector{T}
+    dist::SD
+    meanspec::MS
+	fitted::Bool
+    function ARCHModel{T, VS, SD, MS}(spec, data, dist, meanspec, fitted) where {T, VS, SD, MS}
+        new(spec, data, dist, meanspec, fitted)
+    end
+end
+
+"""
     ARCHModel(spec::VolatilitySpec, data::Vector; dist=StdNormal(),
 	          meanspec=NoIntercept(), fitted=false
               )
@@ -83,21 +104,6 @@ GARCH{1,1} model with Gaussian errors, T=10.
 Parameters:  1.0 0.9 0.05
 ```
 """
-mutable struct ARCHModel{T<:AbstractFloat,
-                 VS<:VolatilitySpec,
-                 SD<:StandardizedDistribution{T},
-                 MS<:MeanSpec{T}
-                 } <: StatisticalModel
-    spec::VS
-    data::Vector{T}
-    dist::SD
-    meanspec::MS
-	fitted::Bool
-    function ARCHModel{T, VS, SD, MS}(spec, data, dist, meanspec, fitted) where {T, VS, SD, MS}
-        new(spec, data, dist, meanspec, fitted)
-    end
-end
-
 function ARCHModel(spec::VS,
           data::Vector{T},
           dist::SD=StdNormal{T}(),
