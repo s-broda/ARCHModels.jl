@@ -433,7 +433,8 @@ end
 
 function selectmodel(::Type{VS}, data::Vector{T};
                      dist::Type{SD}=StdNormal{T}, meanspec::Type{MS}=Intercept{T},
-                     maxlags=3, criterion=bic, show_trace=false, kwargs...
+                     maxlags=3, criterion=bic, show_trace=false, algorithm=BFGS(),
+                     autodiff=:forward, kwargs...
                      ) where {VS<:VolatilitySpec, T<:AbstractFloat,
                               SD<:StandardizedDistribution, MS<:MeanSpec
                               }
@@ -441,7 +442,8 @@ function selectmodel(::Type{VS}, data::Vector{T};
     ndims = my_unwrap_unionall(VS)-1#e.g., two (p and q) for GARCH{p, q, T}
     res = Array{ARCHModel, ndims}(undef, ntuple(i->maxlags, ndims))
     Threads.@threads for ind in collect(CartesianIndices(size(res)))
-        res[ind] = fit(VS{ind.I...}, data; dist=dist, meanspec=meanspec)
+        res[ind] = fit(VS{ind.I...}, data; dist=dist, meanspec=meanspec,
+                       algorithm=algorithm, autodiff=autodiff, kwargs...)
         if show_trace
             lock(mylock)
             Core.println(modname(VS{ind.I...}), " model has ",
