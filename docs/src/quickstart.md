@@ -1,3 +1,4 @@
-## Quick Start Guide
+# Quick Start Guide
 
+## Basics
 This will get you started.
