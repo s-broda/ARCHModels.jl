@@ -630,7 +630,9 @@ include("standardizeddistributions.jl")
 include("GARCH.jl")
 include("EGARCH.jl")
 
-
+#below is the fastest implementation that I can come up with, for reference.
+#instead of keeping σ²ₜ in CircularBuffer, it keeps them in scalars and thus
+#on the stack.
 using Base.Cartesian: @nexprs
 function fastfit(VS, data)
     obj = x-> fastmLL(VS, x, data, var(data))
