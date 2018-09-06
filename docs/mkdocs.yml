@@ -24,4 +24,4 @@ pages:
   - Home: index.md
   - Quick Start Guide: quickstart.md
   - Manual: manual.md
-  - Index: idx.md
+  - Index: reference.md

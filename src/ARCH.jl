@@ -344,7 +344,7 @@ Fit the ARCH model specified by `VS` to data. Keyword arguments `algorithm`,
 # Examples:
 ##  GARCH{1, 1} model  with intercept, Gaussian errors
 ```jldoctest
-julia> Random.seed!(1);  am = simulate(GARCH{1, 1}([1., .9, .05]), 10^4);
+julia> am = simulate(GARCH{1, 1}([1., .9, .05]), 10^4);
 
 julia> fit(GARCH{1, 1}, am.data)
 
@@ -354,7 +354,7 @@ GARCH{1,1} model with Gaussian errors, T=10000.
 Mean equation parameters:
 
       Estimate Std.Error  z value Pr(>|z|)
-μ    0.0277078 0.0435526 0.636192   0.5247
+μ    0.0277078 0.0435526 0.636191   0.5247
 
 Volatility parameters:
 
@@ -366,7 +366,7 @@ Volatility parameters:
 
 ## EGARCH{1, 1, 1} model without intercept, Student's t errors.
 ```jldoctest
-julia> Random.seed!(1); am = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), 10^4; dist=StdTDist(3.));
+julia> am = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), 10^4; dist=StdTDist(3.));
 
 julia> fit(EGARCH{1, 1, 1}, am.data; meanspec=NoIntercept, dist=StdTDist)
 
@@ -446,7 +446,7 @@ minimizes the [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion
 
 # Examples:
 ```jldoctest
-julia> using Random; Random.seed!(1); data = simulate(GARCH{1, 2}([1., .7, .1, .1]), 10^4).data;
+julia> data = simulate(GARCH{1, 2}([1., .7, .1, .1]), 10^4).data;
 
 julia> selectmodel(GARCH, data; maxlags=2, show_trace=true)
 GARCH{1,1} model has BIC 50460.8.
@@ -470,10 +470,10 @@ Volatility parameters:
 α₁    0.08817 0.0116818 7.54761   <1e-13
 α₂    0.11182 0.0164452 6.79955   <1e-10
 
-julia>  selectmodel(EGARCH{0, p, q} where {p, q}, data; maxlags=2, criterion=aic, show_trace=true) # symmetric EGARCH
+julia> selectmodel(EGARCH{0, p, q} where {p, q}, data; maxlags=2, criterion=aic, show_trace=true) # symmetric EGARCH
+EGARCH{0,1,1} model has AIC 50482.4.
 EGARCH{0,1,2} model has AIC 50445.4.
 EGARCH{0,2,1} model has AIC 50990.9.
-EGARCH{0,1,1} model has AIC 50482.4.
 EGARCH{0,2,2} model has AIC 50585.6.
 
 EGARCH{0,1,2} model with Gaussian errors, T=10000.
