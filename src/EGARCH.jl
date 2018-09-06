@@ -17,7 +17,7 @@ struct EGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}
 end
 
 """
-    EGARCH{o, p, q}([coefs]) -> VolatilitySpec
+    EGARCH{o, p, q}(coefs) -> VolatilitySpec
 
 Construct an EGARCH specification with the given parameters.
 

@@ -1,6 +1,18 @@
+"""
+    StdNormal{T} <: StandardizedDistribution{T}
+
+The standard Normal distribution.
+"""
 struct StdNormal{T} <: StandardizedDistribution{T}
     coefs::Vector{T}
 end
+"""
+    StdNormal(T::Type=Float64)
+    StdNormal(v::Vector)
+    StdNormal{T}()
+
+Construct an instance of StdNormal.
+"""
 StdNormal(T::Type=Float64) = StdNormal(T[])
 StdNormal{T}() where {T} = StdNormal(T[])
 rand(::StdNormal{T}) where {T} = randn(T)
@@ -20,9 +32,21 @@ function startingvals(::Type{<:StdNormal}, data::Vector{T})  where {T<:AbstractF
     return T[]
 end
 
+"""
+    StdTDist{T} <: StandardizedDistribution{T}
+
+The standardized (mean zero, variance one) Student's t distribution.
+"""
 struct StdTDist{T} <: StandardizedDistribution{T}
     coefs::Vector{T}
 end
+
+"""
+    StdTDist(v)
+
+Create a standardized t distribution with `v` degrees of freedom. `ν`` can be passed
+as a scalar or vector.
+"""
 StdTDist(ν) = StdTDist([ν])
 StdTDist(ν::Integer) = StdTDist(float(ν))
 (rand(d::StdTDist{T})::T) where {T}  =  (ν=d.coefs[1]; tdistrand(ν)*sqrt((ν-2)/ν))

@@ -18,7 +18,7 @@ struct GARCH{p, q, T<:AbstractFloat} <: VolatilitySpec{T}
 end
 
 """
-    GARCH{p, q}([coefs]) -> VolatilitySpec
+    GARCH{p, q}(coefs) -> VolatilitySpec
 
 Construct a GARCH specification with the given parameters.
 

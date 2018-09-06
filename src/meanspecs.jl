@@ -7,10 +7,11 @@ struct NoIntercept{T} <: MeanSpec{T}
     coefs::Vector{T}
 end
 """
-    NoIntercept(a)
+    NoIntercept(T::Type=Float64)
     NoIntercept{T}()
+    NoIntercept(v::Vector)
 
-Create an instance of NoIntercept. `a` is either a type or an empty array.
+Create an instance of NoIntercept.
 """
 NoIntercept(T::Type=Float64) = NoIntercept(T[])
 NoIntercept{T}() where {T} = NoIntercept(T[])
@@ -43,7 +44,7 @@ end
 """
     Intercept(mu)
 
-Create an instance of Intercept. `mu` can be a 1-element vector or a scalar.    
+Create an instance of Intercept. `mu` can be passed as a scalar or vector.
 """
 Intercept(mu) = Intercept([mu])
 Intercept(mu::Integer) = Intercept(float(mu))
