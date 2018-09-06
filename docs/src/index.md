@@ -13,6 +13,7 @@ This can be extended by including additional lags of past squared returns and vo
 
 ## Contents
 ```@contents
+Pages = ["quickstart.md", "manual.md", "idx.md"]
 Depth = 2
 ```
 
