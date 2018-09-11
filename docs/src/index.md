@@ -33,7 +33,7 @@ in the Pkg REPL mode (which is entered by pressing `]` at the prompt).
 For Julia 0.6, check out the 0.6 branch.
 ## Contents
 ```@contents
-Pages = ["quickstart.md", "manual.md", "reference.md"]
+Pages = ["quickstart.md", "types.md", "manual.md", "reference.md"]
 Depth = 2
 ```
 

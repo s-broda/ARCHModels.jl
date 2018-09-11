@@ -1,10 +1,9 @@
-# Reference Manual
-## Index
+# Index
 
 ```@index
 ```
 
-## Public API
+# Public API
 ```@meta
 DocTestSetup = quote
     using ARCH
@@ -16,6 +15,7 @@ DocTestFilters = r".*[0-9\.]"
 
 ```@autodocs
 Modules = [ARCH]
+Private = false
 ```
 
 ```@meta
