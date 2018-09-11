@@ -57,6 +57,8 @@
     
         <ul>
         
+            <li><a class="toctree-l3" href="#installation">Installation</a></li>
+        
             <li><a class="toctree-l3" href="#contents">Contents</a></li>
         
             <li><a class="toctree-l3" href="#acknowledgements">Acknowledgements</a></li>
@@ -74,18 +76,12 @@
           
             <li class="toctree-l1">
 		
-    <span class="caption-text">Manual</span>
-    <ul class="subnav">
-                <li class="">
-                    
-    <a class="" href="types/">Type Hierarchy</a>
-                </li>
-    </ul>
+    <a class="" href="manual/">Manual</a>
 	    </li>
           
             <li class="toctree-l1">
 		
-    <a class="" href="idx/">Index</a>
+    <a class="" href="reference/">Index</a>
 	    </li>
           
         </ul>
@@ -133,24 +129,48 @@ r_t=\sigma_tz_t,\quad z_t\sim\mathrm{N}(0,1),\quad
 \sigma_t^2=\omega+\alpha r_{t-1}^2+\beta \sigma_{t-1}^2,\quad \omega, \alpha, \beta>0,\quad \alpha+\beta<1.
 </script>
 </p>
-<p>This can be extended by including additional lags of past squared returns and volatilities: the GARCH(p, q) model  has $q$ of the former and $p$ of the latter.</p>
+<p>This can be extended by including additional lags of past squared returns and volatilities: the GARCH(p, q) model  has $q$ of the former and $p$ of the latter. Another generalization is to allow  $z_t$ to follow other, non-Gaussian distributions.</p>
+<p>This package implements simulation, estimation, and model selection for the following models:</p>
+<ul>
+<li>GARCH(p, q)</li>
+<li>EGARCH(o, p q)</li>
+</ul>
+<p>As for error distributions, the user may choose among the following:</p>
+<ul>
+<li>Standard Normal</li>
+<li>Standardized Student's $t$</li>
+</ul>
+<p><a id='Installation-1'></a></p>
+<h2 id="installation">Installation</h2>
+<p>The package is not yet registered. To install it in Julia 1.0 or later, do</p>
+<pre><code>add https://github.com/s-broda/ARCH.jl
+</code></pre>
+
+<p>in the Pkg REPL mode (which is entered by pressing <code>]</code> at the prompt). For Julia 0.6, check out the 0.6 branch.</p>
 <p><a id='Contents-1'></a></p>
 <h2 id="contents">Contents</h2>
-<pre><code>- [Quick Start Guide](quickstart.md#Quick-Start-Guide-1)
-</code></pre>
 <ul>
-<li><a href="idx/#Index-1">Index</a></li>
-<li><a href=".#The-ARCH-Package-1">The ARCH Package</a><ul>
-<li><a href=".#Contents-1">Contents</a></li>
-<li><a href=".#Acknowledgements-1">Acknowledgements</a></li>
-<li><a href="types/#Type-Hierarchy-1">Type Hierarchy</a></li>
+<li><a href="quickstart/#Quick-Start-Guide-1">Quick Start Guide</a><ul>
+<li><a href="quickstart/#Simulate-a-GARCH{1,-1}-model-1">Simulate a GARCH{1, 1} model</a></li>
+<li><a href="quickstart/#Fit-a-GARCH{1,-1}-model-to-the-simulated-data-1">Fit a GARCH{1, 1} model to the simulated data</a></li>
+<li><a href="quickstart/#Simulate-and-fit-an-EGARCH-model-with-an-intercept,-assuming-Student's-t-errors-1">Simulate and fit an EGARCH model with an intercept, assuming Student's t errors</a></li>
+<li><a href="quickstart/#Model-selection-1">Model selection</a></li>
+</ul>
+</li>
+<li><a href="manual/#Manual-1">Manual</a><ul>
+<li><a href="manual/#Type-Hierarchy-1">Type Hierarchy</a></li>
+</ul>
+</li>
+<li><a href="reference/#Reference-Manual-1">Reference Manual</a><ul>
+<li><a href="reference/#Index-1">Index</a></li>
+<li><a href="reference/#Public-API-1">Public API</a></li>
 </ul>
 </li>
 </ul>
 <p><a id='Acknowledgements-1'></a></p>
 <h2 id="acknowledgements">Acknowledgements</h2>
 <p>This project has received funding from the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (grant agreement No. 750559).</p>
-<p><img src="assets/LOGO_ERC-FLAG_EU_.jpg" width="240"></p>
+<p><img src="assets/LOGO*ERC-FLAG*EU_.jpg" width="240"></p>
               
             </div>
           </div>
@@ -204,5 +224,5 @@ r_t=\sigma_tz_t,\quad z_t\sim\mathrm{N}(0,1),\quad
 
 <!--
 MkDocs version : 0.17.5
-Build Date UTC : 2018-08-07 21:40:13
+Build Date UTC : 2018-09-11 13:49:20
 -->
