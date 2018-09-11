@@ -6,7 +6,7 @@ DocTestSetup = quote
 end
 DocTestFilters = r".*[0-9\.]"
 ```
-## Simulate a GARCH{1, 1} model
+### Simulate a GARCH{1, 1} model
 
 ```jldoctest GARCH
 julia> using ARCH
@@ -37,7 +37,7 @@ julia> nobs(am)
 10000
 ```
 
-## Fit a GARCH{1, 1} model to the simulated data
+### Fit a GARCH{1, 1} model to the simulated data
 
 ```jldoctest GARCH
 julia> fit(GARCH{1, 1}, am.data)
@@ -75,7 +75,7 @@ Volatility parameters:
 α₁   0.0503246 0.00522825 9.62552   <1e-21
 ```
 
-## Simulate and fit an EGARCH model with an intercept, assuming Student's t errors
+### Simulate and fit an EGARCH model with an intercept, assuming Student's t errors
 
 ```jldoctest GARCH
 julia> am = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), 10^4; meanspec=Intercept(1.), dist=StdTDist(3.))
@@ -112,7 +112,7 @@ Distribution parameters:
 ν     2.93074 0.0962429 30.4515   <1e-99
 ```
 
-## Model selection
+### Model selection
 The function `selectmodel` can be used to determine the optimal lag length within a class of models:
 
 ```jldoctest GARCH
