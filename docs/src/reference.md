@@ -15,6 +15,7 @@ DocTestFilters = r".*[0-9\.]"
 ```
 
 ```@autodocs
+Modules = [ARCH]
 ```
 
 ```@meta
