@@ -5,5 +5,5 @@ makedocs(modules=[ARCH],
 
 deploydocs(deps   = Deps.pip("mkdocs", "python-markdown-math"),
     repo = "github.com/s-broda/ARCH.jl.git",
-    julia  = "0.6",
+    julia  = "1.0",
     osname = "linux")
