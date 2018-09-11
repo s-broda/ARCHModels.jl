@@ -148,21 +148,21 @@
           } &lt;: StatisticalModel
 </code></pre>
 
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/dabf5c3bcade25516a1f298fa2f63777459cd0f0/src/ARCH.jl#L67-L73' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/a2656639425017856626d0b1fda91938d2a2287f/src/ARCH.jl#L67-L73' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.MeanSpec' href='#ARCH.MeanSpec'>#</a>
 <strong><code>ARCH.MeanSpec</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>MeanSpec{T}
 </code></pre>
 
 <p>Abstract supertype that mean specifications inherit from.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/dabf5c3bcade25516a1f298fa2f63777459cd0f0/src/ARCH.jl#L50-L53' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/a2656639425017856626d0b1fda91938d2a2287f/src/ARCH.jl#L50-L53' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.VolatilitySpec' href='#ARCH.VolatilitySpec'>#</a>
 <strong><code>ARCH.VolatilitySpec</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>VolatilitySpec{T}
 </code></pre>
 
 <p>Abstract supertype that volatility specifications inherit from.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/dabf5c3bcade25516a1f298fa2f63777459cd0f0/src/ARCH.jl#L36-L40' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/a2656639425017856626d0b1fda91938d2a2287f/src/ARCH.jl#L36-L40' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH._ARCH' href='#ARCH._ARCH'>#</a>
 <strong><code>ARCH._ARCH</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>_ARCH{q, T&lt;:AbstractFloat} &lt;: VolatilitySpec{T}
@@ -174,7 +174,7 @@
 \sigma_t^2=\omega+\sum_{i=1}^q\alpha_i r_{t-i}^2.
 </script>
 </p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/dabf5c3bcade25516a1f298fa2f63777459cd0f0/src/GARCH.jl#L37-L44' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/a2656639425017856626d0b1fda91938d2a2287f/src/GARCH.jl#L37-L44' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.GARCH' href='#ARCH.GARCH'>#</a>
 <strong><code>ARCH.GARCH</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>GARCH{p, q, T&lt;:AbstractFloat} &lt;: VolatilitySpec{T}
@@ -186,7 +186,7 @@
 \sigma_t^2=\omega+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i r_{t-i}^2.
 </script>
 </p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/dabf5c3bcade25516a1f298fa2f63777459cd0f0/src/GARCH.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/a2656639425017856626d0b1fda91938d2a2287f/src/GARCH.jl#L4-L11' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.EGARCH' href='#ARCH.EGARCH'>#</a>
 <strong><code>ARCH.EGARCH</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>EGARCH{o, p, q, T&lt;:AbstractFloat} &lt;: VolatilitySpec{T}
@@ -198,28 +198,28 @@
 \log(\sigma_t^2)=\omega+\sum_{i=1}^o\gamma_i z_{t-i}^2+\sum_{i=1}^p\beta_i \log(\sigma_{t-i}^2)+\sum_{i=1}^q\alpha_i (|z_{t-i}|-\sqrt{2/\pi}), \quad z_t=r_t/\sigma_t
 </script>
 </p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/dabf5c3bcade25516a1f298fa2f63777459cd0f0/src/EGARCH.jl#L3-L10' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/a2656639425017856626d0b1fda91938d2a2287f/src/EGARCH.jl#L3-L10' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.StandardizedDistribution' href='#ARCH.StandardizedDistribution'>#</a>
 <strong><code>ARCH.StandardizedDistribution</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>StandardizedDistribution{T} &lt;: Distributions.Distribution{Univariate, Continuous}
 </code></pre>
 
 <p>Abstract supertype that standardized distributions inherit from.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/dabf5c3bcade25516a1f298fa2f63777459cd0f0/src/ARCH.jl#L43-L47' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/a2656639425017856626d0b1fda91938d2a2287f/src/ARCH.jl#L43-L47' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.StdNormal' href='#ARCH.StdNormal'>#</a>
 <strong><code>ARCH.StdNormal</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>StdNormal{T} &lt;: StandardizedDistribution{T}
 </code></pre>
 
 <p>The standard Normal distribution.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/dabf5c3bcade25516a1f298fa2f63777459cd0f0/src/standardizeddistributions.jl#L1-L5' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/a2656639425017856626d0b1fda91938d2a2287f/src/standardizeddistributions.jl#L1-L5' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.StdTDist' href='#ARCH.StdTDist'>#</a>
 <strong><code>ARCH.StdTDist</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>StdTDist{T} &lt;: StandardizedDistribution{T}
 </code></pre>
 
 <p>The standardized (mean zero, variance one) Student's t distribution.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/dabf5c3bcade25516a1f298fa2f63777459cd0f0/src/standardizeddistributions.jl#L35-L39' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/a2656639425017856626d0b1fda91938d2a2287f/src/standardizeddistributions.jl#L35-L39' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.simulate' href='#ARCH.simulate'>#</a>
 <strong><code>ARCH.simulate</code></strong> &mdash; <em>Function</em>.</p>
 <pre><code>simulate(am::ARCHModel; warmup=100)
@@ -227,14 +227,14 @@ simulate(spec::VolatilitySpec{T2}, nobs; warmup=100, dist=StdNormal(), meanspec=
 </code></pre>
 
 <p>Simulate an ARCHModel.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/dabf5c3bcade25516a1f298fa2f63777459cd0f0/src/ARCH.jl#L142-L146' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/a2656639425017856626d0b1fda91938d2a2287f/src/ARCH.jl#L142-L146' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.simulate!' href='#ARCH.simulate!'>#</a>
 <strong><code>ARCH.simulate!</code></strong> &mdash; <em>Function</em>.</p>
 <pre><code>simulate!(am::ARCHModel; warmup=100)
 </code></pre>
 
 <p>Simulate an ARCHModel, modifying <code>am</code> in place.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/dabf5c3bcade25516a1f298fa2f63777459cd0f0/src/ARCH.jl#L161-L164' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/a2656639425017856626d0b1fda91938d2a2287f/src/ARCH.jl#L161-L164' class='documenter-source'>source</a><br></p>
 <p><a id='StatsBase.fit' href='#StatsBase.fit'>#</a>
 <strong><code>StatsBase.fit</code></strong> &mdash; <em>Function</em>.</p>
 <pre><code>fit(Histogram, data[, weight][, edges]; closed=:right, nbins)
@@ -316,17 +316,17 @@ Distribution parameters:
 ν     2.93066 0.0961986 30.4647   &lt;1e-99
 </code></pre>
 
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/dabf5c3bcade25516a1f298fa2f63777459cd0f0/src/ARCH.jl#L337-L389' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/a2656639425017856626d0b1fda91938d2a2287f/src/ARCH.jl#L337-L389' class='documenter-source'>source</a><br></p>
 <pre><code>fit(am::ARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
 </code></pre>
 
 <p>Fit the ARCHModel specified by <code>am</code> and return the result in a new instance of ARCHModel. Keyword arguments are passed on to the optimizer.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/dabf5c3bcade25516a1f298fa2f63777459cd0f0/src/ARCH.jl#L421-L426' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/a2656639425017856626d0b1fda91938d2a2287f/src/ARCH.jl#L421-L426' class='documenter-source'>source</a><br></p>
 <pre><code>fit(::Type{SD}, data; algorithm=BFGS(), kwargs...)
 </code></pre>
 
 <p>Fit a standardized distribution to the data, using the MLE. Keyword arguments are passed on to the optimizer.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/dabf5c3bcade25516a1f298fa2f63777459cd0f0/src/ARCH.jl#L523-L528' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/a2656639425017856626d0b1fda91938d2a2287f/src/ARCH.jl#L523-L528' class='documenter-source'>source</a><br></p>
 <p><a id='StatsBase.fit!' href='#StatsBase.fit!'>#</a>
 <strong><code>StatsBase.fit!</code></strong> &mdash; <em>Function</em>.</p>
 <p>Fit a statistical model in-place.</p>
@@ -334,7 +334,7 @@ Distribution parameters:
 </code></pre>
 
 <p>Fit the ARCHModel specified by <code>am</code>, modifying <code>am</code> in place. Keyword arguments are passed on to the optimizer.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/dabf5c3bcade25516a1f298fa2f63777459cd0f0/src/ARCH.jl#L403-L408' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/a2656639425017856626d0b1fda91938d2a2287f/src/ARCH.jl#L403-L408' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.selectmodel' href='#ARCH.selectmodel'>#</a>
 <strong><code>ARCH.selectmodel</code></strong> &mdash; <em>Function</em>.</p>
 <pre><code>selectmodel(::Type{VS}, data; kwargs...) -&gt; ARCHModel
@@ -398,7 +398,7 @@ Volatility parameters:
 α₂    0.15037  0.023943 6.28036    &lt;1e-9
 </code></pre>
 
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/dabf5c3bcade25516a1f298fa2f63777459cd0f0/src/ARCH.jl#L433-L495' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/a2656639425017856626d0b1fda91938d2a2287f/src/ARCH.jl#L433-L495' class='documenter-source'>source</a><br></p>
               
             </div>
           </div>
