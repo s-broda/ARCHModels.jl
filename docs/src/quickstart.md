@@ -1,4 +1,3 @@
-# Quick Start Guide
 ```@meta
 DocTestSetup = quote
     using Random
