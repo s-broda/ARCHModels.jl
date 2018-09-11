@@ -10,6 +10,7 @@
 #implement conditionalvariances/volas, stdresids
 # Float16/32 don't seem to work anymore. Problem in Optim?
 #support missing data? timeseries?
+# a simulated AM should probably contain a (zero) intercept, so that fit! is consistent with fit.
 
 module ARCH
 using Reexport
@@ -105,7 +106,7 @@ Parameters:  1.0 0.9 0.05
 ```
 """
 function ARCHModel(spec::VS,
-          data::Vector{T},
+          data::Vector{T};
           dist::SD=StdNormal{T}(),
           meanspec::MS=NoIntercept{T}(),
 		  fitted::Bool=false
@@ -155,7 +156,7 @@ function simulate(spec::VolatilitySpec{T2}, nobs; warmup=100, dist::Standardized
                   ) where {T2<:AbstractFloat}
     data = zeros(T2, nobs)
     _simulate!(data,  spec; warmup=warmup, dist=dist, meanspec=meanspec)
-    ARCHModel(spec, data, dist, meanspec, false)
+    ARCHModel(spec, data; dist=dist, meanspec=meanspec, fitted=false)
 end
 
 """
@@ -397,7 +398,7 @@ function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
     distcoefs = startingvals(SD, data)
     meancoefs = startingvals(MS, data)
     _fit!(coefs, distcoefs, meancoefs, VS, SD, MS, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
-    return ARCHModel(VS(coefs), data, SD(distcoefs), MS(meancoefs), true)
+    return ARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=MS(meancoefs), fitted=true)
 end
 
 """
