@@ -12,4 +12,4 @@ The package is not registered yet; to install it in Julia 0.7 or 1.0, do `add ht
 
 This project has received funding from the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (grant agreement No. 750559).
 
-<img src="docs/src/assets/LOGO_ERC-FLAG_EU_.jpg" width="240">
+<img src="docs/src/assets/LOGO.jpg" width="240">
