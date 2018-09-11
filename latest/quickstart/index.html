@@ -58,32 +58,27 @@
     <a class="current" href="./">Quick Start Guide</a>
     <ul class="subnav">
             
-    <li class="toctree-l2"><a href="#quick-start-guide">Quick Start Guide</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l3" href="#simulate-a-garch1-1-model">Simulate a GARCH{1, 1} model</a></li>
-        
-            <li><a class="toctree-l3" href="#fit-a-garch1-1-model-to-the-simulated-data">Fit a GARCH{1, 1} model to the simulated data</a></li>
-        
-            <li><a class="toctree-l3" href="#simulate-and-fit-an-egarch-model-with-an-intercept-assuming-students-t-errors">Simulate and fit an EGARCH model with an intercept, assuming Student's t errors</a></li>
-        
-            <li><a class="toctree-l3" href="#model-selection">Model selection</a></li>
-        
-        </ul>
-    
-
     </ul>
 	    </li>
           
             <li class="toctree-l1">
 		
-    <a class="" href="../manual/">Manual</a>
+    <span class="caption-text">User Guide</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../types/">Introduction and type hierarchy</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../manual/">Usage</a>
+                </li>
+    </ul>
 	    </li>
           
             <li class="toctree-l1">
 		
-    <a class="" href="../reference/">Index</a>
+    <a class="" href="../reference/">Reference Manual</a>
 	    </li>
           
         </ul>
@@ -121,10 +116,7 @@
           <div role="main">
             <div class="section">
               
-                <p><a id='Quick-Start-Guide-1'></a></p>
-<h1 id="quick-start-guide">Quick Start Guide</h1>
-<p><a id='Simulate-a-GARCH{1,-1}-model-1'></a></p>
-<h2 id="simulate-a-garch1-1-model">Simulate a GARCH{1, 1} model</h2>
+                <p><strong>Simulate a GARCH{1, 1} model</strong></p>
 <pre><code class="julia-repl">julia&gt; using ARCH
 
 julia&gt; am = simulate(GARCH{1, 1}([1., .9, .05]), 10^4)
@@ -146,8 +138,7 @@ ARCHModel{Float64,GARCH{1,1,Float64},StdNormal{Float64},NoIntercept{Float64}}
 10000
 </code></pre>
 
-<p><a id='Fit-a-GARCH{1,-1}-model-to-the-simulated-data-1'></a></p>
-<h2 id="fit-a-garch1-1-model-to-the-simulated-data">Fit a GARCH{1, 1} model to the simulated data</h2>
+<p><strong>Fit a GARCH{1, 1} model to the simulated data</strong></p>
 <pre><code class="julia-repl">julia&gt; fit(GARCH{1, 1}, am.data)
 
 GARCH{1,1} model with Gaussian errors, T=10000.
@@ -180,8 +171,7 @@ Volatility parameters:
 α₁   0.0503246 0.00522825 9.62552   &lt;1e-21
 </code></pre>
 
-<p><a id='Simulate-and-fit-an-EGARCH-model-with-an-intercept,-assuming-Student's-t-errors-1'></a></p>
-<h2 id="simulate-and-fit-an-egarch-model-with-an-intercept-assuming-students-t-errors">Simulate and fit an EGARCH model with an intercept, assuming Student's t errors</h2>
+<p><strong>Simulate and fit an EGARCH model with an intercept, assuming Student's t errors</strong></p>
 <pre><code class="julia-repl">julia&gt; am = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), 10^4; meanspec=Intercept(1.), dist=StdTDist(3.))
 
 EGARCH{1,1,1} model with Student's t errors, T=10000.
@@ -216,8 +206,7 @@ Distribution parameters:
 ν     2.93074 0.0962429 30.4515   &lt;1e-99
 </code></pre>
 
-<p><a id='Model-selection-1'></a></p>
-<h2 id="model-selection">Model selection</h2>
+<p><strong>Model selection</strong></p>
 <p>The function <code>selectmodel</code> can be used to determine the optimal lag length within a class of models:</p>
 <pre><code class="julia-repl">julia&gt; selectmodel(EGARCH, am.data; meanspec=Intercept, dist=StdTDist)
 
@@ -251,7 +240,7 @@ Distribution parameters:
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../manual/" class="btn btn-neutral float-right" title="Manual">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../types/" class="btn btn-neutral float-right" title="Introduction and type hierarchy">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
         <a href=".." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
@@ -285,7 +274,7 @@ Distribution parameters:
         <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
-        <span style="margin-left: 15px"><a href="../manual/" style="color: #fcfcfc">Next &raquo;</a></span>
+        <span style="margin-left: 15px"><a href="../types/" style="color: #fcfcfc">Next &raquo;</a></span>
       
     </span>
 </div>
