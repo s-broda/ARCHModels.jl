@@ -1,7 +1,7 @@
 push!(LOAD_PATH,"../src/")
 using Documenter, ARCH
 makedocs(modules=[ARCH],
-        doctest=false)
+        doctest=true)
 
 deploydocs(deps   = Deps.pip("mkdocs", "python-markdown-math"),
     repo = "github.com/s-broda/ARCH.jl.git",

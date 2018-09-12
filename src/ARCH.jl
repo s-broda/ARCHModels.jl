@@ -11,6 +11,7 @@
 #Float16/32 don't seem to work anymore. Problem in Optim?
 #support missing data? timeseries?
 #a simulated AM should probably contain a (zero) intercept, so that fit! is consistent with fit.
+#the constructor for ARCHModel should make a copy of its args
 module ARCH
 using Reexport
 @reexport using StatsBase
@@ -22,6 +23,7 @@ using Distributions
 using Roots
 using LinearAlgebra
 using DataStructures: CircularBuffer
+using DelimitedFiles
 import Base: show, showerror, eltype
 import Statistics: mean
 import Random: rand
@@ -31,7 +33,13 @@ import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, co
 
 export ARCHModel, VolatilitySpec, StandardizedDistribution, MeanSpec,
        simulate, simulate!, selectmodel, StdNormal, StdTDist, Intercept,
-       NoIntercept
+       NoIntercept, BG96
+
+"""
+    BG96
+Data from  Bollerslev, T. and Ghysels, E. (1996), Periodic Autoregressive Conditional Heteroscedasticity, Journal of Business and Economic Statistics (14), pp. 139-151. [DOI: 10.2307/1392425](https://doi.org/10.2307/1392425).
+"""
+const BG96 = readdlm(joinpath(pathof(ARCH), "..", "data", "bollerslev_ghysels.txt"), skipstart=1)[:, 1];
 
 """
     VolatilitySpec{T}
