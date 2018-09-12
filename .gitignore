@@ -2,5 +2,7 @@
 *.jl.*.cov
 *.jl.mem
 *.bak
+*.log
 docs/build/
 docs/site
+src/data

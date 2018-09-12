@@ -11,7 +11,6 @@
 #Float16/32 don't seem to work anymore. Problem in Optim?
 #support missing data? timeseries?
 #a simulated AM should probably contain a (zero) intercept, so that fit! is consistent with fit.
-#put data from bollerslev et al into assets and use in docs? or maybe better: download them in a build script to avoid copyright problems?
 module ARCH
 using Reexport
 @reexport using StatsBase
