@@ -140,8 +140,25 @@
                 <p>The basic type provided by this package is <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a>. It implements the interface of <code>StatisticalModel</code> from <a href="http://juliastats.github.io/StatsBase.jl/stable/statmodels.html"><code>StatsBase</code></a>. An instance of this type contains a vector of data (such as equity returns), and encapsulates information about the <a href="./#volaspec-1">volatility specification</a> (e.g., <a href="./#GARCH-1">GARCH</a> or <a href="./#EGARCH-1">EGARCH</a>), the <a href="./#meanspec-1">mean specification</a> (e.g., whether an intercept is included), and the <a href="./#Distributions-1">error distribution</a>.</p>
 <p><a id='volaspec-1'></a></p>
 <h1 id="volatility-specifications">Volatility specifications</h1>
+<p>Volatility specifications are modelled as subtypes of <a href="../reference/#ARCH.VolatilitySpec"><code>VolatilitySpec</code></a>. There is one type for each class of (G)ARCH model, parameterized by numbers of lags.</p>
 <p><a id='GARCH-1'></a></p>
 <h2 id="garch">GARCH</h2>
+<p>The GARCH(p, q) model specifies the volatility as</p>
+<p>
+<script type="math/tex; mode=display">
+\sigma_t^2=\omega+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i r_{t-i}^2, \quad \omega, \alpha, \beta>0,\quad \alpha+\beta<1.
+</script>
+</p>
+<p>The corresponding type in Julia is <a href="../reference/#ARCH.GARCH"><code>GARCH</code></a>. For example, a GARCH(1, 1) model with $ω=1$, $β=.9$, and $α=.05$ is obtained with</p>
+<pre><code class="julia-repl">julia&gt; using ARCH
+
+julia&gt; GARCH{1, 1}([1., .9, .05])
+GARCH{1,1} specification.
+
+               ω  β₁   α₁
+Parameters:  1.0 0.9 0.05
+</code></pre>
+
 <p><a id='EGARCH-1'></a></p>
 <h2 id="egarch">EGARCH</h2>
 <p><a id='meanspec-1'></a></p>
