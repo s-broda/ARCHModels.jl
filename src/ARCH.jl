@@ -12,6 +12,8 @@
 #support missing data? timeseries?
 #a simulated AM should probably contain a (zero) intercept, so that fit! is consistent with fit.
 #the constructor for ARCHModel should make a copy of its args
+#implement lrtest
+
 module ARCH
 using Reexport
 @reexport using StatsBase
@@ -583,6 +585,9 @@ function coeftable(am::ARCHModel)
               coefnames(am), 4)
 end
 
+function show(io::IO, spec::VolatilitySpec)
+    println(io, modname(typeof(spec)), " specification.\n\n", CoefTable(spec.coefs, coefnames(typeof(spec)), ["Parameters:"]))
+end
 function show(io::IO, am::ARCHModel)
     cc = coef(am)
     se = stderror(am)
