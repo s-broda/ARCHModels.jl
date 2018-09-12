@@ -39,7 +39,7 @@ export ARCHModel, VolatilitySpec, StandardizedDistribution, MeanSpec,
     BG96
 Data from  Bollerslev, T. and Ghysels, E. (1996), Periodic Autoregressive Conditional Heteroscedasticity, Journal of Business and Economic Statistics (14), pp. 139-151. [DOI: 10.2307/1392425](https://doi.org/10.2307/1392425).
 """
-const BG96 = readdlm(joinpath(pathof(ARCH), "..", "data", "bollerslev_ghysels.txt"), skipstart=1)[:, 1];
+const BG96 = readdlm(joinpath(dirname(pathof(ARCH)), "data", "bollerslev_ghysels.txt"), skipstart=1)[:, 1];
 
 """
     VolatilitySpec{T}
