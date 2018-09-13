@@ -39,7 +39,7 @@ export ARCHModel, VolatilitySpec, StandardizedDistribution, MeanSpec,
 
 """
     BG96
-Data from  Bollerslev, T. and Ghysels, E. (1996), Periodic Autoregressive Conditional Heteroscedasticity, Journal of Business and Economic Statistics (14), pp. 139-151. [DOI: 10.2307/1392425](https://doi.org/10.2307/1392425).
+Data from [Bollerslev and Ghysels (JBES 1996)](https://doi.org/10.2307/1392425).
 """
 const BG96 = readdlm(joinpath(dirname(pathof(ARCH)), "data", "bollerslev_ghysels.txt"), skipstart=1)[:, 1];
 
@@ -351,50 +351,25 @@ end
 Fit the ARCH model specified by `VS` to data. Keyword arguments `algorithm`,
 `autodiff`, and `kwargs` are passed on to the optimizer.
 
-# Examples:
-##  GARCH{1, 1} model  with intercept, Gaussian errors
+# Example: EGARCH{1, 1, 1} model without intercept, Student's t errors.
 ```jldoctest
-julia> am = simulate(GARCH{1, 1}([1., .9, .05]), 10^4);
+julia> fit(EGARCH{1, 1, 1}, BG96; meanspec=NoIntercept, dist=StdTDist)
 
-julia> fit(GARCH{1, 1}, am.data)
-
-GARCH{1,1} model with Gaussian errors, T=10000.
-
-
-Mean equation parameters:
-
-      Estimate Std.Error  z value Pr(>|z|)
-μ    0.0277078 0.0435526 0.636191   0.5247
-
-Volatility parameters:
-
-      Estimate  Std.Error z value Pr(>|z|)
-ω     0.910479   0.146171 6.22886    <1e-9
-β₁    0.905417  0.0103798  87.229   <1e-99
-α₁   0.0503472 0.00523329 9.62057   <1e-21
-```
-
-## EGARCH{1, 1, 1} model without intercept, Student's t errors.
-```jldoctest
-julia> am = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), 10^4; dist=StdTDist(3.));
-
-julia> fit(EGARCH{1, 1, 1}, am.data; meanspec=NoIntercept, dist=StdTDist)
-
-EGARCH{1,1,1} model with Student's t errors, T=10000.
+EGARCH{1,1,1} model with Student's t errors, T=1974.
 
 
 Volatility parameters:
 
-       Estimate Std.Error  z value Pr(>|z|)
-ω     0.0987805 0.0250686  3.94041    <1e-4
-γ₁   0.00365422 0.0107549 0.339773   0.7340
-β₁     0.907199 0.0248543  36.5007   <1e-99
-α₁     0.105628 0.0181297  5.82623    <1e-8
+       Estimate Std.Error   z value Pr(>|z|)
+ω    -0.0162014 0.0186806 -0.867286   0.3858
+γ₁   -0.0378454  0.018024  -2.09972   0.0358
+β₁     0.977687  0.012558   77.8538   <1e-99
+α₁     0.255804 0.0625497   4.08961    <1e-4
 
 Distribution parameters:
 
      Estimate Std.Error z value Pr(>|z|)
-ν     2.93066 0.0961986 30.4647   <1e-99
+ν     4.12423   0.40059 10.2954   <1e-24
 ```
 """
 function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
@@ -454,53 +429,26 @@ minimizes the [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion
 - `show_trace=false`: print `criterion` to screen for each estimated model.
 - `algorithm=BFGS(), autodiff=:forward, kwargs...`: passed on to the optimizer.
 
-# Examples:
+# Example
 ```jldoctest
-julia> data = simulate(GARCH{1, 2}([1., .7, .1, .1]), 10^4).data;
+julia> selectmodel(EGARCH, BG96)
 
-julia> selectmodel(GARCH, data; maxlags=2, show_trace=true)
-GARCH{1,1} model has BIC 50460.8.
-GARCH{1,2} model has BIC 50424.4.
-GARCH{2,2} model has BIC 50432.2.
-GARCH{2,1} model has BIC 50474.4.
-
-GARCH{1,2} model with Gaussian errors, T=10000.
+EGARCH{1,1,2} model with Gaussian errors, T=1974.
 
 
 Mean equation parameters:
 
-      Estimate Std.Error  z value Pr(>|z|)
-μ    0.0244617 0.0270085 0.905705   0.3651
+        Estimate  Std.Error   z value Pr(>|z|)
+μ    -0.00900018 0.00943948 -0.953461   0.3404
 
 Volatility parameters:
 
-     Estimate Std.Error z value Pr(>|z|)
-ω    0.923224 0.0945196 9.76755   <1e-21
-β₁   0.712557 0.0191164 37.2746   <1e-99
-α₁    0.08817 0.0116818 7.54761   <1e-13
-α₂    0.11182 0.0164452 6.79955   <1e-10
-
-julia> selectmodel(EGARCH{0, p, q} where {p, q}, data; maxlags=2, criterion=aic, show_trace=true) # symmetric EGARCH
-EGARCH{0,1,1} model has AIC 50482.4.
-EGARCH{0,1,2} model has AIC 50445.4.
-EGARCH{0,2,1} model has AIC 50990.9.
-EGARCH{0,2,2} model has AIC 50585.6.
-
-EGARCH{0,1,2} model with Gaussian errors, T=10000.
-
-
-Mean equation parameters:
-
-      Estimate Std.Error  z value Pr(>|z|)
-μ    0.0229086 0.0263989 0.867786   0.3855
-
-Volatility parameters:
-
-     Estimate Std.Error z value Pr(>|z|)
-ω    0.204397 0.0203417 10.0482   <1e-23
-β₁   0.907583 0.0090583 100.194   <1e-99
-α₁   0.196247 0.0216006 9.08526   <1e-18
-α₂    0.15037  0.023943 6.28036    <1e-9
+       Estimate Std.Error   z value Pr(>|z|)
+ω    -0.0544398 0.0592073 -0.919478   0.3578
+γ₁   -0.0243368 0.0270414 -0.899985   0.3681
+β₁     0.960301 0.0388183   24.7384   <1e-99
+α₁     0.405788  0.067466    6.0147    <1e-8
+α₂    -0.207357  0.114161  -1.81636   0.0693
 ```
 """
 function selectmodel(::Type{VS}, data::Vector{T};

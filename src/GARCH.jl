@@ -3,11 +3,6 @@ export _ARCH #ARCH conflicts with module name
 
 """
     GARCH{p, q, T<:AbstractFloat} <: VolatilitySpec{T}
-
-The GARCH{p, q} volatility specification is
-```math
-\\sigma_t^2=\\omega+\\sum_{i=1}^p\\beta_i \\sigma_{t-i}^2+\\sum_{i=1}^q\\alpha_i r_{t-i}^2.
-```
 """
 struct GARCH{p, q, T<:AbstractFloat} <: VolatilitySpec{T}
     coefs::Vector{T}
@@ -24,23 +19,17 @@ Construct a GARCH specification with the given parameters.
 
 # Example:
 ```jldoctest
-julia> spec = GARCH{2, 1}([1., .3, .4, .05 ]); coefnames(typeof(spec))
-4-element Array{String,1}:
- "ω"
- "β₁"
- "β₂"
- "α₁"
+julia> GARCH{2, 1}([1., .3, .4, .05 ])
+GARCH{2,1} specification.
+
+               ω  β₁  β₂   α₁
+Parameters:  1.0 0.3 0.4 0.05
 ```
 """
 GARCH{p, q}(coefs::Vector{T}) where {p, q, T}  = GARCH{p, q, T}(coefs)
 
 """
     _ARCH{q, T<:AbstractFloat} <: VolatilitySpec{T}
-
-The ARCH{q} volatility specification is
-```math
-\\sigma_t^2=\\omega+\\sum_{i=1}^q\\alpha_i r_{t-i}^2.
-```
 """
 const _ARCH = GARCH{0}
 

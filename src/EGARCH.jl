@@ -2,11 +2,6 @@ export EGARCH
 
 """
     EGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}
-
-The EGARCH{o, p, q} volatility specification is
-```math
-\\log(\\sigma_t^2)=\\omega+\\sum_{i=1}^o\\gamma_i z_{t-i}^2+\\sum_{i=1}^p\\beta_i \\log(\\sigma_{t-i}^2)+\\sum_{i=1}^q\\alpha_i (|z_{t-i}|-\\sqrt{2/\\pi}), \\quad z_t=r_t/\\sigma_t
-```
 """
 struct EGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}
     coefs::Vector{T}
@@ -23,12 +18,11 @@ Construct an EGARCH specification with the given parameters.
 
 # Example:
 ```jldoctest
-julia> spec = EGARCH{1, 1, 1}([-0.1, .1, .9, .04]); coefnames(typeof(spec))
-4-element Array{String,1}:
- "ω"
- "γ₁"
- "β₁"
- "α₁"
+julia> EGARCH{1, 1, 1}([-0.1, .1, .9, .04])
+EGARCH{1,1,1} specification.
+
+                ω  γ₁  β₁   α₁
+Parameters:  -0.1 0.1 0.9 0.04
 ```
 """
 EGARCH{o, p, q}(coefs::Vector{T}) where {o, p, q, T}  = EGARCH{o, p, q, T}(coefs)
