@@ -14,9 +14,8 @@ julia> using ARCH
 
 julia> data = BG96;
 
-julia> autocor(data.^2, demean=true)
-34-element Array{Float64,1}:
- 1.0
+julia> autocor(data.^2, 1:10, demean=true)
+10-element Array{Float64,1}:
  0.22294073831639766
  0.17663183540117078
  0.14086005904595456
@@ -27,18 +26,6 @@ julia> autocor(data.^2, demean=true)
  0.09671690899919724
  0.09217329577285414
  0.11984168975215709
- ⋮
- 0.07466794519715264
- 0.08625439196323935
- 0.12979672743810414
- 0.11029695987065949
- 0.020333125175368432
- 0.06660771180529149
- 0.043868942059016085
- 0.07365813446860613
- 0.08576511654817065
- 0.0585543055306397
- 0.040148029799140304
 ```
 
 Using a critical value of ``1.96/\\sqrt{1974}=0.044``, we see that there is indeed significant autocorrelation in the squared series.

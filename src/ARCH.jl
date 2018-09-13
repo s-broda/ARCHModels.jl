@@ -13,7 +13,7 @@
 #a simulated AM should probably contain a (zero) intercept, so that fit! is consistent with fit.
 #the constructor for ARCHModel should make a copy of its args
 #implement lrtest
-#fix doctest
+
 module ARCH
 using Reexport
 @reexport using StatsBase
