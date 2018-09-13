@@ -84,6 +84,9 @@
     <li class="toctree-l3"><a href="#distributions">Distributions</a></li>
     
 
+    <li class="toctree-l3"><a href="#working-with-an-archmodel">Working with an ARCHModel</a></li>
+    
+
     </ul>
                 </li>
                 <li class="">
@@ -137,19 +140,26 @@
           <div role="main">
             <div class="section">
               
-                <p>The basic type provided by this package is <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a>. It implements the interface of <code>StatisticalModel</code> from <a href="http://juliastats.github.io/StatsBase.jl/stable/statmodels.html"><code>StatsBase</code></a>. An instance of this type contains a vector of data (such as equity returns), and encapsulates information about the <a href="./#volaspec-1">volatility specification</a> (e.g., <a href="./#GARCH-1">GARCH</a> or <a href="./#EGARCH-1">EGARCH</a>), the <a href="./#meanspec-1">mean specification</a> (e.g., whether an intercept is included), and the <a href="./#Distributions-1">error distribution</a>.</p>
-<p><a id='volaspec-1'></a></p>
-<h1 id="volatility-specifications">Volatility specifications</h1>
-<p>Volatility specifications are modelled as subtypes of <a href="../reference/#ARCH.VolatilitySpec"><code>VolatilitySpec</code></a>. There is one type for each class of (G)ARCH model, parameterized by numbers of lags.</p>
-<p><a id='GARCH-1'></a></p>
-<h2 id="garch">GARCH</h2>
-<p>The GARCH(p, q) model specifies the volatility as</p>
+                <p>Consider a sample of daily asset returns $\{r_t\}_{t\in{1,\ldots,T}}$. All models covered in this package share the same basic structure, in that they decompose the return into a conditional mean and a mean-zero innovation:</p>
 <p>
 <script type="math/tex; mode=display">
-\sigma_t^2=\omega+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i r_{t-i}^2, \quad \omega, \alpha, \beta>0,\quad \alpha+\beta<1.
+r_t=\mu_t+\sigma_tz_t,\quad \mu_t\equiv\mathbb{E}[r_t\mid\mathcal{F}_{t-1}],\quad \sigma_t^2\equiv\mathbb{E}[(r_t-\mu_t)^2\mid\mathcal{F}_{t-1}],
 </script>
 </p>
-<p>The corresponding type in Julia is <a href="../reference/#ARCH.GARCH"><code>GARCH</code></a>. For example, a GARCH(1, 1) model with $ω=1$, $β=.9$, and $α=.05$ is obtained with</p>
+<p>where $z_t$ is identically and independently distributed according to some law with mean zero and unit variance and $\{\mathcal{F}_t\}$ is the natural filtration of $\{r_t\}$ (i.e., it encodes information about past returns).</p>
+<p>This package represents a (G)ARCH model as an instance of <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a>, which implements the interface of <code>StatisticalModel</code> from <a href="http://juliastats.github.io/StatsBase.jl/stable/statmodels.html"><code>StatsBase</code></a>. An instance of this type contains a vector of data (such as equity returns), and encapsulates information about the <a href="./#volaspec-1">volatility specification</a> (e.g., <a href="./#GARCH-1">GARCH</a> or <a href="./#EGARCH-1">EGARCH</a>), the <a href="./#meanspec-1">mean specification</a> (e.g., whether an intercept is included), and the <a href="./#Distributions-1">error distribution</a>.</p>
+<p><a id='volaspec-1'></a></p>
+<h1 id="volatility-specifications">Volatility specifications</h1>
+<p>Volatility specifications describe the evolution of $\sigma_t$. They are modelled as subtypes of <a href="../reference/#ARCH.VolatilitySpec"><code>VolatilitySpec</code></a>. There is one type for each class of (G)ARCH model, parameterized by numbers of lags.</p>
+<p><a id='GARCH-1'></a></p>
+<h2 id="garch">GARCH</h2>
+<p>The GARCH(p, q) model, due to <a href="https://doi.org/10.1016/0304-4076(86)90063-1">Bollerslev (J. Econometrics 1986)</a> specifies the volatility as</p>
+<p>
+<script type="math/tex; mode=display">
+\sigma_t^2=\omega+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i r_{t-i}^2, \quad \omega, \alpha_i, \beta_i>0,\quad \sum_{i=1}^{\max p,q} \alpha_i+\beta_i<1.
+</script>
+</p>
+<p>The corresponding type is <a href="../reference/#ARCH.GARCH"><code>GARCH{p, q}</code></a>. For example, a GARCH(1, 1) model with $ω=1$, $β=.9$, and $α=.05$ is obtained with</p>
 <pre><code class="julia-repl">julia&gt; using ARCH
 
 julia&gt; GARCH{1, 1}([1., .9, .05])
@@ -159,12 +169,113 @@ GARCH{1,1} specification.
 Parameters:  1.0 0.9 0.05
 </code></pre>
 
+<p>As for all subtypes of <a href="../reference/#ARCH.VolatilitySpec"><code>VolatilitySpec</code></a>, the order of the parameters in the coefficient vector is such that all parameters pertaining to the first type parameter <code>p</code> (corresponding to the first sum in the equation) appear before those pertaining to the second, <code>q</code>.</p>
+<p>As a special case, the ARCH(q) volatility specification, due to <a href="https://doi.org/10.2307/1912773">Engle (Econometrica 1982)</a>, is</p>
+<p>
+<script type="math/tex; mode=display">
+\sigma_t^2=\omega+\sum_{i=1}^q\alpha_i r_{t-i}^2,
+</script>
+</p>
+<p>corresponding to a GARCH{0, q} model. It is available as <a href="../reference/#ARCH._ARCH"><code>_ARCH{q}</code></a>:</p>
+<pre><code class="julia-repl">julia&gt; _ARCH{2}([1., .5, .4])
+GARCH{0,2} specification.
+
+               ω  α₁  α₂
+Parameters:  1.0 0.5 0.4
+</code></pre>
+
 <p><a id='EGARCH-1'></a></p>
 <h2 id="egarch">EGARCH</h2>
+<p>The EGARCH{o, p, q} volatility specification, due to <a href="https://doi.org/10.2307/2938260">Nelson (Econometrica 1991)</a>, is</p>
+<p>
+<script type="math/tex; mode=display">
+\log(\sigma_t^2)=\omega+\sum_{i=1}^o\gamma_i z_{t-i}+\sum_{i=1}^p\beta_i \log(\sigma_{t-i}^2)+\sum_{i=1}^q\alpha_i (|z_{t-i}|-\sqrt{2/\pi}), \quad z_t=r_t/\sigma_t,\quad \sum_{i=1}^{p}\beta_i<1.
+</script>
+</p>
+<p>The corresponding type is <a href="../reference/#ARCH.EGARCH"><code>EGARCH{o, p, q}</code></a>:</p>
+<pre><code class="julia-repl">julia&gt; EGARCH{1, 1, 1}([-0.1, .1, .9, .04])
+EGARCH{1,1,1} specification.
+
+                ω  γ₁  β₁   α₁
+Parameters:  -0.1 0.1 0.9 0.04
+</code></pre>
+
 <p><a id='meanspec-1'></a></p>
 <h1 id="mean-specifications">Mean specifications</h1>
+<p>Mean specifications serve to specify $\mu_t$. They are modelled as subtypes of <a href="../reference/#ARCH.MeanSpec"><code>MeanSpec</code></a>. They contain their parameters as (possibly empty) vectors, but convenience constructors are provided where appropriate. Currently, two specifications are available:</p>
+<ul>
+<li>$\mu_t=0$, available as <a href="../reference/#ARCH.NoIntercept"><code>NoIntercept</code></a>:</li>
+</ul>
+<pre><code class="julia-repl">julia&gt; NoIntercept() # convenience constructor, eltype defaults to Float64
+NoIntercept{Float64}(Float64[])
+</code></pre>
+
+<ul>
+<li>$\mu_t=\mu$, available as <a href="../reference/#ARCH.Intercept"><code>Intercept</code></a>:</li>
+</ul>
+<pre><code class="julia-repl">julia&gt; Intercept(3) # convenience constructor
+Intercept{Float64}([3.0])
+</code></pre>
+
 <p><a id='Distributions-1'></a></p>
 <h1 id="distributions">Distributions</h1>
+<p>Different distributions of $z_t$ are available as subtypes of <a href="../reference/#ARCH.StandardizedDistribution"><code>StandardizedDistribution</code></a>. <code>StandardizedDistribution</code> in turn subtypes <code>Distribution{Univariate, Continuous}</code> from <a href="https://github.com/JuliaStats/Distributions.jl">Distributions.jl</a>, though not the entire interface must necessarily be implemented. <code>StandardizedDistribution</code>s again hold their parameters as vectors, but convenience constructors are provided. The following are currently available:</p>
+<ul>
+<li><a href="../reference/#ARCH.StdNormal"><code>StdNormal</code></a>, the standard normal distribution:</li>
+</ul>
+<pre><code class="julia-repl">julia&gt; StdNormal() # convenience constructor
+StdNormal{Float64}(coefs=Float64[])
+</code></pre>
+
+<ul>
+<li><a href="../reference/#ARCH.StdTDist"><code>StdTDist</code></a>, the standardized Student's <code>t</code> distribution:</li>
+</ul>
+<pre><code class="julia-repl">julia&gt; StdTDist(3) # convenience constructor: 3 degrees of freedom
+StdTDist{Float64}(coefs=[3.0])
+</code></pre>
+
+<p><a id='Working-with-an-<a href="@ref">ARCHModel</a>-1'></a></p>
+<h1 id="working-with-an-archmodel">Working with an <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a></h1>
+<p>The constructor for <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a> takes two mandatory arguments: an instance of a subtype of <a href="../reference/#ARCH.VolatilitySpec"><code>VolatilitySpec</code></a>, and a vector of returns. The mean specification and error distribution can be changed via the keyword arguments <code>meanspec</code> and <code>dist</code>, which respectively default to <code>NoIntercept</code> and <code>StdNormal</code>.</p>
+<p>For example, to construct a GARCH(1, 1) model with an intercept and $t$-distributed errors, one would do</p>
+<pre><code class="julia-repl">julia&gt; spec = GARCH{1, 1}([1., .9, .05]);
+
+julia&gt; data = BG96;
+
+julia&gt; am = ARCHModel(spec, data; dist=StdTDist(3.), meanspec=Intercept(1.))
+
+GARCH{1,1} model with Student's t errors, T=1974.
+
+
+               ω  β₁   α₁   ν   μ
+Parameters:  1.0 0.9 0.05 3.0 1.0
+</code></pre>
+
+<p>The model can then be fitted as follows:</p>
+<pre><code class="julia-repl">julia&gt; fit!(am)
+
+GARCH{1,1} model with Student's t errors, T=1974.
+
+
+Mean equation parameters:
+
+       Estimate  Std.Error  z value Pr(&gt;|z|)
+μ    0.00227251 0.00686802 0.330882   0.7407
+
+Volatility parameters:
+
+       Estimate  Std.Error z value Pr(&gt;|z|)
+ω    0.00232225 0.00163909 1.41679   0.1565
+β₁     0.884488   0.036963  23.929   &lt;1e-99
+α₁     0.124866  0.0405471 3.07952   0.0021
+
+Distribution parameters:
+
+     Estimate Std.Error z value Pr(&gt;|z|)
+ν     4.11211  0.400384 10.2704   &lt;1e-24
+</code></pre>
+
+<p>It should, however, rarely be necessary to construct an <code>ARCHModel</code> manually via its constructor; typically, instances of it are created by calling <a href="../reference/#StatsBase.fit-Tuple{ARCHModel}"><code>fit</code></a>, <a href="../reference/#ARCH.selectmodel-Union{Tuple{MS}, Tuple{SD}, Tuple{T}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where MS&lt;:MeanSpec where SD&lt;:StandardizedDistribution where T&lt;:AbstractFloat where VS&lt;:VolatilitySpec"><code>selectmodel</code></a>, or <a href="../reference/#ARCH.simulate"><code>simulate</code></a>.</p>
               
             </div>
           </div>

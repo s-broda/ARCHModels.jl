@@ -71,6 +71,9 @@
     <a class="current" href="./">Usage</a>
     <ul class="subnav">
             
+    <li class="toctree-l3"><a href="#model-selection">Model selection</a></li>
+    
+
     </ul>
                 </li>
     </ul>
@@ -120,14 +123,13 @@
           <div role="main">
             <div class="section">
               
-                <p>We will be using the data from Bollerslev and Ghysels (1996)<sup id="fnref:1"><a class="footnote-ref" href="#fn:1" rel="footnote">1</a></sup>, available as the constant <a href="../reference/#ARCH.BG96"><code>BG96</code></a>. The data consist of daily German mark/British pound exchange rates (1974 observations) and are often used in evaluating implementations of (G)ARCH models<sup id="fnref:2"><a class="footnote-ref" href="#fn:2" rel="footnote">2</a></sup>. We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:</p>
+                <p>We will be using the data from <a href="https://doi.org/10.2307/1392425">Bollerslev and Ghysels (JBES 1996)</a>, available as the constant <a href="../reference/#ARCH.BG96"><code>BG96</code></a>. The data consist of daily German mark/British pound exchange rates (1974 observations) and are often used in evaluating implementations of (G)ARCH models (see, e.g., <a href="https://doi.org/10.1016/S0169-2070(00)00070-4">Brooks et.al. (Int. J. Forecasting 2001)</a>. We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:</p>
 <pre><code class="julia-repl">julia&gt; using ARCH
 
 julia&gt; data = BG96;
 
-julia&gt; autocor(data.^2, demean=true)
-34-element Array{Float64,1}:
- 1.0
+julia&gt; autocor(data.^2, 1:10, demean=true) # re-exported from StatsBase
+10-element Array{Float64,1}:
  0.22294073831639766
  0.17663183540117078
  0.14086005904595456
@@ -138,79 +140,12 @@ julia&gt; autocor(data.^2, demean=true)
  0.09671690899919724
  0.09217329577285414
  0.11984168975215709
- ⋮
- 0.07466794519715264
- 0.08625439196323935
- 0.12979672743810414
- 0.11029695987065949
- 0.020333125175368432
- 0.06660771180529149
- 0.043868942059016085
- 0.07365813446860613
- 0.08576511654817065
- 0.0585543055306397
- 0.040148029799140304
 </code></pre>
 
-<p>Using a critical value of $1.96/\sqrt{1974}=0.044$, we see that there is indeed significant autocorrelation in the squared series. Next, an instance of <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a> can be created by calling the constructor as follows:</p>
-<pre><code class="julia-repl">julia&gt; spec = GARCH{1, 1}([1., .9, .05]);
-
-julia&gt; am = ARCHModel(spec, data)
-
-GARCH{1,1} model with Gaussian errors, T=1000.
-
-
-               ω  β₁   α₁
-Parameters:  1.0 0.9 0.05
-</code></pre>
-
-<p>Notice that no intercept is included by default, and a standard Normal distribution is assumed. The constructor accepts the keyword arguments <code>dist</code> and <code>meanspec</code> for specifying alternative distributions and mean specifications:</p>
-<pre><code class="julia-repl">julia&gt; am = ARCHModel(spec, data; dist=StdTDist(3.), meanspec=Intercept(1.))
-
-GARCH{1,1} model with Student's t errors, T=1000.
-
-
-               ω  β₁   α₁   ν   μ
-Parameters:  1.0 0.9 0.05 3.0 1.0
-
-</code></pre>
-
-<p>The model can then be fitted as follows:</p>
-<pre><code class="julia-repl">julia&gt; fit!(am)
-
-GARCH{1,1} model with Student's t errors, T=1974.
-
-
-Mean equation parameters:
-
-       Estimate  Std.Error  z value Pr(&gt;|z|)
-μ    0.00227251 0.00686802 0.330882   0.7407
-
-Volatility parameters:
-
-       Estimate  Std.Error z value Pr(&gt;|z|)
-ω    0.00232225 0.00163909 1.41679   0.1565
-β₁     0.884488   0.036963  23.929   &lt;1e-99
-α₁     0.124866  0.0405471 3.07952   0.0021
-
-Distribution parameters:
-
-     Estimate Std.Error z value Pr(&gt;|z|)
-ν     4.11211  0.400384 10.2704   &lt;1e-24
-</code></pre>
-
+<p>Using a critical value of $1.96/\sqrt{1974}=0.044$, we see that there is indeed significant autocorrelation in the squared series.</p>
 <p>It should rarely be necessary to call the constructor directly; typically, instances of <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a> are created by calling <a href="../reference/#ARCH.simulate"><code>simulate</code></a> or <a href="../reference/#StatsBase.fit-Tuple{ARCHModel}"><code>fit</code></a>.</p>
-<div class="footnote">
-<hr />
-<ol>
-<li id="fn:1">
-<p>Bollerslev, T. and Ghysels, E. (1996), Periodic Autoregressive Conditional Heteroscedasticity, Journal of Business and Economic Statistics (14), pp. 139-151. <a href="https://doi.org/10.2307/1392425">DOI: 10.2307/1392425</a>&#160;<a class="footnote-backref" href="#fnref:1" rev="footnote" title="Jump back to footnote 1 in the text">&#8617;</a></p>
-</li>
-<li id="fn:2">
-<p>Brooks, C., Burke, S. P., and Persand, G. (2001), Benchmarks and the accuracy of GARCH model estimation, International Journal of Forecasting (17), pp. 45-56.<a href="https://doi.org/10.1016/S0169-2070(00)00070-4">DOI: 10.1016/S0169-2070(00)00070-4</a>&#160;<a class="footnote-backref" href="#fnref:2" rev="footnote" title="Jump back to footnote 2 in the text">&#8617;</a></p>
-</li>
-</ol>
-</div>
+<p><a id='Model-selection-1'></a></p>
+<h1 id="model-selection">Model selection</h1>
               
             </div>
           </div>

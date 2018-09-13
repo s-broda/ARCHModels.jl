@@ -126,12 +126,12 @@
 <h1 id="index">Index</h1>
 <ul>
 <li><a href="./#ARCH.BG96"><code>ARCH.BG96</code></a></li>
-<li><a href="./#ARCH.ARCHModel"><code>ARCH.ARCHModel</code></a></li>
 <li><a href="./#ARCH.ARCHModel-Union{Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}, Tuple{VS,Array{T,1}}} where MS&lt;:MeanSpec where SD&lt;:StandardizedDistribution where VS&lt;:VolatilitySpec where T&lt;:AbstractFloat"><code>ARCH.ARCHModel</code></a></li>
-<li><a href="./#ARCH.EGARCH-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}, Tuple{o}} where T where q where p where o"><code>ARCH.EGARCH</code></a></li>
+<li><a href="./#ARCH.ARCHModel"><code>ARCH.ARCHModel</code></a></li>
 <li><a href="./#ARCH.EGARCH"><code>ARCH.EGARCH</code></a></li>
-<li><a href="./#ARCH.GARCH-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}} where T where q where p"><code>ARCH.GARCH</code></a></li>
+<li><a href="./#ARCH.EGARCH-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}, Tuple{o}} where T where q where p where o"><code>ARCH.EGARCH</code></a></li>
 <li><a href="./#ARCH.GARCH"><code>ARCH.GARCH</code></a></li>
+<li><a href="./#ARCH.GARCH-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}} where T where q where p"><code>ARCH.GARCH</code></a></li>
 <li><a href="./#ARCH.Intercept-Tuple{Any}"><code>ARCH.Intercept</code></a></li>
 <li><a href="./#ARCH.Intercept"><code>ARCH.Intercept</code></a></li>
 <li><a href="./#ARCH.MeanSpec"><code>ARCH.MeanSpec</code></a></li>
@@ -147,9 +147,9 @@
 <li><a href="./#ARCH.selectmodel-Union{Tuple{MS}, Tuple{SD}, Tuple{T}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where MS&lt;:MeanSpec where SD&lt;:StandardizedDistribution where T&lt;:AbstractFloat where VS&lt;:VolatilitySpec"><code>ARCH.selectmodel</code></a></li>
 <li><a href="./#ARCH.simulate"><code>ARCH.simulate</code></a></li>
 <li><a href="./#ARCH.simulate!-Tuple{ARCHModel}"><code>ARCH.simulate!</code></a></li>
-<li><a href="./#StatsBase.fit-Union{Tuple{T}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where T&lt;:AbstractFloat where MS&lt;:MeanSpec where SD&lt;:StandardizedDistribution where VS&lt;:VolatilitySpec"><code>StatsBase.fit</code></a></li>
-<li><a href="./#StatsBase.fit-Tuple{ARCHModel}"><code>StatsBase.fit</code></a></li>
 <li><a href="./#StatsBase.fit-Union{Tuple{T}, Tuple{SD}, Tuple{Type{SD},Array{T,1}}} where T&lt;:AbstractFloat where SD&lt;:StandardizedDistribution"><code>StatsBase.fit</code></a></li>
+<li><a href="./#StatsBase.fit-Tuple{ARCHModel}"><code>StatsBase.fit</code></a></li>
+<li><a href="./#StatsBase.fit-Union{Tuple{T}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where T&lt;:AbstractFloat where MS&lt;:MeanSpec where SD&lt;:StandardizedDistribution where VS&lt;:VolatilitySpec"><code>StatsBase.fit</code></a></li>
 <li><a href="./#StatsBase.fit!-Tuple{ARCHModel}"><code>StatsBase.fit!</code></a></li>
 </ul>
 <p><a id='Public-API-1'></a></p>
@@ -159,8 +159,8 @@
 <pre><code>BG96
 </code></pre>
 
-<p>Data from  Bollerslev, T. and Ghysels, E. (1996), Periodic Autoregressive Conditional Heteroscedasticity, Journal of Business and Economic Statistics (14), pp. 139-151. <a href="https://doi.org/10.2307/1392425">DOI: 10.2307/1392425</a>.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/ARCH.jl#L40-L43' class='documenter-source'>source</a><br></p>
+<p>Data from <a href="https://doi.org/10.2307/1392425">Bollerslev and Ghysels (JBES 1996)</a>.</p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/ARCH.jl#L40-L43' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.ARCHModel' href='#ARCH.ARCHModel'>#</a>
 <strong><code>ARCH.ARCHModel</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>ARCHModel{T&lt;:AbstractFloat,
@@ -170,7 +170,7 @@
           } &lt;: StatisticalModel
 </code></pre>
 
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/ARCH.jl#L77-L83' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/ARCH.jl#L77-L83' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.ARCHModel-Union{Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}, Tuple{VS,Array{T,1}}} where MS<:MeanSpec where SD<:StandardizedDistribution where VS<:VolatilitySpec where T<:AbstractFloat' href='#ARCH.ARCHModel-Union{Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}, Tuple{VS,Array{T,1}}} where MS<:MeanSpec where SD<:StandardizedDistribution where VS<:VolatilitySpec where T<:AbstractFloat'>#</a>
 <strong><code>ARCH.ARCHModel</code></strong> &mdash; <em>Method</em>.</p>
 <pre><code>ARCHModel(spec::VolatilitySpec, data::Vector; dist=StdNormal(),
@@ -189,19 +189,13 @@ GARCH{1,1} model with Gaussian errors, T=10.
 Parameters:  1.0 0.9 0.05
 </code></pre>
 
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/ARCH.jl#L99-L116' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/ARCH.jl#L99-L116' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.EGARCH' href='#ARCH.EGARCH'>#</a>
 <strong><code>ARCH.EGARCH</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>EGARCH{o, p, q, T&lt;:AbstractFloat} &lt;: VolatilitySpec{T}
 </code></pre>
 
-<p>The EGARCH{o, p, q} volatility specification is</p>
-<p>
-<script type="math/tex; mode=display">
-\log(\sigma_t^2)=\omega+\sum_{i=1}^o\gamma_i z_{t-i}^2+\sum_{i=1}^p\beta_i \log(\sigma_{t-i}^2)+\sum_{i=1}^q\alpha_i (|z_{t-i}|-\sqrt{2/\pi}), \quad z_t=r_t/\sigma_t
-</script>
-</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/EGARCH.jl#L3-L10' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/EGARCH.jl#L3-L5' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.EGARCH-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}, Tuple{o}} where T where q where p where o' href='#ARCH.EGARCH-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}, Tuple{o}} where T where q where p where o'>#</a>
 <strong><code>ARCH.EGARCH</code></strong> &mdash; <em>Method</em>.</p>
 <pre><code>EGARCH{o, p, q}(coefs) -&gt; VolatilitySpec
@@ -209,27 +203,20 @@ Parameters:  1.0 0.9 0.05
 
 <p>Construct an EGARCH specification with the given parameters.</p>
 <p><strong>Example:</strong></p>
-<pre><code class="julia-repl">julia&gt; spec = EGARCH{1, 1, 1}([-0.1, .1, .9, .04]); coefnames(typeof(spec))
-4-element Array{String,1}:
- &quot;ω&quot;
- &quot;γ₁&quot;
- &quot;β₁&quot;
- &quot;α₁&quot;
+<pre><code class="julia-repl">julia&gt; EGARCH{1, 1, 1}([-0.1, .1, .9, .04])
+EGARCH{1,1,1} specification.
+
+                ω  γ₁  β₁   α₁
+Parameters:  -0.1 0.1 0.9 0.04
 </code></pre>
 
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/EGARCH.jl#L19-L33' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/EGARCH.jl#L14-L27' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.GARCH' href='#ARCH.GARCH'>#</a>
 <strong><code>ARCH.GARCH</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>GARCH{p, q, T&lt;:AbstractFloat} &lt;: VolatilitySpec{T}
 </code></pre>
 
-<p>The GARCH{p, q} volatility specification is</p>
-<p>
-<script type="math/tex; mode=display">
-\sigma_t^2=\omega+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i r_{t-i}^2.
-</script>
-</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/GARCH.jl#L4-L11' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/GARCH.jl#L4-L6' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.GARCH-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}} where T where q where p' href='#ARCH.GARCH-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}} where T where q where p'>#</a>
 <strong><code>ARCH.GARCH</code></strong> &mdash; <em>Method</em>.</p>
 <pre><code>GARCH{p, q}(coefs) -&gt; VolatilitySpec
@@ -237,43 +224,42 @@ Parameters:  1.0 0.9 0.05
 
 <p>Construct a GARCH specification with the given parameters.</p>
 <p><strong>Example:</strong></p>
-<pre><code class="julia-repl">julia&gt; spec = GARCH{2, 1}([1., .3, .4, .05 ]); coefnames(typeof(spec))
-4-element Array{String,1}:
- &quot;ω&quot;
- &quot;β₁&quot;
- &quot;β₂&quot;
- &quot;α₁&quot;
+<pre><code class="julia-repl">julia&gt; GARCH{2, 1}([1., .3, .4, .05 ])
+GARCH{2,1} specification.
+
+               ω  β₁  β₂   α₁
+Parameters:  1.0 0.3 0.4 0.05
 </code></pre>
 
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/GARCH.jl#L20-L34' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/GARCH.jl#L15-L28' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.Intercept' href='#ARCH.Intercept'>#</a>
 <strong><code>ARCH.Intercept</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>Intercept{T} &lt;: MeanSpec{T}
 </code></pre>
 
 <p>A mean specification with just an intercept.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/meanspecs.jl#L35-L39' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/meanspecs.jl#L35-L39' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.Intercept-Tuple{Any}' href='#ARCH.Intercept-Tuple{Any}'>#</a>
 <strong><code>ARCH.Intercept</code></strong> &mdash; <em>Method</em>.</p>
 <pre><code>Intercept(mu)
 </code></pre>
 
 <p>Create an instance of Intercept. <code>mu</code> can be passed as a scalar or vector.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/meanspecs.jl#L44-L48' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/meanspecs.jl#L44-L48' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.MeanSpec' href='#ARCH.MeanSpec'>#</a>
 <strong><code>ARCH.MeanSpec</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>MeanSpec{T}
 </code></pre>
 
 <p>Abstract supertype that mean specifications inherit from.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/ARCH.jl#L60-L63' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/ARCH.jl#L60-L63' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.NoIntercept' href='#ARCH.NoIntercept'>#</a>
 <strong><code>ARCH.NoIntercept</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>NoIntercept{T} &lt;: MeanSpec{T}
 </code></pre>
 
 <p>A mean specification without an intercept (i.e., the mean is zero).</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/meanspecs.jl#L1-L5' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/meanspecs.jl#L1-L5' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.NoIntercept' href='#ARCH.NoIntercept'>#</a>
 <strong><code>ARCH.NoIntercept</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>NoIntercept(T::Type=Float64)
@@ -282,21 +268,21 @@ NoIntercept(v::Vector)
 </code></pre>
 
 <p>Create an instance of NoIntercept.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/meanspecs.jl#L9-L15' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/meanspecs.jl#L9-L15' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.StandardizedDistribution' href='#ARCH.StandardizedDistribution'>#</a>
 <strong><code>ARCH.StandardizedDistribution</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>StandardizedDistribution{T} &lt;: Distributions.Distribution{Univariate, Continuous}
 </code></pre>
 
 <p>Abstract supertype that standardized distributions inherit from.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/ARCH.jl#L53-L57' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/ARCH.jl#L53-L57' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.StdNormal' href='#ARCH.StdNormal'>#</a>
 <strong><code>ARCH.StdNormal</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>StdNormal{T} &lt;: StandardizedDistribution{T}
 </code></pre>
 
 <p>The standard Normal distribution.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/standardizeddistributions.jl#L1-L5' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/standardizeddistributions.jl#L1-L5' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.StdNormal' href='#ARCH.StdNormal'>#</a>
 <strong><code>ARCH.StdNormal</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>StdNormal(T::Type=Float64)
@@ -305,40 +291,34 @@ StdNormal{T}()
 </code></pre>
 
 <p>Construct an instance of StdNormal.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/standardizeddistributions.jl#L9-L15' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/standardizeddistributions.jl#L9-L15' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.StdTDist' href='#ARCH.StdTDist'>#</a>
 <strong><code>ARCH.StdTDist</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>StdTDist{T} &lt;: StandardizedDistribution{T}
 </code></pre>
 
 <p>The standardized (mean zero, variance one) Student's t distribution.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/standardizeddistributions.jl#L35-L39' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/standardizeddistributions.jl#L35-L39' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.StdTDist-Tuple{Any}' href='#ARCH.StdTDist-Tuple{Any}'>#</a>
 <strong><code>ARCH.StdTDist</code></strong> &mdash; <em>Method</em>.</p>
 <pre><code>StdTDist(v)
 </code></pre>
 
 <p>Create a standardized t distribution with <code>v</code> degrees of freedom. `ν`` can be passed as a scalar or vector.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/standardizeddistributions.jl#L44-L49' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/standardizeddistributions.jl#L44-L49' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.VolatilitySpec' href='#ARCH.VolatilitySpec'>#</a>
 <strong><code>ARCH.VolatilitySpec</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>VolatilitySpec{T}
 </code></pre>
 
 <p>Abstract supertype that volatility specifications inherit from.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/ARCH.jl#L46-L50' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/ARCH.jl#L46-L50' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH._ARCH' href='#ARCH._ARCH'>#</a>
 <strong><code>ARCH._ARCH</code></strong> &mdash; <em>Type</em>.</p>
 <pre><code>_ARCH{q, T&lt;:AbstractFloat} &lt;: VolatilitySpec{T}
 </code></pre>
 
-<p>The ARCH{q} volatility specification is</p>
-<p>
-<script type="math/tex; mode=display">
-\sigma_t^2=\omega+\sum_{i=1}^q\alpha_i r_{t-i}^2.
-</script>
-</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/GARCH.jl#L37-L44' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/GARCH.jl#L31-L33' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.selectmodel-Union{Tuple{MS}, Tuple{SD}, Tuple{T}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where MS<:MeanSpec where SD<:StandardizedDistribution where T<:AbstractFloat where VS<:VolatilitySpec' href='#ARCH.selectmodel-Union{Tuple{MS}, Tuple{SD}, Tuple{T}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where MS<:MeanSpec where SD<:StandardizedDistribution where T<:AbstractFloat where VS<:VolatilitySpec'>#</a>
 <strong><code>ARCH.selectmodel</code></strong> &mdash; <em>Method</em>.</p>
 <pre><code>selectmodel(::Type{VS}, data; kwargs...) -&gt; ARCHModel
@@ -354,55 +334,28 @@ StdNormal{T}()
 <li><code>show_trace=false</code>: print <code>criterion</code> to screen for each estimated model.</li>
 <li><code>algorithm=BFGS(), autodiff=:forward, kwargs...</code>: passed on to the optimizer.</li>
 </ul>
-<p><strong>Examples:</strong></p>
-<pre><code class="julia-repl">julia&gt; data = simulate(GARCH{1, 2}([1., .7, .1, .1]), 10^4).data;
+<p><strong>Example</strong></p>
+<pre><code class="julia-repl">julia&gt; selectmodel(EGARCH, BG96)
 
-julia&gt; selectmodel(GARCH, data; maxlags=2, show_trace=true)
-GARCH{1,1} model has BIC 50460.8.
-GARCH{1,2} model has BIC 50424.4.
-GARCH{2,2} model has BIC 50432.2.
-GARCH{2,1} model has BIC 50474.4.
-
-GARCH{1,2} model with Gaussian errors, T=10000.
+EGARCH{1,1,2} model with Gaussian errors, T=1974.
 
 
 Mean equation parameters:
 
-      Estimate Std.Error  z value Pr(&gt;|z|)
-μ    0.0244617 0.0270085 0.905705   0.3651
+        Estimate  Std.Error   z value Pr(&gt;|z|)
+μ    -0.00900018 0.00943948 -0.953461   0.3404
 
 Volatility parameters:
 
-     Estimate Std.Error z value Pr(&gt;|z|)
-ω    0.923224 0.0945196 9.76755   &lt;1e-21
-β₁   0.712557 0.0191164 37.2746   &lt;1e-99
-α₁    0.08817 0.0116818 7.54761   &lt;1e-13
-α₂    0.11182 0.0164452 6.79955   &lt;1e-10
-
-julia&gt; selectmodel(EGARCH{0, p, q} where {p, q}, data; maxlags=2, criterion=aic, show_trace=true) # symmetric EGARCH
-EGARCH{0,1,1} model has AIC 50482.4.
-EGARCH{0,1,2} model has AIC 50445.4.
-EGARCH{0,2,1} model has AIC 50990.9.
-EGARCH{0,2,2} model has AIC 50585.6.
-
-EGARCH{0,1,2} model with Gaussian errors, T=10000.
-
-
-Mean equation parameters:
-
-      Estimate Std.Error  z value Pr(&gt;|z|)
-μ    0.0229086 0.0263989 0.867786   0.3855
-
-Volatility parameters:
-
-     Estimate Std.Error z value Pr(&gt;|z|)
-ω    0.204397 0.0203417 10.0482   &lt;1e-23
-β₁   0.907583 0.0090583 100.194   &lt;1e-99
-α₁   0.196247 0.0216006 9.08526   &lt;1e-18
-α₂    0.15037  0.023943 6.28036    &lt;1e-9
+       Estimate Std.Error   z value Pr(&gt;|z|)
+ω    -0.0544398 0.0592073 -0.919478   0.3578
+γ₁   -0.0243368 0.0270414 -0.899985   0.3681
+β₁     0.960301 0.0388183   24.7384   &lt;1e-99
+α₁     0.405788  0.067466    6.0147    &lt;1e-8
+α₂    -0.207357  0.114161  -1.81636   0.0693
 </code></pre>
 
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/ARCH.jl#L443-L505' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/ARCH.jl#L418-L453' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.simulate' href='#ARCH.simulate'>#</a>
 <strong><code>ARCH.simulate</code></strong> &mdash; <em>Function</em>.</p>
 <pre><code>simulate(am::ARCHModel; warmup=100)
@@ -410,28 +363,28 @@ simulate(spec::VolatilitySpec{T2}, nobs; warmup=100, dist=StdNormal(), meanspec=
 </code></pre>
 
 <p>Simulate an ARCHModel.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/ARCH.jl#L152-L156' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/ARCH.jl#L152-L156' class='documenter-source'>source</a><br></p>
 <p><a id='ARCH.simulate!-Tuple{ARCHModel}' href='#ARCH.simulate!-Tuple{ARCHModel}'>#</a>
 <strong><code>ARCH.simulate!</code></strong> &mdash; <em>Method</em>.</p>
 <pre><code>simulate!(am::ARCHModel; warmup=100)
 </code></pre>
 
 <p>Simulate an ARCHModel, modifying <code>am</code> in place.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/ARCH.jl#L171-L174' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/ARCH.jl#L171-L174' class='documenter-source'>source</a><br></p>
 <p><a id='StatsBase.fit!-Tuple{ARCHModel}' href='#StatsBase.fit!-Tuple{ARCHModel}'>#</a>
 <strong><code>StatsBase.fit!</code></strong> &mdash; <em>Method</em>.</p>
 <pre><code>fit!(am::ARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
 </code></pre>
 
 <p>Fit the ARCHModel specified by <code>am</code>, modifying <code>am</code> in place. Keyword arguments are passed on to the optimizer.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/ARCH.jl#L413-L418' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/ARCH.jl#L388-L393' class='documenter-source'>source</a><br></p>
 <p><a id='StatsBase.fit-Tuple{ARCHModel}' href='#StatsBase.fit-Tuple{ARCHModel}'>#</a>
 <strong><code>StatsBase.fit</code></strong> &mdash; <em>Method</em>.</p>
 <pre><code>fit(am::ARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
 </code></pre>
 
 <p>Fit the ARCHModel specified by <code>am</code> and return the result in a new instance of ARCHModel. Keyword arguments are passed on to the optimizer.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/ARCH.jl#L431-L436' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/ARCH.jl#L406-L411' class='documenter-source'>source</a><br></p>
 <p><a id='StatsBase.fit-Union{Tuple{T}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where T<:AbstractFloat where MS<:MeanSpec where SD<:StandardizedDistribution where VS<:VolatilitySpec' href='#StatsBase.fit-Union{Tuple{T}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where T<:AbstractFloat where MS<:MeanSpec where SD<:StandardizedDistribution where VS<:VolatilitySpec'>#</a>
 <strong><code>StatsBase.fit</code></strong> &mdash; <em>Method</em>.</p>
 <pre><code>fit(VS::Type{&lt;:VolatilitySpec}, data; dist=StdNormal, meanspec=Intercept,
@@ -439,58 +392,34 @@ simulate(spec::VolatilitySpec{T2}, nobs; warmup=100, dist=StdNormal(), meanspec=
 </code></pre>
 
 <p>Fit the ARCH model specified by <code>VS</code> to data. Keyword arguments <code>algorithm</code>, <code>autodiff</code>, and <code>kwargs</code> are passed on to the optimizer.</p>
-<p><strong>Examples:</strong></p>
-<p><strong>GARCH{1, 1} model  with intercept, Gaussian errors</strong></p>
-<pre><code class="julia-repl">julia&gt; am = simulate(GARCH{1, 1}([1., .9, .05]), 10^4);
+<p><strong>Example: EGARCH{1, 1, 1} model without intercept, Student's t errors.</strong></p>
+<pre><code class="julia-repl">julia&gt; fit(EGARCH{1, 1, 1}, BG96; meanspec=NoIntercept, dist=StdTDist)
 
-julia&gt; fit(GARCH{1, 1}, am.data)
-
-GARCH{1,1} model with Gaussian errors, T=10000.
-
-
-Mean equation parameters:
-
-      Estimate Std.Error  z value Pr(&gt;|z|)
-μ    0.0277078 0.0435526 0.636191   0.5247
-
-Volatility parameters:
-
-      Estimate  Std.Error z value Pr(&gt;|z|)
-ω     0.910479   0.146171 6.22886    &lt;1e-9
-β₁    0.905417  0.0103798  87.229   &lt;1e-99
-α₁   0.0503472 0.00523329 9.62057   &lt;1e-21
-</code></pre>
-
-<p><strong>EGARCH{1, 1, 1} model without intercept, Student's t errors.</strong></p>
-<pre><code class="julia-repl">julia&gt; am = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), 10^4; dist=StdTDist(3.));
-
-julia&gt; fit(EGARCH{1, 1, 1}, am.data; meanspec=NoIntercept, dist=StdTDist)
-
-EGARCH{1,1,1} model with Student's t errors, T=10000.
+EGARCH{1,1,1} model with Student's t errors, T=1974.
 
 
 Volatility parameters:
 
-       Estimate Std.Error  z value Pr(&gt;|z|)
-ω     0.0987805 0.0250686  3.94041    &lt;1e-4
-γ₁   0.00365422 0.0107549 0.339773   0.7340
-β₁     0.907199 0.0248543  36.5007   &lt;1e-99
-α₁     0.105628 0.0181297  5.82623    &lt;1e-8
+       Estimate Std.Error   z value Pr(&gt;|z|)
+ω    -0.0162014 0.0186806 -0.867286   0.3858
+γ₁   -0.0378454  0.018024  -2.09972   0.0358
+β₁     0.977687  0.012558   77.8538   &lt;1e-99
+α₁     0.255804 0.0625497   4.08961    &lt;1e-4
 
 Distribution parameters:
 
      Estimate Std.Error z value Pr(&gt;|z|)
-ν     2.93066 0.0961986 30.4647   &lt;1e-99
+ν     4.12423   0.40059 10.2954   &lt;1e-24
 </code></pre>
 
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/ARCH.jl#L347-L399' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/ARCH.jl#L347-L374' class='documenter-source'>source</a><br></p>
 <p><a id='StatsBase.fit-Union{Tuple{T}, Tuple{SD}, Tuple{Type{SD},Array{T,1}}} where T<:AbstractFloat where SD<:StandardizedDistribution' href='#StatsBase.fit-Union{Tuple{T}, Tuple{SD}, Tuple{Type{SD},Array{T,1}}} where T<:AbstractFloat where SD<:StandardizedDistribution'>#</a>
 <strong><code>StatsBase.fit</code></strong> &mdash; <em>Method</em>.</p>
 <pre><code>fit(::Type{SD}, data; algorithm=BFGS(), kwargs...)
 </code></pre>
 
 <p>Fit a standardized distribution to the data, using the MLE. Keyword arguments are passed on to the optimizer.</p>
-<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4ab398d844834cf135ad5aeb4a4425447ab89109/src/ARCH.jl#L533-L538' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/s-broda/ARCH.jl/blob/4fe0bff987e65374b95ca25e1e583edebd047bc7/src/ARCH.jl#L481-L486' class='documenter-source'>source</a><br></p>
               
             </div>
           </div>
