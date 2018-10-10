@@ -140,7 +140,7 @@ Distribution parameters:
 ν     2.93074 0.0962429 30.4515   <1e-99
 ```
 
-By default, `selectmodel` minimizes the [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion). In this case, the optimal lag length corresponds to the "truth"; viz., the one used to simulate the model.
+By default, `selectmodel` minimizes the [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion). In the example above, the selected lag length happens to correspond to the "truth"; viz., the one used to simulate the model.
 
 ```@meta
 DocTestSetup = nothing
