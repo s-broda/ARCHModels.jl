@@ -152,6 +152,7 @@ julia&gt; autocor(data.^2, 1:10, demean=true) # re-exported from StatsBase
 <p>It should rarely be necessary to call the constructor directly; typically, instances of <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a> are created by calling <a href="../reference/#ARCH.simulate"><code>simulate</code></a> or <a href="../reference/#StatsBase.fit-Tuple{ARCHModel}"><code>fit</code></a>.</p>
 <p><a id='Estimation-1'></a></p>
 <h1 id="estimation">Estimation</h1>
+<p>Having established the presence of volatility clustering, we can begin by fitting a <code>GARCH{1, 1}</code> model – the workhorse of volatility modeling.</p>
 <p><a id='Simulation-1'></a></p>
 <h1 id="simulation">Simulation</h1>
 <p><a id='Model-selection-1'></a></p>
