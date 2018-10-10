@@ -33,7 +33,7 @@ Using a critical value of ``1.96/\\sqrt{1974}=0.044``, we see that there is inde
 It should rarely be necessary to call the constructor directly; typically, instances of [`ARCHModel`](@ref) are created by calling [`simulate`](@ref) or [`fit`](@ref).
 
 # Estimation
-
+Having established the presence of volatility clustering, we can begin by fitting a `GARCH{1, 1}` model -- the workhorse of volatility modeling.
 # Simulation
 # Model selection
 ```@meta

@@ -19,4 +19,4 @@ after_success:
   # push coverage results to Codecov
   - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
   # deploy docs to gh-pages
-  - julia -e 'using Pkg; Pkg.add("Documenter"); pwd; include(joinpath("docs", "make.jl"))'
+  - julia -e 'using Pkg; Pkg.add("Documenter"); include(joinpath("docs", "make.jl"))'
