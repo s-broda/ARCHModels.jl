@@ -71,6 +71,12 @@
     <a class="current" href="./">Usage</a>
     <ul class="subnav">
             
+    <li class="toctree-l3"><a href="#estimation">Estimation</a></li>
+    
+
+    <li class="toctree-l3"><a href="#simulation">Simulation</a></li>
+    
+
     <li class="toctree-l3"><a href="#model-selection">Model selection</a></li>
     
 
@@ -123,7 +129,7 @@
           <div role="main">
             <div class="section">
               
-                <p>We will be using the data from <a href="https://doi.org/10.2307/1392425">Bollerslev and Ghysels (JBES 1996)</a>, available as the constant <a href="../reference/#ARCH.BG96"><code>BG96</code></a>. The data consist of daily German mark/British pound exchange rates (1974 observations) and are often used in evaluating implementations of (G)ARCH models (see, e.g., <a href="https://doi.org/10.1016/S0169-2070(00)00070-4">Brooks et.al. (Int. J. Forecasting 2001)</a>. We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:</p>
+                <p>We will be using the data from <a href="https://doi.org/10.2307/1392425">Bollerslev and Ghysels</a>, available as the constant <a href="../reference/#ARCH.BG96"><code>BG96</code></a>. The data consist of daily German mark/British pound exchange rates (1974 observations) and are often used in evaluating implementations of (G)ARCH models (see, e.g., <a href="https://doi.org/10.1016/S0169-2070(00)00070-4">Brooks et.al.</a>. We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:</p>
 <pre><code class="julia-repl">julia&gt; using ARCH
 
 julia&gt; data = BG96;
@@ -144,6 +150,10 @@ julia&gt; autocor(data.^2, 1:10, demean=true) # re-exported from StatsBase
 
 <p>Using a critical value of $1.96/\sqrt{1974}=0.044$, we see that there is indeed significant autocorrelation in the squared series.</p>
 <p>It should rarely be necessary to call the constructor directly; typically, instances of <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a> are created by calling <a href="../reference/#ARCH.simulate"><code>simulate</code></a> or <a href="../reference/#StatsBase.fit-Tuple{ARCHModel}"><code>fit</code></a>.</p>
+<p><a id='Estimation-1'></a></p>
+<h1 id="estimation">Estimation</h1>
+<p><a id='Simulation-1'></a></p>
+<h1 id="simulation">Simulation</h1>
 <p><a id='Model-selection-1'></a></p>
 <h1 id="model-selection">Model selection</h1>
               
