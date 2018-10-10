@@ -74,10 +74,10 @@
     <li class="toctree-l3"><a href="#estimation">Estimation</a></li>
     
 
-    <li class="toctree-l3"><a href="#simulation">Simulation</a></li>
+    <li class="toctree-l3"><a href="#model-selection">Model selection</a></li>
     
 
-    <li class="toctree-l3"><a href="#model-selection">Model selection</a></li>
+    <li class="toctree-l3"><a href="#simulation">Simulation</a></li>
     
 
     </ul>
@@ -129,7 +129,7 @@
           <div role="main">
             <div class="section">
               
-                <p>We will be using the data from <a href="https://doi.org/10.2307/1392425">Bollerslev and Ghysels</a>, available as the constant <a href="../reference/#ARCH.BG96"><code>BG96</code></a>. The data consist of daily German mark/British pound exchange rates (1974 observations) and are often used in evaluating implementations of (G)ARCH models (see, e.g., <a href="https://doi.org/10.1016/S0169-2070(00)00070-4">Brooks et.al.</a>. We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:</p>
+                <p>We will be using the data from <a href="https://doi.org/10.2307/1392425">Bollerslev and Ghysels (1986)</a>, available as the constant <a href="../reference/#ARCH.BG96"><code>BG96</code></a>. The data consist of daily German mark/British pound exchange rates (1974 observations) and are often used in evaluating implementations of (G)ARCH models (see, e.g., <a href="https://doi.org/10.1016/S0169-2070(00)00070-4">Brooks et.al. (2001)</a>. We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:</p>
 <pre><code class="julia-repl">julia&gt; using ARCH
 
 julia&gt; data = BG96;
@@ -149,14 +149,63 @@ julia&gt; autocor(data.^2, 1:10, demean=true) # re-exported from StatsBase
 </code></pre>
 
 <p>Using a critical value of $1.96/\sqrt{1974}=0.044$, we see that there is indeed significant autocorrelation in the squared series.</p>
-<p>It should rarely be necessary to call the constructor directly; typically, instances of <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a> are created by calling <a href="../reference/#ARCH.simulate"><code>simulate</code></a> or <a href="../reference/#StatsBase.fit-Tuple{ARCHModel}"><code>fit</code></a>.</p>
 <p><a id='Estimation-1'></a></p>
 <h1 id="estimation">Estimation</h1>
-<p>Having established the presence of volatility clustering, we can begin by fitting a <code>GARCH{1, 1}</code> model – the workhorse of volatility modeling.</p>
-<p><a id='Simulation-1'></a></p>
-<h1 id="simulation">Simulation</h1>
+<p>Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a <code>GARCH{1, 1}</code> with standard normal errors;  for other model classes such as <a href="../reference/#ARCH.EGARCH"><code>EGARCH</code></a>, see the <a href="../types/#volaspec-1">section on volatility specifications</a>.</p>
+<pre><code>julia&gt; fit(GARCH{1, 1}, data)
+
+GARCH{1,1} model with Gaussian errors, T=1974.
+
+
+Mean equation parameters:
+
+        Estimate  Std.Error   z value Pr(&gt;|z|)
+μ    -0.00616637 0.00920163 -0.670139   0.5028
+
+Volatility parameters:
+
+      Estimate  Std.Error z value Pr(&gt;|z|)
+ω    0.0107606 0.00649493 1.65677   0.0976
+β₁    0.805875  0.0725003 11.1155   &lt;1e-27
+α₁    0.153411  0.0536586 2.85903   0.0042
+</code></pre>
+
+<p>This returns an instance of <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a>, as described in the section <a href="../types/#Working-with-ARCHModels-1">Working with ARCHModels</a>. The parameters $\alpha_1$ and $\beta_1$ in the volatility equation are highly significant, again confirming the presence of volatility clustering. Note also that the fitted values are the same as those found by <a href="https://doi.org/10.2307/1392425">Bollerslev and Ghysels (1986)</a> and <a href="https://doi.org/10.1016/S0169-2070(00)00070-4">Brooks et.al. (2001)</a> for the same dataset.</p>
+<p>The <code>fit</code> method supports a number of keyword arguments; the full signature is</p>
+<pre><code class="julia">fit(::Type{&lt;:VolatilitySpec}, data::Vector; dist=StdNormal, meanspec=Intercept, algorithm=BFGS(), autodiff=:forward, kwargs...)
+</code></pre>
+
+<p>Their meaning is as follows:</p>
+<ul>
+<li><code>dist</code>: the error distribution. A subtype (<em>not instance</em>) of <a href="../reference/#ARCH.StandardizedDistribution"><code>StandardizedDistribution</code></a>; see Section <a href="../types/#Distributions-1">Distributions</a>.</li>
+<li><code>meanspec=Intercept</code>: the mean specification. A subtype of <a href="../reference/#ARCH.MeanSpec"><code>MeanSpec</code></a>; see the <a href="../types/#meanspec-1">section on mean specification</a>.</li>
+</ul>
+<p>The remaining keyword arguments are passed on to the optimizer.</p>
+<p>As an example, an <code>EGARCH{1, 1, 1}</code> model without intercept and with  Student's $t$ errors is fitted as follows:</p>
+<pre><code class="julia-repl">julia&gt; fit(EGARCH{1, 1, 1}, data; meanspec=NoIntercept, dist=StdTDist)
+
+EGARCH{1,1,1} model with Student's t errors, T=1974.
+
+
+Volatility parameters:
+
+       Estimate Std.Error   z value Pr(&gt;|z|)
+ω    -0.0162014 0.0186806 -0.867286   0.3858
+γ₁   -0.0378454  0.018024  -2.09972   0.0358
+β₁     0.977687  0.012558   77.8538   &lt;1e-99
+α₁     0.255804 0.0625497   4.08961    &lt;1e-4
+
+Distribution parameters:
+
+     Estimate Std.Error z value Pr(&gt;|z|)
+ν     4.12423   0.40059 10.2954   &lt;1e-24
+</code></pre>
+
+<p>An alternative approach to fitting a <a href="../reference/#ARCH.VolatilitySpec"><code>VolatilitySpec</code></a> to <code>data</code> is to first construct an <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a> containing data, and then using <a href="../reference/#StatsBase.fit!-Tuple{ARCHModel}"><code>fit!</code></a> to modify it in place:</p>
 <p><a id='Model-selection-1'></a></p>
 <h1 id="model-selection">Model selection</h1>
+<p><a id='Simulation-1'></a></p>
+<h1 id="simulation">Simulation</h1>
               
             </div>
           </div>
