@@ -1,7 +1,5 @@
 #Todo:
-#docs
 #plotting via timeseries
-#marketdata
 #PkgBenchmark
 #HAC s.e.s from CovariancesMatrices.jl?
 #how to export arch?
