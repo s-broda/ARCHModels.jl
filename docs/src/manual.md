@@ -6,8 +6,8 @@ end
 DocTestFilters = r".*[0-9\.]"
 ```
 
-We will be using the data from [Bollerslev and Ghysels (JBES 1996)](https://doi.org/10.2307/1392425), available as the constant [`BG96`](@ref). The data consist of daily German mark/British pound exchange rates (1974 observations) and are often used in evaluating
-implementations of (G)ARCH models (see, e.g., [Brooks et.al. (Int. J. Forecasting 2001)](https://doi.org/10.1016/S0169-2070(00)00070-4). We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:
+We will be using the data from [Bollerslev and Ghysels](https://doi.org/10.2307/1392425), available as the constant [`BG96`](@ref). The data consist of daily German mark/British pound exchange rates (1974 observations) and are often used in evaluating
+implementations of (G)ARCH models (see, e.g., [Brooks et.al.](https://doi.org/10.1016/S0169-2070(00)00070-4). We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:
 
 ```jldoctest MANUAL
 julia> using ARCH
