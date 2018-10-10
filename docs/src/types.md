@@ -77,7 +77,7 @@ julia> StdTDist(3) # convenience constructor: 3 degrees of freedom
 StdTDist{Float64}(coefs=[3.0])
 ```
 
-# Working with an [`ARCHModel`](@ref)
+# Working with `ARCHModel`s
 The constructor for [`ARCHModel`](@ref) takes two mandatory arguments: an instance of a subtype of [`VolatilitySpec`](@ref), and a vector of returns. The mean specification and error distribution can be changed via the keyword arguments `meanspec` and `dist`, which respectively default to `NoIntercept` and `StdNormal`.
 
 For example, to construct a GARCH(1, 1) model with an intercept and ``t``-distributed errors, one would do
