@@ -11,7 +11,7 @@
 #a simulated AM should probably contain a (zero) intercept, so that fit! is consistent with fit.
 #the constructor for ARCHModel should make a copy of its args
 #implement lrtest
-
+#I've observed non-deterministic segfaults in testing selectmodel with threading enabled. seems to happen only in 1.0.1, and only locally, not on CI.  Investigate!
 module ARCH
 using Reexport
 @reexport using StatsBase
@@ -346,8 +346,12 @@ end
     fit(VS::Type{<:VolatilitySpec}, data; dist=StdNormal, meanspec=Intercept,
         algorithm=BFGS(), autodiff=:forward, kwargs...)
 
-Fit the ARCH model specified by `VS` to data. Keyword arguments `algorithm`,
-`autodiff`, and `kwargs` are passed on to the optimizer.
+Fit the ARCH model specified by `VS` to data.
+
+# Keyword arguments:
+- `dist=StdNormal`: the error distribution.
+- `meanspec=Intercept`: the mean specification.
+- `algorithm=BFGS(), autodiff=:forward, kwargs...`: passed on to the optimizer.
 
 # Example: EGARCH{1, 1, 1} model without intercept, Student's t errors.
 ```jldoctest

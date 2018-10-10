@@ -6,8 +6,8 @@ end
 DocTestFilters = r".*[0-9\.]"
 ```
 
-We will be using the data from [Bollerslev and Ghysels](https://doi.org/10.2307/1392425), available as the constant [`BG96`](@ref). The data consist of daily German mark/British pound exchange rates (1974 observations) and are often used in evaluating
-implementations of (G)ARCH models (see, e.g., [Brooks et.al.](https://doi.org/10.1016/S0169-2070(00)00070-4). We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:
+We will be using the data from [Bollerslev and Ghysels (1986)](https://doi.org/10.2307/1392425), available as the constant [`BG96`](@ref). The data consist of daily German mark/British pound exchange rates (1974 observations) and are often used in evaluating
+implementations of (G)ARCH models (see, e.g., [Brooks et.al. (2001)](https://doi.org/10.1016/S0169-2070(00)00070-4). We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:
 
 ```jldoctest MANUAL
 julia> using ARCH
@@ -30,12 +30,70 @@ julia> autocor(data.^2, 1:10, demean=true) # re-exported from StatsBase
 
 Using a critical value of ``1.96/\\sqrt{1974}=0.044``, we see that there is indeed significant autocorrelation in the squared series.
 
-It should rarely be necessary to call the constructor directly; typically, instances of [`ARCHModel`](@ref) are created by calling [`simulate`](@ref) or [`fit`](@ref).
-
 # Estimation
-Having established the presence of volatility clustering, we can begin by fitting a `GARCH{1, 1}` model -- the workhorse of volatility modeling.
-# Simulation
+Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a `GARCH{1, 1}` with standard normal errors;  for other model classes such as [`EGARCH`](@ref), see the [section on volatility specifications](@ref volaspec).
+
+```
+julia> fit(GARCH{1, 1}, data)
+
+GARCH{1,1} model with Gaussian errors, T=1974.
+
+
+Mean equation parameters:
+
+        Estimate  Std.Error   z value Pr(>|z|)
+μ    -0.00616637 0.00920163 -0.670139   0.5028
+
+Volatility parameters:
+
+      Estimate  Std.Error z value Pr(>|z|)
+ω    0.0107606 0.00649493 1.65677   0.0976
+β₁    0.805875  0.0725003 11.1155   <1e-27
+α₁    0.153411  0.0536586 2.85903   0.0042
+```
+
+This returns an instance of [`ARCHModel`](@ref), as described in the section [Working with ARCHModels](@ref). The parameters ``\alpha_1`` and ``\beta_1`` in the volatility equation are highly significant, again confirming the presence of volatility clustering. Note also that the fitted values are the same as those found by [Bollerslev and Ghysels (1986)](https://doi.org/10.2307/1392425) and [Brooks et.al. (2001)](https://doi.org/10.1016/S0169-2070(00)00070-4) for the same dataset.
+
+The `fit` method supports a number of keyword arguments; the full signature is
+```julia
+fit(::Type{<:VolatilitySpec}, data::Vector; dist=StdNormal, meanspec=Intercept, algorithm=BFGS(), autodiff=:forward, kwargs...)
+```
+
+Their meaning is as follows:
+- `dist`: the error distribution. A subtype (*not instance*) of [`StandardizedDistribution`](@ref); see Section [Distributions](@ref).
+- `meanspec=Intercept`: the mean specification. A subtype of [`MeanSpec`](@ref); see the [section on mean specification](@ref meanspec).
+The remaining keyword arguments are passed on to the optimizer.
+
+As an example, an `EGARCH{1, 1, 1}` model without intercept and with  Student's ``t`` errors is fitted as follows:
+
+```jldoctest MANUAL
+julia> fit(EGARCH{1, 1, 1}, data; meanspec=NoIntercept, dist=StdTDist)
+
+EGARCH{1,1,1} model with Student's t errors, T=1974.
+
+
+Volatility parameters:
+
+       Estimate Std.Error   z value Pr(>|z|)
+ω    -0.0162014 0.0186806 -0.867286   0.3858
+γ₁   -0.0378454  0.018024  -2.09972   0.0358
+β₁     0.977687  0.012558   77.8538   <1e-99
+α₁     0.255804 0.0625497   4.08961    <1e-4
+
+Distribution parameters:
+
+     Estimate Std.Error z value Pr(>|z|)
+ν     4.12423   0.40059 10.2954   <1e-24
+```
+
+An alternative approach to fitting a [`VolatilitySpec`](@ref) to `data` is to first construct
+an [`ARCHModel`](@ref) containing data, and then using [`fit!`](@ref) to modify it in place:
+
+
 # Model selection
+
+# Simulation
+
 ```@meta
 DocTestSetup = nothing
 DocTestFilters = nothing

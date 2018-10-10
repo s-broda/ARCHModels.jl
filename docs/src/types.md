@@ -9,7 +9,7 @@ This package represents a (G)ARCH model as an instance of [`ARCHModel`](@ref), w
 # [Volatility specifications](@id volaspec)
 Volatility specifications describe the evolution of ``\sigma_t``. They are modelled as subtypes of [`VolatilitySpec`](@ref). There is one type for each class of (G)ARCH model, parameterized by numbers of lags.
 ## GARCH
-The GARCH(p, q) model, due to [Bollerslev (J. Econometrics 1986)](https://doi.org/10.1016/0304-4076(86)90063-1) specifies the volatility as
+The GARCH(p, q) model, due to [Bollerslev (1986)](https://doi.org/10.1016/0304-4076(86)90063-1) specifies the volatility as
 ```math
 \sigma_t^2=\omega+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i r_{t-i}^2, \quad \omega, \alpha_i, \beta_i>0,\quad \sum_{i=1}^{\max p,q} \alpha_i+\beta_i<1.
 ```
@@ -26,7 +26,7 @@ Parameters:  1.0 0.9 0.05
 
 As for all subtypes of [`VolatilitySpec`](@ref), the order of the parameters in the coefficient vector is such that all parameters pertaining to the first type parameter `p` (corresponding to the first sum in the equation) appear before those pertaining to the second, `q`.
 
-As a special case, the ARCH(q) volatility specification, due to [Engle (Econometrica 1982)](https://doi.org/10.2307/1912773 ), is
+As a special case, the ARCH(q) volatility specification, due to [Engle (1982)](https://doi.org/10.2307/1912773 ), is
 ```math
 \sigma_t^2=\omega+\sum_{i=1}^q\alpha_i r_{t-i}^2,
 ```
@@ -39,7 +39,7 @@ GARCH{0,2} specification.
 Parameters:  1.0 0.5 0.4
 ```
 ## EGARCH
-The EGARCH{o, p, q} volatility specification, due to [Nelson (Econometrica 1991)](https://doi.org/10.2307/2938260), is
+The EGARCH{o, p, q} volatility specification, due to [Nelson (1991)](https://doi.org/10.2307/2938260), is
 ```math
 \log(\sigma_t^2)=\omega+\sum_{i=1}^o\gamma_i z_{t-i}+\sum_{i=1}^p\beta_i \log(\sigma_{t-i}^2)+\sum_{i=1}^q\alpha_i (|z_{t-i}|-\sqrt{2/\pi}), \quad z_t=r_t/\sigma_t,\quad \sum_{i=1}^{p}\beta_i<1.
 ```
