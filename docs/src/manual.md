@@ -32,6 +32,9 @@ Using a critical value of ``1.96/\\sqrt{1974}=0.044``, we see that there is inde
 
 It should rarely be necessary to call the constructor directly; typically, instances of [`ARCHModel`](@ref) are created by calling [`simulate`](@ref) or [`fit`](@ref).
 
+# Estimation
+
+# Simulation
 # Model selection
 ```@meta
 DocTestSetup = nothing
