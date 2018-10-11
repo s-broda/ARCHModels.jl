@@ -14,8 +14,11 @@ end
 
 """
     GARCH{p, q}(coefs) -> VolatilitySpec
+    GARCH{p, q, T}()   -> VolatilitySpec
+    GARCH{p, q}()      -> VolatilitySpec
 
-Construct a GARCH specification with the given parameters.
+Construct a GARCH specification with the given parameters. When `coefs` is
+omitted, the coefficient vector is unititialized, with `T` defaulting to `Float64`.
 
 # Example:
 ```jldoctest
@@ -27,6 +30,10 @@ Parameters:  1.0 0.3 0.4 0.05
 ```
 """
 GARCH{p, q}(coefs::Vector{T}) where {p, q, T}  = GARCH{p, q, T}(coefs)
+
+GARCH{p, q, T}() where {p, q, T} = GARCH{p, q, T}(Vector{Float64}(undef, nparams(GARCH{p, q, T})))
+
+GARCH{p, q}() where {p, q} = GARCH{p, q, Float64}()
 
 """
     _ARCH{q, T<:AbstractFloat} <: VolatilitySpec{T}

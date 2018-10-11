@@ -13,8 +13,11 @@ end
 
 """
     EGARCH{o, p, q}(coefs) -> VolatilitySpec
+    EGARCH{o, p, q, T}()   -> VolatilitySpec
+    EGARCH{o, p, q}()      -> VolatilitySpec
 
-Construct an EGARCH specification with the given parameters.
+Construct an EGARCH specification with the given parameters. When `coefs` is
+omitted, the coefficient vector is unititialized, with `T` defaulting to `Float64`.
 
 # Example:
 ```jldoctest
@@ -26,6 +29,10 @@ Parameters:  -0.1 0.1 0.9 0.04
 ```
 """
 EGARCH{o, p, q}(coefs::Vector{T}) where {o, p, q, T}  = EGARCH{o, p, q, T}(coefs)
+
+EGARCH{o, p, q, T}() where {o, p, q, T} = EGARCH{o, p, q, T}(Vector{Float64}(undef, nparams(EGARCH{o, p, q, T})))
+
+EGARCH{o, p, q}() where {o, p, q} = EGARCH{o, p, q, Float64}()
 
 @inline nparams(::Type{<:EGARCH{o, p, q}}) where {o, p, q} = o+p+q+1
 

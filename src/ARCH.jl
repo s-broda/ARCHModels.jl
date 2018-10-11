@@ -12,6 +12,8 @@
 #the constructor for ARCHModel should make a copy of its args
 #implement lrtest
 #I've observed non-deterministic segfaults in testing selectmodel with threading enabled. seems to happen only in 1.0.1, and only locally, not on CI.  Investigate!
+#allow uninititalized constructors for VolatilitySpec, MeanSpec and StandardizedDistribution, like I've done for GARCH and EGARCH here? If so, then be consistent with how they are defined
+#  (change for meanspec and dist like I've done here for GARCH and EGARCH), document, and test. Also, NaN is prob. safer than undef.
 module ARCH
 using Reexport
 @reexport using StatsBase
