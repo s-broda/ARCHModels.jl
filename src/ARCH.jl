@@ -116,8 +116,8 @@ julia> ARCHModel(GARCH{1, 1}([1., .9, .05]), randn(10))
 GARCH{1,1} model with Gaussian errors, T=10.
 
 
-               ω  β₁   α₁
-Parameters:  1.0 0.9 0.05
+                             ω  β₁   α₁
+Volatility parameters:     1.0 0.9 0.05
 ```
 """
 function ARCHModel(spec::VS,

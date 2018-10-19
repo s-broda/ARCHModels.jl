@@ -95,8 +95,8 @@ julia> am = ARCHModel(GARCH{1, 1}([1., 0., 0.]), data)
 GARCH{1,1} model with Gaussian errors, T=1974.
 
 
-               ω  β₁  α₁
-Parameters:  1.0 0.0 0.0
+                             ω  β₁  α₁
+Volatility parameters:     1.0 0.0 0.0
 
 
 
@@ -130,9 +130,9 @@ The function [`selectmodel`](@ref) can be used for automatic model selection, ba
 a class of model (i.e., a subtype of [`VolatilitySpec`](@ref)), it will return a fitted [`ARCHModel`](@ref), with the lag length
 parameters (i.e., ``p`` and ``q`` in the case of [`GARCH`](@ref)) chosen to minimize the desired criterion. The [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion) is used by default.
 
-Eg., the following selects the optimal [`EGARCH`](@ref) model based on the [AIC criterion](https://en.wikipedia.org/wiki/Akaike_information_criterion),  assuming ``t`` distributed errors
+Eg., the following selects the optimal (minimum AIC) ``EGARCH{o, p, q}`` model, ``o, p, q < 2``,  assuming ``t`` distributed errors.
 
-```jldoctest MANUAl
+```jldoctest MANUAL
 julia> selectmodel(EGARCH, data; criterion=aic, maxlags=2, dist=StdTDist)
 
 EGARCH{1,1,2} model with Student's t errors, T=1974.
@@ -156,9 +156,9 @@ Distribution parameters:
 
      Estimate Std.Error z value Pr(>|z|)
 ν     4.18795  0.418697 10.0023   <1e-22
-
 ```
 
+Passing the keyword argument `show_trace=false` will show the criterion for each model after it is estimated.
 # Simulation
 To simulate from an [`ARCHModel`](@ref), use [`simulate`](@ref). You can either specify the [`VolatilitySpec`](@ref) (and optionally the distribution and mean specification) and desired number of observations, or pass an existing [`ARCHModel`](@ref). Use [`simulate`](@ref) to modify the data in place.
 

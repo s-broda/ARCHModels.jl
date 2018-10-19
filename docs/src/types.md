@@ -91,8 +91,14 @@ julia> am = ARCHModel(spec, data; dist=StdTDist(3.), meanspec=Intercept(1.))
 GARCH{1,1} model with Student's t errors, T=1974.
 
 
-               ω  β₁   α₁   ν   μ
-Parameters:  1.0 0.9 0.05 3.0 1.0
+                             μ
+Mean equation parameters:  1.0
+
+                             ω  β₁   α₁
+Volatility parameters:     1.0 0.9 0.05
+
+                             ν
+Distribution parameters:   3.0
 ```
 
 The model can then be fitted as follows:
@@ -131,5 +137,5 @@ julia> nobs(am)
 1974
 
 julia> loglikelihood(am)
--989.3423293124742
+-989.3519039123187
 ```
