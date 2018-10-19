@@ -157,13 +157,14 @@ isfitted(am::ARCHModel) = am.fitted
 
 """
     simulate(am::ARCHModel; warmup=100)
-    simulate(spec::VolatilitySpec{T2}, nobs; warmup=100, dist=StdNormal(), meanspec=NoIntercept())
+    simulate(spec::VolatilitySpec, nobs; warmup=100, dist=StdNormal(), meanspec=NoIntercept())
 Simulate an ARCHModel.
 """
 function simulate end
 
 function simulate(am::ARCHModel; warmup=100)
-    simulate(am.spec, nobs(am); warmup=warmup, dist=am.dist, meanspec=am.meanspec)
+	am2 = deepcopy(am)
+    simulate(am2.spec, nobs(am2); warmup=warmup, dist=am2.dist, meanspec=am2.meanspec)
 end
 
 function simulate(spec::VolatilitySpec{T2}, nobs; warmup=100, dist::StandardizedDistribution{T2}=StdNormal{T2}(),
@@ -179,6 +180,7 @@ end
 Simulate an ARCHModel, modifying `am` in place.
 """
 function simulate!(am::ARCHModel; warmup=100)
+	am.fitted = false
     _simulate!(am.data, am.spec; warmup=warmup, dist=am.dist, meanspec=am.meanspec)
     am
 end
@@ -188,7 +190,8 @@ function _simulate!(data::Vector{T2}, spec::VolatilitySpec{T2};
                   dist::StandardizedDistribution{T2}=StdNormal{T2}(),
                   meanspec::MeanSpec{T2}=NoIntercept{T2}()
                   ) where {T2<:AbstractFloat}
-    append!(data, zeros(T2, warmup))
+	@assert warmup>0
+	append!(data, zeros(T2, warmup))
     T = length(data)
     r = presample(typeof(spec))
     ht = CircularBuffer{T2}(r)
@@ -584,7 +587,9 @@ function show(io::IO, am::ARCHModel)
    else
 	   println(io, "\n", modname(typeof(am.spec)), " model with ",
 			   distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n\n")
-	   println(io, CoefTable(coef(am), coefnames(am), ["Parameters:"]))
+	   length(am.meanspec.coefs) > 0 && println(io, CoefTable(am.meanspec.coefs, coefnames(typeof(am.meanspec)), ["Mean equation parameters:"]))
+	   println(io, CoefTable(am.spec.coefs, coefnames(typeof(am.spec)), ["Volatility parameters:   "]))
+	   length(am.dist.coefs) > 0 && println(io, CoefTable(am.dist.coefs, coefnames(typeof(am.dist)), ["Distribution parameters: "]))
    end
 end
 

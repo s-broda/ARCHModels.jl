@@ -22,7 +22,6 @@ docs_dir: 'build'
 
 pages:
   - Home: index.md
-  - Quick Start Guide: quickstart.md
   - User Guide:
       - Introduction and type hierarchy: types.md
       - Usage: manual.md

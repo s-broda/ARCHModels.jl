@@ -89,11 +89,96 @@ Distribution parameters:
 An alternative approach to fitting a [`VolatilitySpec`](@ref) to `data` is to first construct
 an [`ARCHModel`](@ref) containing data, and then using [`fit!`](@ref) to modify it in place:
 
+```jldoctest MANUAL
+julia> am = ARCHModel(GARCH{1, 1}([1., 0., 0.]), data)
+
+GARCH{1,1} model with Gaussian errors, T=1974.
+
+
+               ω  β₁  α₁
+Parameters:  1.0 0.0 0.0
+
+
+
+julia> fit!(am)
+
+GARCH{1,1} model with Gaussian errors, T=1974.
+
+
+Volatility parameters:
+
+      Estimate  Std.Error z value Pr(>|z|)
+ω    0.0108661 0.00657449 1.65277   0.0984
+β₁    0.804431  0.0730395 11.0136   <1e-27
+α₁    0.154597  0.0539319 2.86651   0.0042
+```
+
+Calling `fit(am)` will return a new instance of ARCHModel instead:
+
+```jldoctest MANUAL
+julia> am2 = fit(am);
+
+julia> am2 === am
+false
+
+julia> am2.spec.coefs == am.spec.coefs
+true
+```
 
 # Model selection
+The function [`selectmodel`](@ref) can be used for automatic model selection, based on an information crititerion. Given
+a class of model (i.e., a subtype of [`VolatilitySpec`](@ref)), it will return a fitted [`ARCHModel`](@ref), with the lag length
+parameters (i.e., ``p`` and ``q`` in the case of [`GARCH`](@ref)) chosen to minimize the desired criterion. The [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion) is used by default.
+
+Eg., the following selects the optimal [`EGARCH`](@ref) model based on the [AIC criterion](https://en.wikipedia.org/wiki/Akaike_information_criterion),  assuming ``t`` distributed errors
+
+```jldoctest MANUAl
+julia> selectmodel(EGARCH, data; criterion=aic, maxlags=2, dist=StdTDist)
+
+EGARCH{1,1,2} model with Student's t errors, T=1974.
+
+
+Mean equation parameters:
+
+       Estimate  Std.Error  z value Pr(>|z|)
+μ    0.00196126 0.00695292 0.282077   0.7779
+
+Volatility parameters:
+
+       Estimate Std.Error   z value Pr(>|z|)
+ω    -0.0031274 0.0112456 -0.278101   0.7809
+γ₁   -0.0307681 0.0160754  -1.91398   0.0556
+β₁     0.989056 0.0073654   134.284   <1e-99
+α₁     0.421644 0.0678139   6.21767    <1e-9
+α₂    -0.229068 0.0755326   -3.0327   0.0024
+
+Distribution parameters:
+
+     Estimate Std.Error z value Pr(>|z|)
+ν     4.18795  0.418697 10.0023   <1e-22
+
+```
 
 # Simulation
+To simulate from an [`ARCHModel`](@ref), use [`simulate`](@ref). You can either specify the [`VolatilitySpec`](@ref) (and optionally the distribution and mean specification) and desired number of observations, or pass an existing [`ARCHModel`](@ref). Use [`simulate`](@ref) to modify the data in place.
 
+```jldoctest MANUAL
+julia> am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=500, meanspec=Intercept(5.), dist=StdTDist(3.))
+
+GARCH{1,1} model with Student's t errors, T=1000.
+
+
+                             μ
+Mean equation parameters:  5.0
+
+                             ω  β₁   α₁
+Volatility parameters:     1.0 0.9 0.05
+
+                             ν
+Distribution parameters:   3.0
+
+julia> am4 = simulate(am3);
+```
 ```@meta
 DocTestSetup = nothing
 DocTestFilters = nothing
