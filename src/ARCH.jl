@@ -15,6 +15,7 @@
 #allow uninititalized constructors for VolatilitySpec, MeanSpec and StandardizedDistribution? If so, then be consistent with how they are defined
 #  (change for meanspec and dist ), document, and test. Also, NaN is prob. safer than undef.
 #constructors for meanspec, distributions should check length of coef vector
+#rename to ARCHModels
 
 """
 The ARCH package for Julia. For documentation, see https://s-broda.github.io/ARCH.jl/latest.
@@ -546,18 +547,18 @@ function show(io::IO, spec::VolatilitySpec)
     println(io, modname(typeof(spec)), " specification.\n\n", CoefTable(spec.coefs, coefnames(typeof(spec)), ["Parameters:"]))
 end
 function show(io::IO, am::ARCHModel)
-    cc = coef(am)
-    se = stderror(am)
-    ccg, ccd, ccm = splitcoefs(cc, typeof(am.spec),
-                               typeof(am.dist), typeof(am.meanspec)
-                               )
-    seg, sed, sem = splitcoefs(se, typeof(am.spec),
-                               typeof(am.dist), typeof(am.meanspec)
-                               )
-    zzg = ccg ./ seg
-    zzd = ccd ./ sed
-    zzm = ccm ./ sem
 	if isfitted(am)
+		cc = coef(am)
+	    se = stderror(am)
+	    ccg, ccd, ccm = splitcoefs(cc, typeof(am.spec),
+	                               typeof(am.dist), typeof(am.meanspec)
+	                               )
+	    seg, sed, sem = splitcoefs(se, typeof(am.spec),
+	                               typeof(am.dist), typeof(am.meanspec)
+	                               )
+	    zzg = ccg ./ seg
+	    zzd = ccd ./ sed
+	    zzm = ccm ./ sem
 	    println(io, "\n", modname(typeof(am.spec)), " model with ",
 	            distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n\n")
 
