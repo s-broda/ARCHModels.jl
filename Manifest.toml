@@ -1,8 +1,8 @@
 [[Arpack]]
 deps = ["BinaryProvider", "Libdl", "LinearAlgebra", "Random", "SparseArrays", "Test"]
-git-tree-sha1 = "5b046410fb617d9cf2f8bc0edd5da05a2e5a2ad4"
+git-tree-sha1 = "1ce1ce9984683f0b6a587d5bdbc688ecb480096f"
 uuid = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
-version = "0.2.3"
+version = "0.3.0"
 
 [[Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -15,9 +15,9 @@ version = "0.8.10"
 
 [[BinaryProvider]]
 deps = ["Libdl", "Pkg", "SHA", "Test"]
-git-tree-sha1 = "38be61810f280c3c478f5c38aaf387f8f9199275"
+git-tree-sha1 = "9930c1a6cd49d9fcd7218df6be417e6ae4f1468a"
 uuid = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
-version = "0.5.1"
+version = "0.5.2"
 
 [[Calculus]]
 deps = ["Compat"]
@@ -33,9 +33,9 @@ version = "0.2.0"
 
 [[Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
-git-tree-sha1 = "ff2595695fc4f14427358ce2593f867085c45dcb"
+git-tree-sha1 = "2d9e14d19bad3f9ad5cc5e4cffabc3cfa59de825"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "1.2.0"
+version = "1.3.0"
 
 [[DataStructures]]
 deps = ["InteractiveUtils", "OrderedCollections", "REPL", "Random", "Serialization", "Test"]
@@ -78,6 +78,12 @@ deps = ["Distributed", "LinearAlgebra", "PDMats", "Pkg", "Printf", "QuadGK", "Ra
 git-tree-sha1 = "c24e9b6500c037673f0241a2783472b8c3d080c7"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
 version = "0.16.4"
+
+[[DocStringExtensions]]
+deps = ["LibGit2", "Markdown", "Pkg", "Test"]
+git-tree-sha1 = "a016e0bfe98a748c4488e2248c2ef4c67d6fdd35"
+uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
+version = "0.5.0"
 
 [[ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "InteractiveUtils", "LinearAlgebra", "NaNMath", "Pkg", "Random", "SparseArrays", "SpecialFunctions", "StaticArrays", "Test"]
@@ -122,10 +128,10 @@ version = "0.3.1"
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[NLSolversBase]]
-deps = ["Calculus", "DiffEqDiffTools", "DiffResults", "Distributed", "ForwardDiff", "LinearAlgebra", "Random", "SparseArrays", "Test"]
-git-tree-sha1 = "75f08d4dd9174855aefe4dc9532569450bffcd93"
+deps = ["Calculus", "DiffEqDiffTools", "DiffResults", "Distributed", "ForwardDiff", "LinearAlgebra", "Pkg", "Random", "SparseArrays", "Test"]
+git-tree-sha1 = "ebfb2e96970151753575b9c4d31d47e5ae8382a5"
 uuid = "d41bc354-129a-5804-8e4c-c37616107c6c"
-version = "7.1.0"
+version = "7.1.1"
 
 [[NaNMath]]
 deps = ["Compat"]
