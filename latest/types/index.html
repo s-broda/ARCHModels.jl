@@ -55,11 +55,6 @@
           
             <li class="toctree-l1">
 		
-    <a class="" href="../quickstart/">Quick Start Guide</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
     <span class="caption-text">User Guide</span>
     <ul class="subnav">
                 <li class=" current">
@@ -247,8 +242,14 @@ julia&gt; am = ARCHModel(spec, data; dist=StdTDist(3.), meanspec=Intercept(1.))
 GARCH{1,1} model with Student's t errors, T=1974.
 
 
-               ω  β₁   α₁   ν   μ
-Parameters:  1.0 0.9 0.05 3.0 1.0
+                             μ
+Mean equation parameters:  1.0
+
+                             ω  β₁   α₁
+Volatility parameters:     1.0 0.9 0.05
+
+                             ν
+Distribution parameters:   3.0
 </code></pre>
 
 <p>The model can then be fitted as follows:</p>
@@ -276,6 +277,13 @@ Distribution parameters:
 </code></pre>
 
 <p>It should, however, rarely be necessary to construct an <code>ARCHModel</code> manually via its constructor; typically, instances of it are created by calling <a href="../reference/#StatsBase.fit-Tuple{ARCHModel}"><code>fit</code></a>, <a href="../reference/#ARCH.selectmodel-Union{Tuple{MS}, Tuple{SD}, Tuple{T}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where MS&lt;:MeanSpec where SD&lt;:StandardizedDistribution where T&lt;:AbstractFloat where VS&lt;:VolatilitySpec"><code>selectmodel</code></a>, or <a href="../reference/#ARCH.simulate"><code>simulate</code></a>.</p>
+<p>As discussed earlier, <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a> implements the interface of StatisticalModel from <a href="http://juliastats.github.io/StatsBase.jl/stable/statmodels.html"><code>StatsBase</code></a>, so you can call <code>coef</code>, <code>coefnames</code>, <code>confint</code>, <code>dof</code>, <code>informationmatrix</code>, <code>isfitted</code>, <code>loglikelihood</code>, <code>nobs</code>,  <code>score</code>, <code>stderror</code>, <code>vcov</code>, etc. on its instances:</p>
+<pre><code class="julia-repl">julia&gt; nobs(am)
+1974
+
+julia&gt; loglikelihood(am)
+-989.3519039123187
+</code></pre>
               
             </div>
           </div>
@@ -286,7 +294,7 @@ Distribution parameters:
         <a href="../manual/" class="btn btn-neutral float-right" title="Usage">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
-        <a href="../quickstart/" class="btn btn-neutral" title="Quick Start Guide"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href=".." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
       
     </div>
   
@@ -314,7 +322,7 @@ Distribution parameters:
           <a href="https://github.com/s-broda/ARCH.jl/" class="fa fa-github" style="float: left; color: #fcfcfc"> GitHub</a>
       
       
-        <span><a href="../quickstart/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+        <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
       
       
         <span style="margin-left: 15px"><a href="../manual/" style="color: #fcfcfc">Next &raquo;</a></span>
