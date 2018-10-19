@@ -12,6 +12,13 @@
 #the constructor for ARCHModel should make a copy of its args
 #implement lrtest
 #I've observed non-deterministic segfaults in testing selectmodel with threading enabled. seems to happen only in 1.0.1, and only locally, not on CI.  Investigate!
+#allow uninititalized constructors for VolatilitySpec, MeanSpec and StandardizedDistribution? If so, then be consistent with how they are defined
+#  (change for meanspec and dist ), document, and test. Also, NaN is prob. safer than undef.
+#constructors for meanspec, distributions should check length of coef vector
+
+"""
+The ARCH package for Julia. For documentation, see https://s-broda.github.io/ARCH.jl/latest.
+"""
 module ARCH
 using Reexport
 @reexport using StatsBase
