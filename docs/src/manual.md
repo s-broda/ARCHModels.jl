@@ -31,7 +31,7 @@ julia> autocor(data.^2, 1:10, demean=true) # re-exported from StatsBase
 Using a critical value of ``1.96/\\sqrt{1974}=0.044``, we see that there is indeed significant autocorrelation in the squared series.
 
 # Estimation
-Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a `GARCH{1, 1}` with standard normal errors;  for other model classes such as [`EGARCH`](@ref), see the [section on volatility specifications](@ref volaspec).
+Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a GARCH(1, 1) with standard normal errors;  for other model classes such as [`EGARCH`](@ref), see the [section on volatility specifications](@ref volaspec).
 
 ```
 julia> fit(GARCH{1, 1}, data)
@@ -54,7 +54,7 @@ Volatility parameters:
 
 This returns an instance of [`ARCHModel`](@ref), as described in the section [Working with ARCHModels](@ref). The parameters ``\alpha_1`` and ``\beta_1`` in the volatility equation are highly significant, again confirming the presence of volatility clustering. Note also that the fitted values are the same as those found by [Bollerslev and Ghysels (1986)](https://doi.org/10.2307/1392425) and [Brooks et.al. (2001)](https://doi.org/10.1016/S0169-2070(00)00070-4) for the same dataset.
 
-The `fit` method supports a number of keyword arguments; the full signature is
+The [`fit`](@ref) method supports a number of keyword arguments; the full signature is
 ```julia
 fit(::Type{<:VolatilitySpec}, data::Vector; dist=StdNormal, meanspec=Intercept, algorithm=BFGS(), autodiff=:forward, kwargs...)
 ```
@@ -64,7 +64,7 @@ Their meaning is as follows:
 - `meanspec=Intercept`: the mean specification. A subtype of [`MeanSpec`](@ref); see the [section on mean specification](@ref meanspec).
 The remaining keyword arguments are passed on to the optimizer.
 
-As an example, an `EGARCH{1, 1, 1}` model without intercept and with  Student's ``t`` errors is fitted as follows:
+As an example, an EGARCH(1, 1, 1) model without intercept and with  Student's ``t`` errors is fitted as follows:
 
 ```jldoctest MANUAL
 julia> fit(EGARCH{1, 1, 1}, data; meanspec=NoIntercept, dist=StdTDist)
@@ -87,7 +87,7 @@ Distribution parameters:
 ```
 
 An alternative approach to fitting a [`VolatilitySpec`](@ref) to `data` is to first construct
-an [`ARCHModel`](@ref) containing data, and then using [`fit!`](@ref) to modify it in place:
+an [`ARCHModel`](@ref) containing the data, and then using [`fit!`](@ref) to modify it in place:
 
 ```jldoctest MANUAL
 julia> am = ARCHModel(GARCH{1, 1}([1., 0., 0.]), data)
@@ -130,7 +130,7 @@ The function [`selectmodel`](@ref) can be used for automatic model selection, ba
 a class of model (i.e., a subtype of [`VolatilitySpec`](@ref)), it will return a fitted [`ARCHModel`](@ref), with the lag length
 parameters (i.e., ``p`` and ``q`` in the case of [`GARCH`](@ref)) chosen to minimize the desired criterion. The [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion) is used by default.
 
-Eg., the following selects the optimal (minimum AIC) ``EGARCH{o, p, q}`` model, ``o, p, q < 2``,  assuming ``t`` distributed errors.
+Eg., the following selects the optimal (minimum AIC) EGARCH(o, p, q) model, where o, p, q < 2,  assuming ``t`` distributed errors.
 
 ```jldoctest MANUAL
 julia> selectmodel(EGARCH, data; criterion=aic, maxlags=2, dist=StdTDist)
@@ -160,7 +160,7 @@ Distribution parameters:
 
 Passing the keyword argument `show_trace=false` will show the criterion for each model after it is estimated.
 # Simulation
-To simulate from an [`ARCHModel`](@ref), use [`simulate`](@ref). You can either specify the [`VolatilitySpec`](@ref) (and optionally the distribution and mean specification) and desired number of observations, or pass an existing [`ARCHModel`](@ref). Use [`simulate`](@ref) to modify the data in place.
+To simulate from an [`ARCHModel`](@ref), use [`simulate`](@ref). You can either specify the [`VolatilitySpec`](@ref) (and optionally the distribution and mean specification) and desired number of observations, or pass an existing [`ARCHModel`](@ref). Use [`simulate!`](@ref) to modify the data in place.
 
 ```jldoctest MANUAL
 julia> am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=500, meanspec=Intercept(5.), dist=StdTDist(3.))
