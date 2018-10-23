@@ -31,7 +31,9 @@ T = 10^4;
     @test all(isapprox.(stderror(am), [0.14578736059501485,
                                        0.010356284482676704,
                                        0.005228247833454602], rtol=1e-4))
-
+    @test sum(volatilities(am0)) ≈ 44768.17421580251
+    @test sum(abs, residuals(am0)) ≈ 8022.163087384836
+    @test sum(abs, residuals(am0, standardized=false)) ≈ 35939.07066637026
     am2 = ARCHModel(spec, am0.data)
     @test isfitted(am2) == false
     io = IOBuffer()

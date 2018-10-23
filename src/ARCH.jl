@@ -5,7 +5,6 @@
 #how to export arch?
 #Forecasting
 #actually pass instances everywhere, at least for mean
-#implement conditionalvariances/volas, stdresids
 #Float16/32 don't seem to work anymore. Problem in Optim?
 #support missing data? timeseries?
 #a simulated AM should probably contain a (zero) intercept, so that fit! is consistent with fit.
@@ -16,7 +15,8 @@
 #  (change for meanspec and dist ), document, and test. Also, NaN is prob. safer than undef.
 #constructors for meanspec, distributions should check length of coef vector
 #rename to ARCHModels
-
+#mean(meanspec) should take an instance.
+#allow arbitrary distributions by making a wrapper type Standardized{<:UnivariateContinuousDistribution}?
 """
 The ARCH package for Julia. For documentation, see https://s-broda.github.io/ARCH.jl/latest.
 """
@@ -37,11 +37,11 @@ import Statistics: mean
 import Random: rand
 import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, confint, aic,
                   bic, aicc, dof, coef, coefnames, coeftable, CoefTable,
-				  informationmatrix, islinear, score, vcov
+				  informationmatrix, islinear, score, vcov, residuals
 
 export ARCHModel, VolatilitySpec, StandardizedDistribution, MeanSpec,
        simulate, simulate!, selectmodel, StdNormal, StdTDist, Intercept,
-       NoIntercept, BG96
+       NoIntercept, BG96, volatilities, mean
 
 """
     BG96
@@ -225,6 +225,33 @@ end
     distcoefs = coefs[ng+1:ng+nd]
     meancoefs = coefs[ng+nd+1:ng+nd+nm]
     return garchcoefs, distcoefs, meancoefs
+end
+"""
+    volatilities(am::ARCHModel)
+Return the conditional volatilities.
+"""
+function volatilities(am::ARCHModel{T, VS, SD, MS}) where {T, VS, SD, MS}
+	ht = Vector{T}(undef, 0)
+	lht = Vector{T}(undef, 0)
+	zt = Vector{T}(undef, 0)
+	loglik!(ht, lht, zt, VS, SD, MS, am.data, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
+	return sqrt.(ht)
+end
+
+"""
+    residuals(am::ARCHModel; standardized=true)
+Return the residuals of the model. Pass `standardized=false` for the non-devolatized residuals.
+"""
+function residuals(am::ARCHModel{T, VS, SD, MS}; standardized=true) where {T, VS, SD, MS}
+	if standardized
+		ht = Vector{T}(undef, 0)
+		lht = Vector{T}(undef, 0)
+		zt = Vector{T}(undef, 0)
+		loglik!(ht, lht, zt, VS, SD, MS, am.data, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
+		return zt
+	else
+		return am.data.-mean(MS, am.meanspec.coefs)
+	end
 end
 
 #this works on CircularBuffers. The idea is that ht/lht/zt need to be allocated

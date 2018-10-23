@@ -139,3 +139,5 @@ julia> nobs(am)
 julia> loglikelihood(am)
 -989.3519039123187
 ```
+
+Other useful methods include [`volatilities`](@ref) and [`residuals`](@ref).
