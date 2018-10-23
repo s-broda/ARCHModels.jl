@@ -72,6 +72,9 @@
     <li class="toctree-l3"><a href="#model-selection">Model selection</a></li>
     
 
+    <li class="toctree-l3"><a href="#model-diagnostics-and-specification-tests">Model diagnostics and specification tests</a></li>
+    
+
     <li class="toctree-l3"><a href="#simulation">Simulation</a></li>
     
 
@@ -260,6 +263,9 @@ Distribution parameters:
 </code></pre>
 
 <p>Passing the keyword argument <code>show_trace=false</code> will show the criterion for each model after it is estimated.</p>
+<p><a id='Model-diagnostics-and-specification-tests-1'></a></p>
+<h1 id="model-diagnostics-and-specification-tests">Model diagnostics and specification tests</h1>
+<p>Testing volatility models in general relies on the estimated conditional volatilities $\hat{\sigma}_t$ and the standardized residuals $\hat{z}_t\equiv (r_t-\hat{\mu}_t)/\hat{\sigma}_t$, accessible via <a href="../reference/#ARCH.volatilities-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>volatilities(::ARCHModel)</code></a> and <a href="../reference/#StatsBase.residuals-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>residuals(::ARCHModel)</code></a>, respectively. The non-standardized residuals $\hat{u}_t\equiv r_t-\hat{\mu}_t$ can be obtained by passing <code>standardized=false</code> as a keyword argument to <a href="../reference/#StatsBase.residuals-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>residuals</code></a>.</p>
 <p><a id='Simulation-1'></a></p>
 <h1 id="simulation">Simulation</h1>
 <p>To simulate from an <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a>, use <a href="../reference/#ARCH.simulate"><code>simulate</code></a>. You can either specify the <a href="../reference/#ARCH.VolatilitySpec"><code>VolatilitySpec</code></a> (and optionally the distribution and mean specification) and desired number of observations, or pass an existing <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a>. Use <a href="../reference/#ARCH.simulate!-Tuple{ARCHModel}"><code>simulate!</code></a> to modify the data in place.</p>
