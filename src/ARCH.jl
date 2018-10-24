@@ -15,7 +15,6 @@
 #  (change for meanspec and dist ), document, and test. Also, NaN is prob. safer than undef.
 #constructors for meanspec, distributions should check length of coef vector
 #rename to ARCHModels
-#mean(meanspec) should take an instance.
 #allow arbitrary distributions by making a wrapper type Standardized{<:UnivariateContinuousDistribution}? this might work if every distribion that
 # has location/scale has location and scale defined, like Normal does; the NIG, for example, doesn't. May need to make PR.
 """
@@ -252,7 +251,7 @@ function residuals(am::ARCHModel{T, VS, SD, MS}; standardized=true) where {T, VS
 		loglik!(ht, lht, zt, VS, SD, MS, am.data, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
 		return zt
 	else
-		return am.data.-mean(MS, am.meanspec.coefs)
+		return am.data.-mean(am.meanspec)
 	end
 end
 

@@ -1,3 +1,12 @@
+################################################################################
+#general functions
+"""
+    mean(spec::MeanSpec)
+Return the mean implied by MeanSpec
+"""
+mean(spec::MeanSpec) = mean(typeof(spec), spec.coefs)
+################################################################################
+#NoIntercept
 """
     NoIntercept{T} <: MeanSpec{T}
 
@@ -32,6 +41,8 @@ function mean(::Type{<:NoIntercept}, meancoefs::Vector{T}) where {T}
     return zero(T)
 end
 
+################################################################################
+#Intercept
 """
     Intercept{T} <: MeanSpec{T}
 

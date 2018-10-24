@@ -107,6 +107,8 @@ end
 end
 
 @testset "MeanSpecs" begin
+    mean(NoIntercept()) == 0.0
+    mean(Intercept(3)) == 3.0
     Random.seed!(1);
     spec = GARCH{1, 1}([1., .9, .05])
     am = simulate(spec, T; meanspec=Intercept(0.))
