@@ -174,6 +174,7 @@ end
         @test fit(StdNormal, data).coefs == Float64[]
         @test coefnames(StdNormal) == String[]
         @test ARCH.distname(StdNormal) == "Gaussian"
+        @test quantile(StdNormal(), .05) == -1.6448536269514724
     end
     @testset "Student" begin
         Random.seed!(1)
@@ -182,6 +183,7 @@ end
         @test fit(StdTDist, data).coefs[1] ≈ 3.972437329588246 rtol=1e-4
         @test coefnames(StdTDist) == ["ν"]
         @test ARCH.distname(StdTDist) == "Student's t"
+        @test quantile(StdTDist(3), .05) == -2.3533634348018255
         Random.seed!(1);
         datat = simulate(spec, T; dist=StdTDist(4)).data
         Random.seed!(1);

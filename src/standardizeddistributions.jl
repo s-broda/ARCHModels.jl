@@ -1,3 +1,44 @@
+################################################################################
+#general functions
+
+#for rand to work
+Base.eltype(::StandardizedDistribution{T}) where {T} = T
+
+"""
+    fit(::Type{SD}, data; algorithm=BFGS(), kwargs...)
+
+Fit a standardized distribution to the data, using the MLE. Keyword arguments
+are passed on to the optimizer.
+"""
+function fit(::Type{SD}, data::Vector{T};
+             algorithm=BFGS(), kwargs...
+             ) where {SD<:StandardizedDistribution, T<:AbstractFloat}
+    nparams(SD) == 0 && return SD{T}()
+    obj = x -> -loglik(SD, data, x)
+    lower, upper = constraints(SD, T)
+    x0 = startingvals(SD, data)
+    res = optimize(obj, lower, upper, x0, Fminbox(algorithm); kwargs...)
+    coefs = res.minimizer
+    return SD(coefs...)
+end
+
+
+function loglik(::Type{SD}, data::Vector{<:AbstractFloat},
+                coefs::Vector{T2}
+                ) where {SD<:StandardizedDistribution, T2}
+    T = length(data)
+    length(coefs) == nparams(SD) || throw(NumParamError(nparams(SD), length(coefs)))
+    @inbounds begin
+        LL = zero(T2)
+        @fastmath for t = 1:T
+            LL += logkernel(SD, data[t], coefs)
+        end#for
+    end#inbounds
+    LL += T*logconst(SD, coefs)
+end#function
+
+################################################################################
+#StdNormal
 """
     StdNormal{T} <: StandardizedDistribution{T}
 
@@ -31,6 +72,13 @@ end
 function startingvals(::Type{<:StdNormal}, data::Vector{T})  where {T<:AbstractFloat}
     return T[]
 end
+
+function quantile(::StdNormal, q::Real)
+    norminvcdf(q)
+end
+
+################################################################################
+#StdTDist
 
 """
     StdTDist{T} <: StandardizedDistribution{T}
@@ -78,4 +126,8 @@ function startingvals(::Type{<:StdTDist}, data::Array{T}) where {T}
     upper = convert(T, 30)
     z = mean(abs.(data.-mean(data))./sqrt.(ht))
     z > eabst(upper) ? [upper] : [find_zero(x -> z-eabst(x), (lower, upper))]
+end
+
+function quantile(dist::StdTDist, q::Real)
+    tdistinvcdf(dist.coefs..., q)
 end

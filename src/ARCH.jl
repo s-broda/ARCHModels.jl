@@ -16,18 +16,20 @@
 #constructors for meanspec, distributions should check length of coef vector
 #rename to ARCHModels
 #mean(meanspec) should take an instance.
-#allow arbitrary distributions by making a wrapper type Standardized{<:UnivariateContinuousDistribution}?
+#allow arbitrary distributions by making a wrapper type Standardized{<:UnivariateContinuousDistribution}? this might work if every distribion that
+# has location/scale has location and scale defined, like Normal does; the NIG, for example, doesn't. May need to make PR.
 """
 The ARCH package for Julia. For documentation, see https://s-broda.github.io/ARCH.jl/latest.
 """
 module ARCH
 using Reexport
 @reexport using StatsBase
-using StatsFuns: normcdf, normccdf, normlogpdf, log2π, RFunctions.tdistrand
+using StatsFuns: normcdf, normccdf, normlogpdf, norminvcdf, log2π, RFunctions.tdistrand, RFunctions.tdistinvcdf
 using SpecialFunctions: beta, lgamma
 using Optim
 using ForwardDiff
 using Distributions
+import Distributions: quantile
 using Roots
 using LinearAlgebra
 using DataStructures: CircularBuffer
@@ -41,7 +43,7 @@ import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, co
 
 export ARCHModel, VolatilitySpec, StandardizedDistribution, MeanSpec,
        simulate, simulate!, selectmodel, StdNormal, StdTDist, Intercept,
-       NoIntercept, BG96, volatilities, mean
+       NoIntercept, BG96, volatilities, mean, quantile
 
 """
     BG96
@@ -517,42 +519,6 @@ function selectmodel(::Type{VS}, data::Vector{T};
     _, ind = findmin(crits)
     return res[ind]
 end
-
-"""
-    fit(::Type{SD}, data; algorithm=BFGS(), kwargs...)
-
-Fit a standardized distribution to the data, using the MLE. Keyword arguments
-are passed on to the optimizer.
-"""
-function fit(::Type{SD}, data::Vector{T};
-             algorithm=BFGS(), kwargs...
-             ) where {SD<:StandardizedDistribution, T<:AbstractFloat}
-    nparams(SD) == 0 && return SD{T}()
-    obj = x -> -loglik(SD, data, x)
-    lower, upper = constraints(SD, T)
-    x0 = startingvals(SD, data)
-    res = optimize(obj, lower, upper, x0, Fminbox(algorithm); kwargs...)
-    coefs = res.minimizer
-    return SD(coefs...)
-end
-
-
-function loglik(::Type{SD}, data::Vector{<:AbstractFloat},
-                coefs::Vector{T2}
-                ) where {SD<:StandardizedDistribution, T2}
-    T = length(data)
-    length(coefs) == nparams(SD) || throw(NumParamError(nparams(SD), length(coefs)))
-    @inbounds begin
-        LL = zero(T2)
-        @fastmath for t = 1:T
-            LL += logkernel(SD, data[t], coefs)
-        end#for
-    end#inbounds
-    LL += T*logconst(SD, coefs)
-end#function
-
-#for rand to work
-Base.eltype(::StandardizedDistribution{T}) where {T} = T
 
 #count the number of type vars. there's probably a better way.
 function my_unwrap_unionall(@nospecialize a)
