@@ -104,6 +104,10 @@ end
     #@test all(isapprox(score(am), [-4.091261171623728e-6 3.524550271549742e-5 -6.989366926291041e-5], rtol=1e-4))
     @test all(isapprox(score(am), [0. 0. 0.], atol=1e-3))
     @test islinear(am::ARCHModel) == false
+    @test predict(am) ≈ 4.366619452770822
+    @test predict(am, :variance) ≈ 19.067365445316554
+    @test predict(am, :return) == 0.0
+    @test predict(am, :VaR) ≈ 10.158275880698804
 end
 
 @testset "MeanSpecs" begin
@@ -170,6 +174,10 @@ end
     str = sprint(showerror, e.value)
     @test startswith(str, "incorrect number of parameters")
     @test_throws ARCH.NumParamError GARCH{1, 1}([.1])
+    e = @test_throws ErrorException predict(ARCHModel(GARCH{0, 0}([1.]), zeros(10)), :blah)
+    str = sprint(showerror, e.value)
+    @test startswith(str, "Prediction target blah unknown")
+
 end
 
 @testset "Distributions" begin

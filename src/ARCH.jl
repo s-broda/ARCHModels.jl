@@ -40,7 +40,7 @@ import Statistics: mean
 import Random: rand
 import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, confint, aic,
                   bic, aicc, dof, coef, coefnames, coeftable, CoefTable,
-				  informationmatrix, islinear, score, vcov, residuals
+				  informationmatrix, islinear, score, vcov, residuals, predict
 
 export ARCHModel, VolatilitySpec, StandardizedDistribution, MeanSpec,
        simulate, simulate!, selectmodel, StdNormal, StdTDist, Intercept,
@@ -239,6 +239,33 @@ function volatilities(am::ARCHModel{T, VS, SD, MS}) where {T, VS, SD, MS}
 	zt = Vector{T}(undef, 0)
 	loglik!(ht, lht, zt, VS, SD, MS, am.data, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
 	return sqrt.(ht)
+end
+
+"""
+    predict(am::ARCHModel, what=:volatility; level=0.01)
+Form a 1-step ahead prediction from `am`. `what` controls which object is predicted.
+The choices are `:volatility` (the default), `:variance`, `:return`, and `:VaR`. The VaR
+level can be controlled with the keyword argument `level`.
+"""
+function predict(am::ARCHModel{T, VS, SD, MS}, what=:volatility; level=0.01) where {T, VS, SD, MS}
+	ht = volatilities(am).^2
+	lht = log.(ht)
+	zt = residuals(am)
+	t = length(am.data)
+	update!(ht, lht, zt, VS, MS, am.data, am.spec.coefs, am.meanspec.coefs, t)
+	#this (and a loop) is what we'd need for n-step. but this will only work vor the variance, and only for GARCH:
+	#push!(zt, zero(T))
+	#push!(am.data, mean(am.meanspec))
+	if what == :return
+		return mean(am.meanspec)
+	elseif what == :volatility
+		return sqrt(ht[end])
+	elseif what == :variance
+		return ht[end]
+	elseif what == :VaR
+		return -mean(am.meanspec) - sqrt(ht[end]) * quantile(am.dist, level)
+	else error("Prediction target $what unknown.")
+	end
 end
 
 """
