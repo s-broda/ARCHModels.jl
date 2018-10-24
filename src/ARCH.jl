@@ -17,6 +17,8 @@
 #rename to ARCHModels
 #allow arbitrary distributions by making a wrapper type Standardized{<:UnivariateContinuousDistribution}? this might work if every distribion that
 # has location/scale has location and scale defined, like Normal does; the NIG, for example, doesn't. May need to make PR.
+#use a project for building the docs https://discourse.julialang.org/t/psa-use-a-project-for-building-your-docs/14974
+
 """
 The ARCH package for Julia. For documentation, see https://s-broda.github.io/ARCH.jl/latest.
 """
