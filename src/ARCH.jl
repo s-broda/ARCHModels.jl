@@ -42,7 +42,7 @@ import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, co
 
 export ARCHModel, VolatilitySpec, StandardizedDistribution, MeanSpec,
        simulate, simulate!, selectmodel, StdNormal, StdTDist, Intercept,
-       NoIntercept, BG96, volatilities, mean, quantile
+       NoIntercept, BG96, volatilities, mean, quantile, VaRs
 
 """
     BG96
@@ -253,6 +253,14 @@ function residuals(am::ARCHModel{T, VS, SD, MS}; standardized=true) where {T, VS
 	else
 		return am.data.-mean(am.meanspec)
 	end
+end
+
+"""
+    VaRs(am::ARCHModel, level=0.01)
+Return the in-sample Value at Risk implied by `am`.
+"""
+function VaRs(am::ARCHModel, level=0.01)
+    return -mean(am.meanspec) .- volatilities(am) .* quantile(am.dist, level)
 end
 
 #this works on CircularBuffers. The idea is that ht/lht/zt need to be allocated

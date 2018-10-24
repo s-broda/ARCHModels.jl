@@ -164,6 +164,21 @@ Passing the keyword argument `show_trace=false` will show the criterion for each
 Testing volatility models in general relies on the estimated conditional volatilities ``\hat{\sigma}_t`` and the standardized residuals
 ``\hat{z}_t\equiv (r_t-\hat{\mu}_t)/\hat{\sigma}_t``, accessible via [`volatilities(::ARCHModel)`](@ref) and [`residuals(::ARCHModel)`](@ref), respectively. The non-standardized
 residuals ``\hat{u}_t\equiv r_t-\hat{\mu}_t`` can be obtained by passing `standardized=false` as a keyword argument to [`residuals`](@ref).
+
+# Risk measures
+One of the primary uses of ARCH models is for estimating and forecasting risk measures, such as [Value at Risk](https://en.wikipedia.org/wiki/Value_at_risk) and [Expected Shortfall](https://en.wikipedia.org/wiki/Expected_shortfall).
+This section details the relevant functionality provided in this package.
+
+Basic in-sample estimates for the Value at Risk implied by an estimated [`ARCHModel`](@ref) can be obtained using [`VaRs`](@ref):
+
+```jldoctest MANUAL
+julia> am = fit(GARCH{1, 1}, BG96);
+
+julia> VaRs(am)[end]
+0.7945179524273573
+```
+
+
 # Simulation
 To simulate from an [`ARCHModel`](@ref), use [`simulate`](@ref). You can either specify the [`VolatilitySpec`](@ref) (and optionally the distribution and mean specification) and desired number of observations, or pass an existing [`ARCHModel`](@ref). Use [`simulate!`](@ref) to modify the data in place.
 

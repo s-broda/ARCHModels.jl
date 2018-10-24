@@ -152,6 +152,10 @@ end
     @test coefnames(EGARCH{2, 2, 2}) == ["ω", "γ₁", "γ₂", "β₁", "β₂", "α₁", "α₂"]
 end
 
+@testset VaR begin
+    am = fit(GARCH{1, 1}, BG96)
+    @test sum(VaRs(am)) ≈ 2077.0976454790807
+end
 @testset "Errors" begin
     #with unconditional as presample:
     #@test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), [.1, .2, .3, .4, .5, .6, .7]))
