@@ -152,7 +152,7 @@ end
     @test coefnames(EGARCH{2, 2, 2}) == ["ω", "γ₁", "γ₂", "β₁", "β₂", "α₁", "α₂"]
 end
 
-@testset VaR begin
+@testset "VaR" begin
     am = fit(GARCH{1, 1}, BG96)
     @test sum(VaRs(am)) ≈ 2077.0976454790807
 end
