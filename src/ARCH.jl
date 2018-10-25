@@ -373,7 +373,7 @@ score(am::ARCHModel) = sum(scores(am), dims=1)
 
 function vcov(am::ARCHModel)
 	S = scores(am)
-    V = S'S/nobs(am)
+	V = S'S/nobs(am)
     J = informationmatrix(am; expected=false) #Note: B&W use expected information.
     Ji = try
         inv(J)

@@ -1,6 +1,40 @@
 ################################################################################
 #general functions
 
+#wrapper type
+struct Standardized{T<:AbstractFloat, D<:ContinuousUnivariateDistribution}  <: StandardizedDistribution{T}
+    coefs::Vector{T}
+    #this seems hacky, but I don't know how else to do this since CUD is not parameterized on T
+    #Standardized{T, D}(coefs) where {T, D} = (T == D.parameters[1] || throw(MethodError); new(coefs))
+    Standardized{T, D}(coefs) where {T, D} = new(coefs)
+end
+Standardized{T, D}(coefs::AbstractFloat...) where {T, D} =Standardized{T, D}([coefs...])
+#Standardized{D}(coefs) where {D} = Standardized{D.parameters[1], D}(coefs)
+rand(s::Standardized{T, D}) where {T, D} = (rand(D(s.coefs...))-mean(D(s.coefs...)))./std(D(s.coefs...))
+@inline logkernel(S::Type{<:Standardized{T, D}}, x, coefs) where {T, D} = (try sig=std(D(coefs...)); logpdf(D(coefs...), mean(D(coefs...)) + sig*x)+log(sig); catch; T(-Inf); end)
+@inline logconst(S::Type{<:Standardized{T, D}}, coefs) where {T, D} = zero(T)
+nparams(S::Type{<:Standardized{T, D}}) where {T, D} = length(fieldnames(D))
+coefnames(S::Type{<:Standardized{T, D}}) where {T, D} = [string.(fieldnames(D))...]
+distname(S::Type{<:Standardized{T, D}}) where {T, D} = D{T}.name
+function quantile(s::Standardized{T, D}, q::Real) where {T, D}
+    (quantile(D(s.coefs...), q)-mean(D(s.coefs...)))./std(D(s.coefs...))
+end
+
+
+function constraints(S::Type{<:Standardized}, ::Type{T})  where {T<:AbstractFloat}
+    lower = Vector{T}(undef, nparams(S))
+    upper = Vector{T}(undef, nparams(S))
+    fill!(lower, T(-Inf))
+    fill!(upper, T(Inf))
+    lower, upper
+end
+
+function startingvals(S::Type{<:Standardized}, data::Vector{T})  where {T<:AbstractFloat}
+    svals = Vector{T}(undef, nparams(S))
+    fill!(svals, zero(T))
+    return svals
+end
+
 #for rand to work
 Base.eltype(::StandardizedDistribution{T}) where {T} = T
 
@@ -19,7 +53,7 @@ function fit(::Type{SD}, data::Vector{T};
     x0 = startingvals(SD, data)
     res = optimize(obj, lower, upper, x0, Fminbox(algorithm); kwargs...)
     coefs = res.minimizer
-    return SD(coefs...)
+    return SD(coefs)
 end
 
 
