@@ -84,15 +84,15 @@ Apart from the natively supported standardized distributions, it is possible to 
 ```jldoctest TYPES
 julia> using Distributions
 
-julia> const MyStdNormal=Standardized{Normal};
+julia> const MyStdNormal = Standardized{Normal};
 ```
 
-`MyStdNormal` can be used whereever a built-in distribution could, albeit with a speed penalty. Note also that if the underlying distribution (here `Normal`) contains location and/or scale parameters, then these are no longer identifiable, which implies that the estimated covariance matrix will be singular.
+`MyStdNormal` can be used whereever a built-in distribution could, albeit with a speed penalty. Note also that if the underlying distribution (such as `Normal` in the example above) contains location and/or scale parameters, then these are no longer identifiable, which implies that the estimated covariance matrix of the estimators will be singular.
 
-A final remark concerns the domain of the parameters: the estimation process relies on a starting value for the parameters of the distribution, say ``\theta\equiv(\theta_1, \ldots, \theta_p)'``. For a distribution wrapped in [`Standardized`](@ref), the starting value for ``\theta_i`` is taken to be a small positive value ϵ. This will fail if ϵ is not in the domain of ``\theta_i``; as an example, the standardized Student's ``t`` distribution is only defined for degrees of freedom larger than 2, because a finite variance is required for standardization. In that case, it is necessary to define a function that returns a feasible vector of starting values, as follows:
+A final remark concerns the domain of the parameters: the estimation process relies on a starting value for the parameters of the distribution, say ``\theta\equiv(\theta_1, \ldots, \theta_p)'``. For a distribution wrapped in [`Standardized`](@ref), the starting value for ``\theta_i`` is taken to be a small positive value ϵ. This will fail if ϵ is not in the domain of ``\theta_i``; as an example, the standardized Student's ``t`` distribution is only defined for degrees of freedom larger than 2, because a finite variance is required for standardization. In that case, it is necessary to define a method of the (non-exported) function `startingvals` that returns a feasible vector of starting values, as follows:
 
 ```jldoctest TYPES
-julia> const MyStdTDist=Standardized{TDist};
+julia> const MyStdTDist = Standardized{TDist};
 
 julia> ARCH.startingvals(::Type{<:MyStdTDist}, data::Vector{T}) where T = T[3.]
 ```
