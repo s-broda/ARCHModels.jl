@@ -10,7 +10,7 @@
 #a simulated AM should probably contain a (zero) intercept, so that fit! is consistent with fit.
 #the constructor for ARCHModel should make a copy of its args
 #implement lrtest
-#I've observed non-deterministic segfaults in testing selectmodel with threading enabled. seems to happen only in 1.0.1, and only locally, not on CI.  Investigate!
+#I've turned of threading in `selectmodel`, because I observed non-deterministic segfaults in testing. seems to happen only in 1.0.1, and only locally, not on CI.  Investigate!
 #allow uninititalized constructors for VolatilitySpec, MeanSpec and StandardizedDistribution? If so, then be consistent with how they are defined
 #  (change for meanspec and dist ), document, and test. Also, NaN is prob. safer than undef.
 #constructors for meanspec, distributions should check length of coef vector
