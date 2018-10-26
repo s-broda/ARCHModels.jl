@@ -78,6 +78,14 @@
 
     <li class="toctree-l3"><a href="#distributions">Distributions</a></li>
     
+        <ul>
+        
+            <li><a class="toctree-l4" href="#built-in-distributions">Built-in distributions</a></li>
+        
+            <li><a class="toctree-l4" href="#user-defined-standardized-distributions">User-defined standardized distributions</a></li>
+        
+        </ul>
+    
 
     <li class="toctree-l3"><a href="#working-with-archmodels">Working with ARCHModels</a></li>
     
@@ -214,6 +222,8 @@ Intercept{Float64}([3.0])
 
 <p><a id='Distributions-1'></a></p>
 <h1 id="distributions">Distributions</h1>
+<p><a id='Built-in-distributions-1'></a></p>
+<h2 id="built-in-distributions">Built-in distributions</h2>
 <p>Different distributions of $z_t$ are available as subtypes of <a href="../reference/#ARCH.StandardizedDistribution"><code>StandardizedDistribution</code></a>. <code>StandardizedDistribution</code> in turn subtypes <code>Distribution{Univariate, Continuous}</code> from <a href="https://github.com/JuliaStats/Distributions.jl">Distributions.jl</a>, though not the entire interface must necessarily be implemented. <code>StandardizedDistribution</code>s again hold their parameters as vectors, but convenience constructors are provided. The following are currently available:</p>
 <ul>
 <li><a href="../reference/#ARCH.StdNormal"><code>StdNormal</code></a>, the standard normal distribution:</li>
@@ -227,6 +237,21 @@ StdNormal{Float64}(coefs=Float64[])
 </ul>
 <pre><code class="julia-repl">julia&gt; StdTDist(3) # convenience constructor: 3 degrees of freedom
 StdTDist{Float64}(coefs=[3.0])
+</code></pre>
+
+<p><a id='User-defined-standardized-distributions-1'></a></p>
+<h2 id="user-defined-standardized-distributions">User-defined standardized distributions</h2>
+<p>Apart from the natively supported standardized distributions, it is possible to wrap a continuous univariate distribution from the <a href="https://github.com/JuliaStats/Distributions.jl">Distributions package</a> in the <a href="../reference/#ARCH.Standardized"><code>Standardized</code></a> wrapper type. Below, we reimplement the standardized normal distribution:</p>
+<pre><code class="julia-repl">julia&gt; using Distributions
+
+julia&gt; const MyStdNormal=Standardized{Normal};
+</code></pre>
+
+<p><code>MyStdNormal</code> can be used whereever a built-in distribution could, albeit with a speed penalty. Note also that if the underlying distribution (here <code>Normal</code>) contains location and/or scale parameters, then these are no longer identifiable, which implies that the estimated covariance matrix will be singular.</p>
+<p>A final remark concerns the domain of the parameters: the estimation process relies on a starting value for the parameters of the distribution, say $\theta\equiv(\theta_1, \ldots, \theta_p)'$. For a distribution wrapped in <a href="../reference/#ARCH.Standardized"><code>Standardized</code></a>, the starting value for $\theta_i$ is taken to be a small positive value ϵ. This will fail if ϵ is not in the domain of $\theta_i$; as an example, the standardized Student's $t$ distribution is only defined for degrees of freedom larger than 2, because a finite variance is required for standardization. In that case, it is necessary to define a function that returns a feasible vector of starting values, as follows:</p>
+<pre><code class="julia-repl">julia&gt; const MyStdTDist=Standardized{TDist};
+
+julia&gt; ARCH.startingvals(::Type{&lt;:MyStdTDist}, data::Vector{T}) where T = T[3.]
 </code></pre>
 
 <p><a id='Working-with-ARCHModels-1'></a></p>
