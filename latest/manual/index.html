@@ -72,10 +72,13 @@
     <li class="toctree-l3"><a href="#model-selection">Model selection</a></li>
     
 
-    <li class="toctree-l3"><a href="#model-diagnostics-and-specification-tests">Model diagnostics and specification tests</a></li>
+    <li class="toctree-l3"><a href="#risk-measures">Risk measures</a></li>
     
 
-    <li class="toctree-l3"><a href="#risk-measures">Risk measures</a></li>
+    <li class="toctree-l3"><a href="#forecasting">Forecasting</a></li>
+    
+
+    <li class="toctree-l3"><a href="#model-diagnostics-and-specification-tests">Model diagnostics and specification tests</a></li>
     
 
     <li class="toctree-l3"><a href="#simulation">Simulation</a></li>
@@ -266,9 +269,6 @@ Distribution parameters:
 </code></pre>
 
 <p>Passing the keyword argument <code>show_trace=false</code> will show the criterion for each model after it is estimated.</p>
-<p><a id='Model-diagnostics-and-specification-tests-1'></a></p>
-<h1 id="model-diagnostics-and-specification-tests">Model diagnostics and specification tests</h1>
-<p>Testing volatility models in general relies on the estimated conditional volatilities $\hat{\sigma}_t$ and the standardized residuals $\hat{z}_t\equiv (r_t-\hat{\mu}_t)/\hat{\sigma}_t$, accessible via <a href="../reference/#ARCH.volatilities-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>volatilities(::ARCHModel)</code></a> and <a href="../reference/#StatsBase.residuals-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>residuals(::ARCHModel)</code></a>, respectively. The non-standardized residuals $\hat{u}_t\equiv r_t-\hat{\mu}_t$ can be obtained by passing <code>standardized=false</code> as a keyword argument to <a href="../reference/#StatsBase.residuals-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>residuals</code></a>.</p>
 <p><a id='Risk-measures-1'></a></p>
 <h1 id="risk-measures">Risk measures</h1>
 <p>One of the primary uses of ARCH models is for estimating and forecasting risk measures, such as <a href="https://en.wikipedia.org/wiki/Value_at_risk">Value at Risk</a> and <a href="https://en.wikipedia.org/wiki/Expected_shortfall">Expected Shortfall</a>. This section details the relevant functionality provided in this package.</p>
@@ -279,6 +279,16 @@ julia&gt; VaRs(am)[end]
 0.7945179524273573
 </code></pre>
 
+<p><a id='Forecasting-1'></a></p>
+<h1 id="forecasting">Forecasting</h1>
+<p>The <a href="../reference/#StatsBase.predict-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}, Tuple{ARCHModel{T,VS,SD,MS},Any}} where MS where SD where VS where T"><code>predict(am::ARCHModel)</code></a> method can be used to construct one-step ahead forecasts for a number of quantities. Its signature is</p>
+<pre><code>    predict(am::ARCHModel, what=:volatility; level=0.01)
+</code></pre>
+
+<p>The keyword argument <code>what</code> controls which object is predicted; the choices are <code>:volatility</code> (the default), <code>:variance</code>, <code>:return</code>, and <code>:VaR</code>. The VaR level can be controlled with the keyword argument <code>level</code>.</p>
+<p><a id='Model-diagnostics-and-specification-tests-1'></a></p>
+<h1 id="model-diagnostics-and-specification-tests">Model diagnostics and specification tests</h1>
+<p>Testing volatility models in general relies on the estimated conditional volatilities $\hat{\sigma}_t$ and the standardized residuals $\hat{z}_t\equiv (r_t-\hat{\mu}_t)/\hat{\sigma}_t$, accessible via <a href="../reference/#ARCH.volatilities-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>volatilities(::ARCHModel)</code></a> and <a href="../reference/#StatsBase.residuals-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>residuals(::ARCHModel)</code></a>, respectively. The non-standardized residuals $\hat{u}_t\equiv r_t-\hat{\mu}_t$ can be obtained by passing <code>standardized=false</code> as a keyword argument to <a href="../reference/#StatsBase.residuals-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>residuals</code></a>.</p>
 <p><a id='Simulation-1'></a></p>
 <h1 id="simulation">Simulation</h1>
 <p>To simulate from an <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a>, use <a href="../reference/#ARCH.simulate"><code>simulate</code></a>. You can either specify the <a href="../reference/#ARCH.VolatilitySpec"><code>VolatilitySpec</code></a> (and optionally the distribution and mean specification) and desired number of observations, or pass an existing <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a>. Use <a href="../reference/#ARCH.simulate!-Tuple{ARCHModel}"><code>simulate!</code></a> to modify the data in place.</p>
