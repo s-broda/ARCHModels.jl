@@ -1,27 +1,28 @@
 ################################################################################
 #general functions
 
-#wrapper type
-struct Standardized{T<:AbstractFloat, D<:ContinuousUnivariateDistribution}  <: StandardizedDistribution{T}
+"""
+    Standardized{D<:ContinuousUnivariateDistribution, T}  <: StandardizedDistribution{T}
+A wrapper type for standardizing a distribution from Distributions.jl.
+"""
+struct Standardized{D<:ContinuousUnivariateDistribution, T}  <: StandardizedDistribution{T}
     coefs::Vector{T}
-    #this seems hacky, but I don't know how else to do this since CUD is not parameterized on T
-    #Standardized{T, D}(coefs) where {T, D} = (T == D.parameters[1] || throw(MethodError); new(coefs))
-    Standardized{T, D}(coefs) where {T, D} = new(coefs)
 end
-Standardized{T, D}(coefs::AbstractFloat...) where {T, D} =Standardized{T, D}([coefs...])
-#Standardized{D}(coefs) where {D} = Standardized{D.parameters[1], D}(coefs)
-rand(s::Standardized{T, D}) where {T, D} = (rand(D(s.coefs...))-mean(D(s.coefs...)))./std(D(s.coefs...))
-@inline logkernel(S::Type{<:Standardized{T, D}}, x, coefs) where {T, D} = (try sig=std(D(coefs...)); logpdf(D(coefs...), mean(D(coefs...)) + sig*x)+log(sig); catch; T(-Inf); end)
-@inline logconst(S::Type{<:Standardized{T, D}}, coefs) where {T, D} = zero(T)
-nparams(S::Type{<:Standardized{T, D}}) where {T, D} = length(fieldnames(D))
-coefnames(S::Type{<:Standardized{T, D}}) where {T, D} = [string.(fieldnames(D))...]
-distname(S::Type{<:Standardized{T, D}}) where {T, D} = D{T}.name
-function quantile(s::Standardized{T, D}, q::Real) where {T, D}
+Standardized{D, T}(coefs::AbstractFloat...) where {D, T} = Standardized{D, T}([coefs...])
+(::Type{Standardized{D, T1} where T1})(coefs::Array{T}) where {D, T} = Standardized{D, T}(coefs)
+(::Type{Standardized{D, T1} where T1})(coefs::T...) where {D, T} = Standardized{D, T}([coefs...])
+rand(s::Standardized{D, T}) where {D, T} = (rand(D(s.coefs...))-mean(D(s.coefs...)))./std(D(s.coefs...))
+@inline logkernel(S::Type{<:Standardized{D, T1} where T1}, x, coefs::Vector{T}) where {D, T} = (try sig=std(D(coefs...)); logpdf(D(coefs...), mean(D(coefs...)) + sig*x)+log(sig); catch; T(-Inf); end)
+@inline logconst(S::Type{<:Standardized{D, T1} where T1}, coefs::Vector{T}) where {D, T} = zero(T)
+nparams(S::Type{<:Standardized{D, T} where T}) where {D} = length(fieldnames(D))
+coefnames(S::Type{<:Standardized{D, T}}) where {D, T} = [string.(fieldnames(D))...]
+distname(S::Type{<:Standardized{D, T}}) where {D, T} = D{T}.name
+function quantile(s::Standardized{D, T}, q::Real) where {D, T}
     (quantile(D(s.coefs...), q)-mean(D(s.coefs...)))./std(D(s.coefs...))
 end
 
 
-function constraints(S::Type{<:Standardized}, ::Type{T})  where {T<:AbstractFloat}
+function constraints(S::Type{<:Standardized{D, T1} where T1}, ::Type{T})  where {D, T}
     lower = Vector{T}(undef, nparams(S))
     upper = Vector{T}(undef, nparams(S))
     fill!(lower, T(-Inf))
@@ -29,9 +30,9 @@ function constraints(S::Type{<:Standardized}, ::Type{T})  where {T<:AbstractFloa
     lower, upper
 end
 
-function startingvals(S::Type{<:Standardized}, data::Vector{T})  where {T<:AbstractFloat}
+function startingvals(S::Type{<:Standardized{D, T1} where {T1}}, data::Vector{T})  where {T, D}
     svals = Vector{T}(undef, nparams(S))
-    fill!(svals, zero(T))
+    fill!(svals, eps(T))
     return svals
 end
 

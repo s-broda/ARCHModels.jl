@@ -65,6 +65,7 @@ julia> Intercept(3) # convenience constructor
 Intercept{Float64}([3.0])
 ```
 # Distributions
+## Built-in distributions
 Different distributions of ``z_t`` are available as subtypes of [`StandardizedDistribution`](@ref). `StandardizedDistribution` in turn subtypes `Distribution{Univariate, Continuous}` from [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), though not the entire interface must necessarily be implemented. `StandardizedDistribution`s again hold their parameters as vectors, but convenience constructors are provided. The following are currently available:
 * [`StdNormal`](@ref), the standard normal distribution:
 ```jldoctest TYPES
@@ -77,6 +78,24 @@ julia> StdTDist(3) # convenience constructor: 3 degrees of freedom
 StdTDist{Float64}(coefs=[3.0])
 ```
 
+## User-defined standardized distributions
+Apart from the natively supported standardized distributions, it is possible to wrap a continuous univariate distribution from the [Distributions package](https://github.com/JuliaStats/Distributions.jl) in the [`Standardized`](@ref) wrapper type. Below, we reimplement the standardized normal distribution:
+
+```jldoctest TYPES
+julia> using Distributions
+
+julia> const MyStdNormal=Standardized{Normal};
+```
+
+`MyStdNormal` can be used whereever a built-in distribution could, albeit with a speed penalty. Note also that if the underlying distribution (here `Normal`) contains location and/or scale parameters, then these are no longer identifiable, which implies that the estimated covariance matrix will be singular.
+
+A final remark concerns the domain of the parameters: the estimation process relies on a starting value for the parameters of the distribution, say ``\theta\equiv(\theta_1, \ldots, \theta_p)'``. For a distribution wrapped in [`Standardized`](@ref), the starting value for ``\theta_i`` is taken to be a small positive value ϵ. This will fail if ϵ is not in the domain of ``\theta_i``; as an example, the standardized Student's ``t`` distribution is only defined for degrees of freedom larger than 2, because a finite variance is required for standardization. In that case, it is necessary to define a function that returns a feasible vector of starting values, as follows:
+
+```jldoctest TYPES
+julia> const MyStdTDist=Standardized{TDist};
+
+julia> ARCH.startingvals(::Type{<:MyStdTDist}, data::Vector{T}) where T = T[3.]
+```
 # Working with ARCHModels
 The constructor for [`ARCHModel`](@ref) takes two mandatory arguments: an instance of a subtype of [`VolatilitySpec`](@ref), and a vector of returns. The mean specification and error distribution can be changed via the keyword arguments `meanspec` and `dist`, which respectively default to `NoIntercept` and `StdNormal`.
 

@@ -227,4 +227,12 @@ end
                                        3.834033118707376,
                                        2.9918481871096083], rtol=1e-4))
     end
+    @testset "Standardized" begin
+        using Distributions
+        MyStdTDist=Standardized{TDist}
+        ARCH.startingvals(::Type{<:MyStdTDist}, data::Vector{T}) where T = T[3.]
+        Random.seed!(1)
+        am = simulate(GARCH{1, 1}([1, 0.9, .05]), 1000, dist=MyStdTDist(3.))
+        @test  loglikelihood(fit(am)) ≈ -2700.9089012063323
+    end
 end

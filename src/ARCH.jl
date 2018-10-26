@@ -15,8 +15,6 @@
 #  (change for meanspec and dist ), document, and test. Also, NaN is prob. safer than undef.
 #constructors for meanspec, distributions should check length of coef vector
 #rename to ARCHModels
-#allow arbitrary distributions by making a wrapper type Standardized{<:UnivariateContinuousDistribution}? this might work if every distribion that
-# has location/scale has location and scale defined, like Normal does; the NIG, for example, doesn't. May need to make PR.
 #use a project for building the docs https://discourse.julialang.org/t/psa-use-a-project-for-building-your-docs/14974
 
 """
@@ -42,7 +40,7 @@ import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, co
                   bic, aicc, dof, coef, coefnames, coeftable, CoefTable,
 				  informationmatrix, islinear, score, vcov, residuals, predict
 
-export ARCHModel, VolatilitySpec, StandardizedDistribution, MeanSpec,
+export ARCHModel, VolatilitySpec, StandardizedDistribution, Standardized, MeanSpec,
        simulate, simulate!, selectmodel, StdNormal, StdTDist, Intercept,
        NoIntercept, BG96, volatilities, mean, quantile, VaRs
 
@@ -460,7 +458,7 @@ function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
     distcoefs = startingvals(SD, data)
     meancoefs = startingvals(MS, data)
     _fit!(coefs, distcoefs, meancoefs, VS, SD, MS, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
-    return ARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=MS(meancoefs), fitted=true)
+	return ARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=MS(meancoefs), fitted=true)
 end
 
 """
