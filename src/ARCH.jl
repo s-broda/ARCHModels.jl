@@ -16,15 +16,15 @@
 #constructors for meanspec, distributions should check length of coef vector
 #rename to ARCHModels
 #use a project for building the docs https://discourse.julialang.org/t/psa-use-a-project-for-building-your-docs/14974
-
+#logconst needs to return the correct type
 """
 The ARCH package for Julia. For documentation, see https://s-broda.github.io/ARCH.jl/latest.
 """
 module ARCH
 using Reexport
 @reexport using StatsBase
-using StatsFuns: normcdf, normccdf, normlogpdf, norminvcdf, log2π, RFunctions.tdistrand, RFunctions.tdistinvcdf
-using SpecialFunctions: beta, lgamma
+using StatsFuns: normcdf, normccdf, normlogpdf, norminvcdf, log2π, logtwo, RFunctions.tdistrand, RFunctions.tdistinvcdf, RFunctions.gammarand
+using SpecialFunctions: beta, lgamma, gamma
 using Optim
 using ForwardDiff
 using Distributions
@@ -41,7 +41,7 @@ import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, co
 				  informationmatrix, islinear, score, vcov, residuals, predict
 
 export ARCHModel, VolatilitySpec, StandardizedDistribution, Standardized, MeanSpec,
-       simulate, simulate!, selectmodel, StdNormal, StdTDist, Intercept,
+       simulate, simulate!, selectmodel, StdNormal, StdTDist, StdGED, Intercept,
        NoIntercept, BG96, volatilities, mean, quantile, VaRs
 
 """

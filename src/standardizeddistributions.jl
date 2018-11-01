@@ -1,6 +1,9 @@
 ################################################################################
 #general functions
 
+#loop invariant part of the kernel
+@inline hoistkernel(::Type{<:StandardizedDistribution}, coefs) = 1
+
 """
     Standardized{D<:ContinuousUnivariateDistribution, T}  <: StandardizedDistribution{T}
 A wrapper type for standardizing a distribution from Distributions.jl.
@@ -165,4 +168,51 @@ end
 
 function quantile(dist::StdTDist, q::Real)
     tdistinvcdf(dist.coefs..., q)
+end
+
+################################################################################
+#StdGED
+#Nardon, M. and Pianca, P. (2009). Simulation techniques for generalized Gaussian densities. Journal
+#of Statistical Software and Simulation, 79(11):1317–1329.
+
+"""
+    StdGED{T} <: StandardizedDistribution{T}
+
+The standardized (mean zero, variance one) generalized error distribution.
+"""
+struct StdGED{T} <: StandardizedDistribution{T}
+    coefs::Vector{T}
+end
+
+"""
+    StdGED(p)
+
+Create a standardized generalized error distribution parameter `p`. `p` can be passed
+as a scalar or vector.
+"""
+StdGED(p) = StdGED([p])
+
+
+(rand(d::StdGED{T})::T) where {T} = (p = d.coefs[1]; ip=1/p;  (2*rand()-1)*gammarand(1+ip, 1)^ip * sqrt(gamma(ip) / gamma(3*ip)) )
+
+
+@inline logconst(::Type{<:StdGED}, coefs)  = (p = coefs[1]; ip = 1/p; lgamma(3*ip)/2 - lgamma(ip)*3/2 - logtwo  - log(ip))
+@inline logkernel(::Type{<:StdGED}, x, coefs, hs) = (p = coefs[1]; -abs(x)^p)
+@inline hoistscale(::Type{<:StdGED}, coefs) = (p = coefs[1] ;ip = 1/p; sqrt(gamma(3*ip) / gamma(ip)))
+
+nparams(::Type{<:StdGED}) = 1
+coefnames(::Type{<:StdGED}) = ["p"]
+distname(::Type{<:StdGED}) = "Generalized Error Distribution"
+
+function constraints(::Type{<:StdGED}, ::Type{T}) where {T}
+    lower = [zero(T)]
+    upper = T[Inf]
+    return lower, upper
+end
+
+function startingvals(::Type{<:StdGED}, data::Array{T}) where {T}
+    T[2]
+end
+
+function quantile(dist::StdGED, q::Real)
 end
