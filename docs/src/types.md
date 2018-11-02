@@ -154,9 +154,6 @@ can call `coef`, `coefnames`, `confint`, `dof`, `informationmatrix`, `isfitted`,
 ```jldoctest TYPES
 julia> nobs(am)
 1974
-
-julia> loglikelihood(am)
--989.3519039123187
 ```
 
 Other useful methods include [`volatilities`](@ref) and [`residuals`](@ref).
