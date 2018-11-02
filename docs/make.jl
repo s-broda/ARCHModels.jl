@@ -1,5 +1,5 @@
 push!(LOAD_PATH,"../src/")
-using Documenter, ARCH
+using Documenter, ARCH, Pkg
 makedocs(modules=[ARCH],
         doctest=true)
 
