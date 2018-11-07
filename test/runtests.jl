@@ -1,4 +1,3 @@
-#=
 using Test
 
 using ARCH
@@ -237,4 +236,3 @@ end
         @test  loglikelihood(fit(am)) ≈ -2700.9089012063323
     end
 end
-=#
