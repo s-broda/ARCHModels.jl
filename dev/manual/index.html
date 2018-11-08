@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Estimation · ARCH.jl Documentation</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>ARCH.jl Documentation</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">The ARCH Package</a></li><li class="current"><a class="toctext" href>Estimation</a><ul class="internal"><li class="toplevel"><a class="toctext" href="#Model-selection-1">Model selection</a></li><li class="toplevel"><a class="toctext" href="#Risk-measures-1">Risk measures</a></li><li class="toplevel"><a class="toctext" href="#Forecasting-1">Forecasting</a></li><li class="toplevel"><a class="toctext" href="#Model-diagnostics-and-specification-tests-1">Model diagnostics and specification tests</a></li><li class="toplevel"><a class="toctext" href="#Simulation-1">Simulation</a></li></ul></li><li><a class="toctext" href="../reference/">Index</a></li><li><a class="toctext" href="../types/">Volatility specifications</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Estimation</a></li></ul><a class="edit-page" href="https://github.com/s-broda/ARCH.jl/blob/master/docs/src/manual.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Estimation</span><a class="fa fa-bars" href="#"></a></div></header><p>We will be using the data from <a href="https://doi.org/10.2307/1392425">Bollerslev and Ghysels (1986)</a>, available as the constant <a href="../reference/#ARCH.BG96"><code>BG96</code></a>. The data consist of daily German mark/British pound exchange rates (1974 observations) and are often used in evaluating implementations of (G)ARCH models (see, e.g., <a href="https://doi.org/10.1016/S0169-2070(00)00070-4">Brooks et.al. (2001)</a>. We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:</p><pre><code class="language-julia-repl">julia&gt; using ARCH
+
+julia&gt; data = BG96;
+
+julia&gt; autocor(data.^2, 1:10, demean=true) # re-exported from StatsBase
+10-element Array{Float64,1}:
+ 0.22294073831639766
+ 0.17663183540117078
+ 0.14086005904595456
+ 0.1263198344036979
+ 0.18922204038617135
+ 0.09068404029331875
+ 0.08465365332525085
+ 0.09671690899919724
+ 0.09217329577285414
+ 0.11984168975215709</code></pre><p>Using a critical value of <span>$1.96/\\sqrt{1974}=0.044$</span>, we see that there is indeed significant autocorrelation in the squared series.</p><h1><a class="nav-anchor" id="Estimation-1" href="#Estimation-1">Estimation</a></h1><p>Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a GARCH(1, 1) with standard normal errors;  for other model classes such as <a href="../reference/#ARCH.EGARCH"><code>EGARCH</code></a>, see the <a href="../types/#volaspec-1">section on volatility specifications</a>.</p><pre><code class="language-none">julia&gt; fit(GARCH{1, 1}, data)
+
+GARCH{1,1} model with Gaussian errors, T=1974.
+
+
+Mean equation parameters:
+
+        Estimate  Std.Error   z value Pr(&gt;|z|)
+μ    -0.00616637 0.00920163 -0.670139   0.5028
+
+Volatility parameters:
+
+      Estimate  Std.Error z value Pr(&gt;|z|)
+ω    0.0107606 0.00649493 1.65677   0.0976
+β₁    0.805875  0.0725003 11.1155   &lt;1e-27
+α₁    0.153411  0.0536586 2.85903   0.0042</code></pre><p>This returns an instance of <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a>, as described in the section <a href="../types/#Working-with-ARCHModels-1">Working with ARCHModels</a>. The parameters <span>$\alpha_1$</span> and <span>$\beta_1$</span> in the volatility equation are highly significant, again confirming the presence of volatility clustering. Note also that the fitted values are the same as those found by <a href="https://doi.org/10.2307/1392425">Bollerslev and Ghysels (1986)</a> and <a href="https://doi.org/10.1016/S0169-2070(00)00070-4">Brooks et.al. (2001)</a> for the same dataset.</p><p>The <a href="../reference/#StatsBase.fit-Tuple{ARCHModel}"><code>fit</code></a> method supports a number of keyword arguments; the full signature is</p><pre><code class="language-julia">fit(::Type{&lt;:VolatilitySpec}, data::Vector; dist=StdNormal, meanspec=Intercept, algorithm=BFGS(), autodiff=:forward, kwargs...)</code></pre><p>Their meaning is as follows:</p><ul><li><code>dist</code>: the error distribution. A subtype (<em>not instance</em>) of <a href="../reference/#ARCH.StandardizedDistribution"><code>StandardizedDistribution</code></a>; see Section <a href="../types/#Distributions-1">Distributions</a>.</li><li><code>meanspec=Intercept</code>: the mean specification. A subtype of <a href="../reference/#ARCH.MeanSpec"><code>MeanSpec</code></a>; see the <a href="../types/#meanspec-1">section on mean specification</a>.</li></ul><p>The remaining keyword arguments are passed on to the optimizer.</p><p>As an example, an EGARCH(1, 1, 1) model without intercept and with  Student&#39;s <span>$t$</span> errors is fitted as follows:</p><pre><code class="language-julia-repl">julia&gt; fit(EGARCH{1, 1, 1}, data; meanspec=NoIntercept, dist=StdTDist)
+
+EGARCH{1,1,1} model with Student&#39;s t errors, T=1974.
+
+
+Volatility parameters:
+
+       Estimate Std.Error   z value Pr(&gt;|z|)
+ω    -0.0162014 0.0186806 -0.867286   0.3858
+γ₁   -0.0378454  0.018024  -2.09972   0.0358
+β₁     0.977687  0.012558   77.8538   &lt;1e-99
+α₁     0.255804 0.0625497   4.08961    &lt;1e-4
+
+Distribution parameters:
+
+     Estimate Std.Error z value Pr(&gt;|z|)
+ν     4.12423   0.40059 10.2954   &lt;1e-24</code></pre><p>An alternative approach to fitting a <a href="../reference/#ARCH.VolatilitySpec"><code>VolatilitySpec</code></a> to <code>data</code> is to first construct an <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a> containing the data, and then using <a href="../reference/#StatsBase.fit!-Tuple{ARCHModel}"><code>fit!</code></a> to modify it in place:</p><pre><code class="language-julia-repl">julia&gt; am = ARCHModel(GARCH{1, 1}([1., 0., 0.]), data)
+
+GARCH{1,1} model with Gaussian errors, T=1974.
+
+
+                             ω  β₁  α₁
+Volatility parameters:     1.0 0.0 0.0
+
+
+
+julia&gt; fit!(am)
+
+GARCH{1,1} model with Gaussian errors, T=1974.
+
+
+Volatility parameters:
+
+      Estimate  Std.Error z value Pr(&gt;|z|)
+ω    0.0108661 0.00657449 1.65277   0.0984
+β₁    0.804431  0.0730395 11.0136   &lt;1e-27
+α₁    0.154597  0.0539319 2.86651   0.0042</code></pre><p>Calling <code>fit(am)</code> will return a new instance of ARCHModel instead:</p><pre><code class="language-julia-repl">julia&gt; am2 = fit(am);
+
+julia&gt; am2 === am
+false
+
+julia&gt; am2.spec.coefs == am.spec.coefs
+true</code></pre><h1><a class="nav-anchor" id="Model-selection-1" href="#Model-selection-1">Model selection</a></h1><p>The function <a href="../reference/#ARCH.selectmodel-Union{Tuple{MS}, Tuple{SD}, Tuple{T}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where MS&lt;:MeanSpec where SD&lt;:StandardizedDistribution where T&lt;:AbstractFloat where VS&lt;:VolatilitySpec"><code>selectmodel</code></a> can be used for automatic model selection, based on an information crititerion. Given a class of model (i.e., a subtype of <a href="../reference/#ARCH.VolatilitySpec"><code>VolatilitySpec</code></a>), it will return a fitted <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a>, with the lag length parameters (i.e., <span>$p$</span> and <span>$q$</span> in the case of <a href="../reference/#ARCH.GARCH"><code>GARCH</code></a>) chosen to minimize the desired criterion. The <a href="https://en.wikipedia.org/wiki/Bayesian_information_criterion">BIC</a> is used by default.</p><p>Eg., the following selects the optimal (minimum AIC) EGARCH(o, p, q) model, where o, p, q &lt; 2,  assuming <span>$t$</span> distributed errors.</p><pre><code class="language-julia-repl">julia&gt; selectmodel(EGARCH, data; criterion=aic, maxlags=2, dist=StdTDist)
+
+EGARCH{1,1,2} model with Student&#39;s t errors, T=1974.
+
+
+Mean equation parameters:
+
+       Estimate  Std.Error  z value Pr(&gt;|z|)
+μ    0.00196126 0.00695292 0.282077   0.7779
+
+Volatility parameters:
+
+       Estimate Std.Error   z value Pr(&gt;|z|)
+ω    -0.0031274 0.0112456 -0.278101   0.7809
+γ₁   -0.0307681 0.0160754  -1.91398   0.0556
+β₁     0.989056 0.0073654   134.284   &lt;1e-99
+α₁     0.421644 0.0678139   6.21767    &lt;1e-9
+α₂    -0.229068 0.0755326   -3.0327   0.0024
+
+Distribution parameters:
+
+     Estimate Std.Error z value Pr(&gt;|z|)
+ν     4.18795  0.418697 10.0023   &lt;1e-22</code></pre><p>Passing the keyword argument <code>show_trace=false</code> will show the criterion for each model after it is estimated.</p><h1><a class="nav-anchor" id="Risk-measures-1" href="#Risk-measures-1">Risk measures</a></h1><p>One of the primary uses of ARCH models is for estimating and forecasting risk measures, such as <a href="https://en.wikipedia.org/wiki/Value_at_risk">Value at Risk</a> and <a href="https://en.wikipedia.org/wiki/Expected_shortfall">Expected Shortfall</a>. This section details the relevant functionality provided in this package.</p><p>Basic in-sample estimates for the Value at Risk implied by an estimated <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a> can be obtained using <a href="../reference/#ARCH.VaRs"><code>VaRs</code></a>:</p><pre><code class="language-julia-repl">julia&gt; am = fit(GARCH{1, 1}, BG96);
+
+julia&gt; VaRs(am)[end]
+0.7945179524273573</code></pre><h1><a class="nav-anchor" id="Forecasting-1" href="#Forecasting-1">Forecasting</a></h1><p>The <a href="../reference/#StatsBase.predict-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}, Tuple{ARCHModel{T,VS,SD,MS},Any}} where MS where SD where VS where T"><code>predict(am::ARCHModel)</code></a> method can be used to construct one-step ahead forecasts for a number of quantities. Its signature is</p><pre><code class="language-none">    predict(am::ARCHModel, what=:volatility; level=0.01)</code></pre><p>The keyword argument <code>what</code> controls which object is predicted; the choices are <code>:volatility</code> (the default), <code>:variance</code>, <code>:return</code>, and <code>:VaR</code>. The VaR level can be controlled with the keyword argument <code>level</code>.</p><h1><a class="nav-anchor" id="Model-diagnostics-and-specification-tests-1" href="#Model-diagnostics-and-specification-tests-1">Model diagnostics and specification tests</a></h1><p>Testing volatility models in general relies on the estimated conditional volatilities <span>$\hat{\sigma}_t$</span> and the standardized residuals <span>$\hat{z}_t\equiv (r_t-\hat{\mu}_t)/\hat{\sigma}_t$</span>, accessible via <a href="../reference/#ARCH.volatilities-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>volatilities(::ARCHModel)</code></a> and <a href="../reference/#StatsBase.residuals-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>residuals(::ARCHModel)</code></a>, respectively. The non-standardized residuals <span>$\hat{u}_t\equiv r_t-\hat{\mu}_t$</span> can be obtained by passing <code>standardized=false</code> as a keyword argument to <a href="../reference/#StatsBase.residuals-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>residuals</code></a>.</p><h1><a class="nav-anchor" id="Simulation-1" href="#Simulation-1">Simulation</a></h1><p>To simulate from an <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a>, use <a href="../reference/#ARCH.simulate"><code>simulate</code></a>. You can either specify the <a href="../reference/#ARCH.VolatilitySpec"><code>VolatilitySpec</code></a> (and optionally the distribution and mean specification) and desired number of observations, or pass an existing <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a>. Use <a href="../reference/#ARCH.simulate!-Tuple{ARCHModel}"><code>simulate!</code></a> to modify the data in place.</p><pre><code class="language-julia-repl">julia&gt; am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=500, meanspec=Intercept(5.), dist=StdTDist(3.))
+
+GARCH{1,1} model with Student&#39;s t errors, T=1000.
+
+
+                             μ
+Mean equation parameters:  5.0
+
+                             ω  β₁   α₁
+Volatility parameters:     1.0 0.9 0.05
+
+                             ν
+Distribution parameters:   3.0
+
+julia&gt; am4 = simulate(am3);</code></pre><footer><hr/><a class="previous" href="../"><span class="direction">Previous</span><span class="title">The ARCH Package</span></a><a class="next" href="../reference/"><span class="direction">Next</span><span class="title">Index</span></a></footer></article></body></html>
