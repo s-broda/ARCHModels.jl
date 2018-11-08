@@ -16,7 +16,7 @@
 #rename to ARCHModels
 #logconst needs to return the correct type
 """
-The ARCH package for Julia. For documentation, see https://s-broda.github.io/ARCH.jl/latest.
+The ARCH package for Julia. For documentation, see https://s-broda.github.io/ARCH.jl/dev.
 """
 module ARCH
 using Reexport
