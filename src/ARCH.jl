@@ -15,7 +15,6 @@
 #  (change for meanspec and dist ), document, and test. Also, NaN is prob. safer than undef.
 #constructors for meanspec, distributions should check length of coef vector
 #rename to ARCHModels
-#use a project for building the docs https://discourse.julialang.org/t/psa-use-a-project-for-building-your-docs/14974
 #logconst needs to return the correct type
 """
 The ARCH package for Julia. For documentation, see https://s-broda.github.io/ARCH.jl/latest.
