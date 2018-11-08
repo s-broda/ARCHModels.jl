@@ -10,7 +10,6 @@
 #a simulated AM should probably contain a (zero) intercept, so that fit! is consistent with fit.
 #the constructor for ARCHModel should make a copy of its args
 #implement lrtest
-#I've turned of threading in `selectmodel`, because I observed non-deterministic segfaults in testing. seems to happen only in 1.0.1, and only locally, not on CI.  Investigate!
 #allow uninititalized constructors for VolatilitySpec, MeanSpec and StandardizedDistribution? If so, then be consistent with how they are defined
 #  (change for meanspec and dist ), document, and test. Also, NaN is prob. safer than undef.
 #constructors for meanspec, distributions should check length of coef vector
@@ -533,20 +532,20 @@ function selectmodel(::Type{VS}, data::Vector{T};
                      ) where {VS<:VolatilitySpec, T<:AbstractFloat,
                               SD<:StandardizedDistribution, MS<:MeanSpec
                               }
-    #mylock=Threads.SpinLock()
+	#threading sometimes segfaults in tests locally. possibly https://github.com/JuliaLang/julia/issues/29934
+    mylock=Threads.SpinLock()
     ndims = my_unwrap_unionall(VS)-1#e.g., two (p and q) for GARCH{p, q, T}
     res = Array{ARCHModel, ndims}(undef, ntuple(i->maxlags, ndims))
-    #Threads.@threads
-	for ind in collect(CartesianIndices(size(res)))
+    Threads.@threads for ind in collect(CartesianIndices(size(res)))
         res[ind] = fit(VS{ind.I...}, data; dist=dist, meanspec=meanspec,
                        algorithm=algorithm, autodiff=autodiff, kwargs...)
         if show_trace
-            #lock(mylock)
+            lock(mylock)
             Core.println(modname(VS{ind.I...}), " model has ",
                               uppercase(split("$criterion", ".")[2]), " ",
                               criterion(res[ind]), "."
                               )
-            #unlock(mylock)
+            unlock(mylock)
         end
     end
     crits = criterion.(res)
