@@ -1,5 +1,5 @@
 push!(LOAD_PATH,"../src/")
-using Documenter, ARCH, Pkg
+using Documenter, ARCH
 makedocs(modules=[ARCH],
         sitename="ARCH.jl",
         assets=["assets/invenia.css"],
