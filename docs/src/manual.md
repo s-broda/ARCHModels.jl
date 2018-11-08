@@ -5,7 +5,7 @@ DocTestSetup = quote
 end
 DocTestFilters = r".*[0-9\.]"
 ```
-
+# Usage
 We will be using the data from [Bollerslev and Ghysels (1986)](https://doi.org/10.2307/1392425), available as the constant [`BG96`](@ref). The data consist of daily German mark/British pound exchange rates (1974 observations) and are often used in evaluating
 implementations of (G)ARCH models (see, e.g., [Brooks et.al. (2001)](https://doi.org/10.1016/S0169-2070(00)00070-4). We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:
 
@@ -28,9 +28,9 @@ julia> autocor(data.^2, 1:10, demean=true) # re-exported from StatsBase
  0.11984168975215709
 ```
 
-Using a critical value of ``1.96/\\sqrt{1974}=0.044``, we see that there is indeed significant autocorrelation in the squared series.
+Using a critical value of ``1.96/\sqrt{1974}=0.044``, we see that there is indeed significant autocorrelation in the squared series.
 
-# Estimation
+## Estimation
 Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a GARCH(1, 1) with standard normal errors;  for other model classes such as [`EGARCH`](@ref), see the [section on volatility specifications](@ref volaspec).
 
 ```
@@ -125,7 +125,7 @@ julia> am2.spec.coefs == am.spec.coefs
 true
 ```
 
-# Model selection
+## Model selection
 The function [`selectmodel`](@ref) can be used for automatic model selection, based on an information crititerion. Given
 a class of model (i.e., a subtype of [`VolatilitySpec`](@ref)), it will return a fitted [`ARCHModel`](@ref), with the lag length
 parameters (i.e., ``p`` and ``q`` in the case of [`GARCH`](@ref)) chosen to minimize the desired criterion. The [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion) is used by default.
@@ -160,7 +160,7 @@ Distribution parameters:
 
 Passing the keyword argument `show_trace=false` will show the criterion for each model after it is estimated.
 
-# Risk measures
+## Risk measures
 One of the primary uses of ARCH models is for estimating and forecasting risk measures, such as [Value at Risk](https://en.wikipedia.org/wiki/Value_at_risk) and [Expected Shortfall](https://en.wikipedia.org/wiki/Expected_shortfall).
 This section details the relevant functionality provided in this package.
 
@@ -173,7 +173,7 @@ julia> VaRs(am)[end]
 0.7945179524273573
 ```
 
-# Forecasting
+## Forecasting
 The [`predict(am::ARCHModel)`](@ref) method can be used to construct one-step ahead forecasts for a number of quantities. Its signature is
 ```
     predict(am::ARCHModel, what=:volatility; level=0.01)
@@ -181,12 +181,12 @@ The [`predict(am::ARCHModel)`](@ref) method can be used to construct one-step ah
 The keyword argument `what` controls which object is predicted;
 the choices are `:volatility` (the default), `:variance`, `:return`, and `:VaR`. The VaR level can be controlled with the keyword argument `level`.
 
-# Model diagnostics and specification tests
+## Model diagnostics and specification tests
 Testing volatility models in general relies on the estimated conditional volatilities ``\hat{\sigma}_t`` and the standardized residuals
 ``\hat{z}_t\equiv (r_t-\hat{\mu}_t)/\hat{\sigma}_t``, accessible via [`volatilities(::ARCHModel)`](@ref) and [`residuals(::ARCHModel)`](@ref), respectively. The non-standardized
 residuals ``\hat{u}_t\equiv r_t-\hat{\mu}_t`` can be obtained by passing `standardized=false` as a keyword argument to [`residuals`](@ref).
 
-# Simulation
+## Simulation
 To simulate from an [`ARCHModel`](@ref), use [`simulate`](@ref). You can either specify the [`VolatilitySpec`](@ref) (and optionally the distribution and mean specification) and desired number of observations, or pass an existing [`ARCHModel`](@ref). Use [`simulate!`](@ref) to modify the data in place.
 
 ```jldoctest MANUAL

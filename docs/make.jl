@@ -1,8 +1,15 @@
 push!(LOAD_PATH,"../src/")
 using Documenter, ARCH, Pkg
 makedocs(modules=[ARCH],
-        sitename="ARCH.jl Documentation",
+        sitename="ARCH.jl",
+        assets=["assets/invenia.css"],
         doctest=true,
-        strict=true)
+        strict=true,
+        pages = ["Home" => "index.md",
+                 "types.md",
+                 "manual.md",
+                 "reference.md"
+                 ]
+        )
 
 deploydocs(repo="github.com/s-broda/ARCH.jl.git")

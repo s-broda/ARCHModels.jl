@@ -1,9 +1,10 @@
-# Index
+# Reference guide
+## Index
 
 ```@index
 ```
 
-# Public API
+## Public API
 ```@meta
 DocTestSetup = quote
     using ARCH

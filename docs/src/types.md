@@ -1,4 +1,5 @@
-Consider a sample of daily asset returns ``\\{r_t\\}_{t\in\{1,\ldots,T\}}``. All models covered in this package share the same basic structure, in that they decompose the return into a conditional mean and a mean-zero innovation:
+# Introduction and type hierarchy
+Consider a sample of daily asset returns ``\{r_t\}_{t\in\{1,\ldots,T\}}``. All models covered in this package share the same basic structure, in that they decompose the return into a conditional mean and a mean-zero innovation:
 ```math
 r_t=\mu_t+\sigma_tz_t,\quad \mu_t\equiv\mathbb{E}[r_t\mid\mathcal{F}_{t-1}],\quad \sigma_t^2\equiv\mathbb{E}[(r_t-\mu_t)^2\mid\mathcal{F}_{t-1}],
 ```
@@ -6,9 +7,9 @@ where ``z_t`` is identically and independently distributed according to some law
 
 This package represents a (G)ARCH model as an instance of [`ARCHModel`](@ref), which implements the interface of `StatisticalModel` from [`StatsBase`](http://juliastats.github.io/StatsBase.jl/stable/statmodels.html). An instance of this type contains a vector of data (such as equity returns), and encapsulates information about the [volatility specification](@ref volaspec) (e.g., [GARCH](@ref) or [EGARCH](@ref)), the [mean specification](@ref meanspec) (e.g., whether an intercept is included), and the [error distribution](@ref Distributions).
 
-# [Volatility specifications](@id volaspec)
+## [Volatility specifications](@id volaspec)
 Volatility specifications describe the evolution of ``\sigma_t``. They are modelled as subtypes of [`VolatilitySpec`](@ref). There is one type for each class of (G)ARCH model, parameterized by numbers of lags.
-## GARCH
+### GARCH
 The GARCH(p, q) model, due to [Bollerslev (1986)](https://doi.org/10.1016/0304-4076(86)90063-1) specifies the volatility as
 ```math
 \sigma_t^2=\omega+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i r_{t-i}^2, \quad \omega, \alpha_i, \beta_i>0,\quad \sum_{i=1}^{\max p,q} \alpha_i+\beta_i<1.
@@ -38,7 +39,7 @@ GARCH{0,2} specification.
                ω  α₁  α₂
 Parameters:  1.0 0.5 0.4
 ```
-## EGARCH
+### EGARCH
 The EGARCH{o, p, q} volatility specification, due to [Nelson (1991)](https://doi.org/10.2307/2938260), is
 ```math
 \log(\sigma_t^2)=\omega+\sum_{i=1}^o\gamma_i z_{t-i}+\sum_{i=1}^p\beta_i \log(\sigma_{t-i}^2)+\sum_{i=1}^q\alpha_i (|z_{t-i}|-\sqrt{2/\pi}), \quad z_t=r_t/\sigma_t,\quad \sum_{i=1}^{p}\beta_i<1.
@@ -52,7 +53,7 @@ EGARCH{1,1,1} specification.
                 ω  γ₁  β₁   α₁
 Parameters:  -0.1 0.1 0.9 0.04
 ```
-# [Mean specifications](@id meanspec)
+## [Mean specifications](@id meanspec)
 Mean specifications serve to specify ``\mu_t``. They are modelled as subtypes of [`MeanSpec`](@ref). They contain their parameters as (possibly empty) vectors, but convenience constructors are provided where appropriate. Currently, two specifications are available:
 * ``\mu_t=0``, available as [`NoIntercept`](@ref):
 ```jldoctest TYPES
@@ -64,8 +65,8 @@ NoIntercept{Float64}(Float64[])
 julia> Intercept(3) # convenience constructor
 Intercept{Float64}([3.0])
 ```
-# Distributions
-## Built-in distributions
+## Distributions
+### Built-in distributions
 Different distributions of ``z_t`` are available as subtypes of [`StandardizedDistribution`](@ref). `StandardizedDistribution` in turn subtypes `Distribution{Univariate, Continuous}` from [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), though not the entire interface must necessarily be implemented. `StandardizedDistribution`s again hold their parameters as vectors, but convenience constructors are provided. The following are currently available:
 * [`StdNormal`](@ref), the standard normal distribution:
 ```jldoctest TYPES
@@ -78,7 +79,7 @@ julia> StdTDist(3) # convenience constructor: 3 degrees of freedom
 StdTDist{Float64}(coefs=[3.0])
 ```
 
-## User-defined standardized distributions
+### User-defined standardized distributions
 Apart from the natively supported standardized distributions, it is possible to wrap a continuous univariate distribution from the [Distributions package](https://github.com/JuliaStats/Distributions.jl) in the [`Standardized`](@ref) wrapper type. Below, we reimplement the standardized normal distribution:
 
 ```jldoctest TYPES
@@ -96,7 +97,7 @@ julia> const MyStdTDist = Standardized{TDist};
 
 julia> ARCH.startingvals(::Type{<:MyStdTDist}, data::Vector{T}) where T = T[3.]
 ```
-# Working with ARCHModels
+## Working with ARCHModels
 The constructor for [`ARCHModel`](@ref) takes two mandatory arguments: an instance of a subtype of [`VolatilitySpec`](@ref), and a vector of returns. The mean specification and error distribution can be changed via the keyword arguments `meanspec` and `dist`, which respectively default to `NoIntercept` and `StdNormal`.
 
 For example, to construct a GARCH(1, 1) model with an intercept and ``t``-distributed errors, one would do
