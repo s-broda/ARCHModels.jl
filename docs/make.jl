@@ -5,5 +5,4 @@ makedocs(modules=[ARCH],
         doctest=true,
         strict=true)
 
-deploydocs(repo="github.com/s-broda/ARCH.jl.git",
-           julia="1.0")
+deploydocs(repo="github.com/s-broda/ARCH.jl.git")
