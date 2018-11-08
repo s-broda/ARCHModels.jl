@@ -1,6 +1,7 @@
 push!(LOAD_PATH,"../src/")
 using Documenter, ARCH, Pkg
 makedocs(modules=[ARCH],
+        sitename="ARCH.jl Documentation",
         doctest=true,
         strict=true)
 
