@@ -68,8 +68,9 @@ function loglik(::Type{SD}, data::Vector{<:AbstractFloat},
     length(coefs) == nparams(SD) || throw(NumParamError(nparams(SD), length(coefs)))
     @inbounds begin
         LL = zero(T2)
+        iv = kernelinvariants(SD, coefs)
         @fastmath for t = 1:T
-            LL += logkernel(SD, data[t], coefs)
+            LL += logkernel(SD, data[t], coefs, iv...)
         end#for
     end#inbounds
     LL += T*logconst(SD, coefs)
