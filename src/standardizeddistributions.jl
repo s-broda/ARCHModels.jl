@@ -116,42 +116,42 @@ function quantile(::StdNormal, q::Real)
 end
 
 ################################################################################
-#StdTDist
+#StdT
 
 """
-    StdTDist{T} <: StandardizedDistribution{T}
+    StdT{T} <: StandardizedDistribution{T}
 
 The standardized (mean zero, variance one) Student's t distribution.
 """
-struct StdTDist{T} <: StandardizedDistribution{T}
+struct StdT{T} <: StandardizedDistribution{T}
     coefs::Vector{T}
 end
 
 """
-    StdTDist(v)
+    StdT(v)
 
 Create a standardized t distribution with `v` degrees of freedom. `ν`` can be passed
 as a scalar or vector.
 """
-StdTDist(ν) = StdTDist([ν])
-StdTDist(ν::Integer) = StdTDist(float(ν))
-(rand(d::StdTDist{T})::T) where {T}  =  (ν=d.coefs[1]; tdistrand(ν)*sqrt((ν-2)/ν))
-@inline logkernel(::Type{<:StdTDist}, x, coefs) = (-(coefs[1] + 1) / 2) * log1p(abs2(x) / (coefs[1]-2))
-@inline logconst(::Type{<:StdTDist}, coefs)  = (lgamma((coefs[1] + 1) / 2)
+StdT(ν) = StdT([ν])
+StdT(ν::Integer) = StdT(float(ν))
+(rand(d::StdT{T})::T) where {T}  =  (ν=d.coefs[1]; tdistrand(ν)*sqrt((ν-2)/ν))
+@inline logkernel(::Type{<:StdT}, x, coefs) = (-(coefs[1] + 1) / 2) * log1p(abs2(x) / (coefs[1]-2))
+@inline logconst(::Type{<:StdT}, coefs)  = (lgamma((coefs[1] + 1) / 2)
                                                - log((coefs[1]-2) * pi) / 2
                                                - lgamma(coefs[1] / 2)
                                                )
-nparams(::Type{<:StdTDist}) = 1
-coefnames(::Type{<:StdTDist}) = ["ν"]
-distname(::Type{<:StdTDist}) = "Student's t"
+nparams(::Type{<:StdT}) = 1
+coefnames(::Type{<:StdT}) = ["ν"]
+distname(::Type{<:StdT}) = "Student's t"
 
-function constraints(::Type{<:StdTDist}, ::Type{T}) where {T}
+function constraints(::Type{<:StdT}, ::Type{T}) where {T}
     lower = T[20/10]
     upper = T[Inf]
     return lower, upper
 end
 
-function startingvals(::Type{<:StdTDist}, data::Array{T}) where {T}
+function startingvals(::Type{<:StdT}, data::Array{T}) where {T}
     #mean of abs(t)
     eabst(ν)=2*sqrt(ν-2)/(ν-1)/beta(ν/2, 1/2)
     ##alteratively, could use mean of log(abs(t)):
@@ -166,7 +166,7 @@ function startingvals(::Type{<:StdTDist}, data::Array{T}) where {T}
     z > eabst(upper) ? [upper] : [find_zero(x -> z-eabst(x), (lower, upper))]
 end
 
-function quantile(dist::StdTDist, q::Real)
+function quantile(dist::StdT, q::Real)
     tdistinvcdf(dist.coefs..., q)
 end
 

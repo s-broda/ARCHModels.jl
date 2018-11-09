@@ -73,10 +73,10 @@ Different distributions of ``z_t`` are available as subtypes of [`StandardizedDi
 julia> StdNormal() # convenience constructor
 StdNormal{Float64}(coefs=Float64[])
 ```
-* [`StdTDist`](@ref), the standardized Student's `t` distribution:
+* [`StdT`](@ref), the standardized Student's `t` distribution:
 ```jldoctest TYPES
-julia> StdTDist(3) # convenience constructor: 3 degrees of freedom
-StdTDist{Float64}(coefs=[3.0])
+julia> StdT(3) # convenience constructor: 3 degrees of freedom
+StdT{Float64}(coefs=[3.0])
 ```
 
 ### User-defined standardized distributions
@@ -93,9 +93,9 @@ julia> const MyStdNormal = Standardized{Normal};
 A final remark concerns the domain of the parameters: the estimation process relies on a starting value for the parameters of the distribution, say ``\theta\equiv(\theta_1, \ldots, \theta_p)'``. For a distribution wrapped in [`Standardized`](@ref), the starting value for ``\theta_i`` is taken to be a small positive value ϵ. This will fail if ϵ is not in the domain of ``\theta_i``; as an example, the standardized Student's ``t`` distribution is only defined for degrees of freedom larger than 2, because a finite variance is required for standardization. In that case, it is necessary to define a method of the (non-exported) function `startingvals` that returns a feasible vector of starting values, as follows:
 
 ```jldoctest TYPES
-julia> const MyStdTDist = Standardized{TDist};
+julia> const MyStdT = Standardized{TDist};
 
-julia> ARCH.startingvals(::Type{<:MyStdTDist}, data::Vector{T}) where T = T[3.]
+julia> ARCH.startingvals(::Type{<:MyStdT}, data::Vector{T}) where T = T[3.]
 ```
 ## Working with ARCHModels
 The constructor for [`ARCHModel`](@ref) takes two mandatory arguments: an instance of a subtype of [`VolatilitySpec`](@ref), and a vector of returns. The mean specification and error distribution can be changed via the keyword arguments `meanspec` and `dist`, which respectively default to `NoIntercept` and `StdNormal`.
@@ -106,7 +106,7 @@ julia> spec = GARCH{1, 1}([1., .9, .05]);
 
 julia> data = BG96;
 
-julia> am = ARCHModel(spec, data; dist=StdTDist(3.), meanspec=Intercept(1.))
+julia> am = ARCHModel(spec, data; dist=StdT(3.), meanspec=Intercept(1.))
 
 GARCH{1,1} model with Student's t errors, T=1974.
 

@@ -67,7 +67,7 @@ The remaining keyword arguments are passed on to the optimizer.
 As an example, an EGARCH(1, 1, 1) model without intercept and with  Student's ``t`` errors is fitted as follows:
 
 ```jldoctest MANUAL
-julia> fit(EGARCH{1, 1, 1}, data; meanspec=NoIntercept, dist=StdTDist)
+julia> fit(EGARCH{1, 1, 1}, data; meanspec=NoIntercept, dist=StdT)
 
 EGARCH{1,1,1} model with Student's t errors, T=1974.
 
@@ -133,7 +133,7 @@ parameters (i.e., ``p`` and ``q`` in the case of [`GARCH`](@ref)) chosen to mini
 Eg., the following selects the optimal (minimum AIC) EGARCH(o, p, q) model, where o, p, q < 2,  assuming ``t`` distributed errors.
 
 ```jldoctest MANUAL
-julia> selectmodel(EGARCH, data; criterion=aic, maxlags=2, dist=StdTDist)
+julia> selectmodel(EGARCH, data; criterion=aic, maxlags=2, dist=StdT)
 
 EGARCH{1,1,2} model with Student's t errors, T=1974.
 
@@ -190,7 +190,7 @@ residuals ``\hat{u}_t\equiv r_t-\hat{\mu}_t`` can be obtained by passing `standa
 To simulate from an [`ARCHModel`](@ref), use [`simulate`](@ref). You can either specify the [`VolatilitySpec`](@ref) (and optionally the distribution and mean specification) and desired number of observations, or pass an existing [`ARCHModel`](@ref). Use [`simulate!`](@ref) to modify the data in place.
 
 ```jldoctest MANUAL
-julia> am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=500, meanspec=Intercept(5.), dist=StdTDist(3.))
+julia> am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=500, meanspec=Intercept(5.), dist=StdT(3.))
 
 GARCH{1,1} model with Student's t errors, T=1000.
 

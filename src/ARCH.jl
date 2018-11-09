@@ -39,7 +39,7 @@ import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, co
 				  informationmatrix, islinear, score, vcov, residuals, predict
 
 export ARCHModel, VolatilitySpec, StandardizedDistribution, Standardized, MeanSpec,
-       simulate, simulate!, selectmodel, StdNormal, StdTDist, StdGED, Intercept,
+       simulate, simulate!, selectmodel, StdNormal, StdT, StdGED, Intercept,
        NoIntercept, BG96, volatilities, mean, quantile, VaRs
 
 """
@@ -428,7 +428,7 @@ Fit the ARCH model specified by `VS` to data.
 
 # Example: EGARCH{1, 1, 1} model without intercept, Student's t errors.
 ```jldoctest
-julia> fit(EGARCH{1, 1, 1}, BG96; meanspec=NoIntercept, dist=StdTDist)
+julia> fit(EGARCH{1, 1, 1}, BG96; meanspec=NoIntercept, dist=StdT)
 
 EGARCH{1,1,1} model with Student's t errors, T=1974.
 

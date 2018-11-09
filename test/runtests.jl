@@ -192,18 +192,18 @@ end
     end
     @testset "Student" begin
         Random.seed!(1)
-        data = rand(StdTDist(4), T)
+        data = rand(StdT(4), T)
         spec = GARCH{1, 1}([1., .9, .05])
-        @test fit(StdTDist, data).coefs[1] ≈ 3.972437329588246 rtol=1e-4
-        @test coefnames(StdTDist) == ["ν"]
-        @test ARCH.distname(StdTDist) == "Student's t"
-        @test quantile(StdTDist(3), .05) ≈ -2.3533634348018255
+        @test fit(StdT, data).coefs[1] ≈ 3.972437329588246 rtol=1e-4
+        @test coefnames(StdT) == ["ν"]
+        @test ARCH.distname(StdT) == "Student's t"
+        @test quantile(StdT(3), .05) ≈ -2.3533634348018255
         Random.seed!(1);
-        datat = simulate(spec, T; dist=StdTDist(4)).data
+        datat = simulate(spec, T; dist=StdT(4)).data
         Random.seed!(1);
-        datam = simulate(spec, T; dist=StdTDist(4), meanspec=Intercept(3)).data
-        am4 = selectmodel(GARCH, datat; dist=StdTDist, meanspec=NoIntercept, show_trace=true)
-        am5 = selectmodel(GARCH, datam; dist=StdTDist, show_trace=true)
+        datam = simulate(spec, T; dist=StdT(4), meanspec=Intercept(3)).data
+        am4 = selectmodel(GARCH, datat; dist=StdT, meanspec=NoIntercept, show_trace=true)
+        am5 = selectmodel(GARCH, datam; dist=StdT, show_trace=true)
         @test coefnames(am5) == ["ω", "β₁", "α₁", "ν", "μ"]
         @test all(coeftable(am4).cols[2] .== stderror(am4))
         #with unconditional as presample:
@@ -229,10 +229,10 @@ end
     end
     @testset "Standardized" begin
         using Distributions
-        MyStdTDist=Standardized{TDist}
-        ARCH.startingvals(::Type{<:MyStdTDist}, data::Vector{T}) where T = T[3.]
+        MyStdT=Standardized{TDist}
+        ARCH.startingvals(::Type{<:MyStdT}, data::Vector{T}) where T = T[3.]
         Random.seed!(1)
-        am = simulate(GARCH{1, 1}([1, 0.9, .05]), 1000, dist=MyStdTDist(3.))
+        am = simulate(GARCH{1, 1}([1, 0.9, .05]), 1000, dist=MyStdT(3.))
         @test  loglikelihood(fit(am)) ≈ -2700.9089012063323
     end
 end
