@@ -212,7 +212,18 @@ function constraints(::Type{<:StdGED}, ::Type{T}) where {T}
 end
 
 function startingvals(::Type{<:StdGED}, data::Array{T}) where {T}
-    T[1]
+    ht = T[]
+    lht = T[]
+    zt = T[]
+    loglik!(ht, lht, zt, GARCH{1, 1}, StdNormal, Intercept, data, vcat(startingvals(GARCH{1, 1}, data), startingvals(Intercept, data)))
+    z = mean((abs.(data.-mean(data))./sqrt.(ht)).^4)
+    lower = T(0.05)
+    upper = T(25.)
+    f(r) = z-gamma(5/r)*gamma(1/r)/gamma(3/r)^2
+    f(lower)>0 && return [lower]
+    f(upper)<0 && return [upper]
+    return T[find_zero(f, (lower, upper))]
+
 end
 
 function quantile(dist::StdGED, q::Real)
