@@ -2,7 +2,7 @@
 #general functions
 
 #loop invariant part of the kernel
-@inline hoistkernel(::Type{<:StandardizedDistribution}, coefs) = 1
+@inline kernelinvariants(::Type{<:StandardizedDistribution}, coefs) = ()
 
 """
     Standardized{D<:ContinuousUnivariateDistribution, T}  <: StandardizedDistribution{T}
@@ -197,8 +197,8 @@ StdGED(p) = StdGED([p])
 
 
 @inline logconst(::Type{<:StdGED}, coefs)  = (p = coefs[1]; ip = 1/p; lgamma(3*ip)/2 - lgamma(ip)*3/2 - logtwo  - log(ip))
-@inline logkernel(::Type{<:StdGED}, x, coefs, hs) = (p = coefs[1]; -abs(x)^p)
-@inline hoistscale(::Type{<:StdGED}, coefs) = (p = coefs[1] ;ip = 1/p; sqrt(gamma(3*ip) / gamma(ip)))
+@inline logkernel(::Type{<:StdGED}, x, coefs, s) = (p = coefs[1]; -abs(x*s)^p)
+@inline kernelinvariants(::Type{<:StdGED}, coefs) = (p = coefs[1]; ip = 1/p; (sqrt(gamma(3*ip) / gamma(ip)),))
 
 nparams(::Type{<:StdGED}) = 1
 coefnames(::Type{<:StdGED}) = ["p"]
@@ -211,7 +211,7 @@ function constraints(::Type{<:StdGED}, ::Type{T}) where {T}
 end
 
 function startingvals(::Type{<:StdGED}, data::Array{T}) where {T}
-    T[2]
+    T[1]
 end
 
 function quantile(dist::StdGED, q::Real)

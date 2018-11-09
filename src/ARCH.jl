@@ -310,6 +310,7 @@ end
     T = length(data)
     r = presample(VS)
     T > r || error("Sample too small.")
+	ki = kernelinvariants(SD, distcoefs)
     @inbounds begin
         h0 = var(data) # could be moved outside
         #h0 = uncond(VS, garchcoefs)
@@ -324,7 +325,7 @@ end
             end
             ht[end] < 0 && return T2(NaN)
             push!(zt, (data[t]-mean(MS, meancoefs))/sqrt(ht[end]))
-            LL += -lht[end]/2 + logkernel(SD, zt[end], distcoefs)
+            LL += -lht[end]/2 + logkernel(SD, zt[end], distcoefs, ki...)
         end#for
     end#inbounds
     LL += T*logconst(SD, distcoefs)
@@ -349,7 +350,7 @@ function logliks(spec, dist, meanspec, data, coefs::Vector{T}) where {T}
     lht = T[]
     zt = T[]
     loglik!(ht, lht, zt, spec, dist, meanspec, data, coefs)
-    LLs = -lht./2 .+ logkernel.(dist, zt, Ref{Vector{T}}(distcoefs)) .+ logconst(dist, distcoefs)
+    LLs = -lht./2 .+ logkernel.(dist, zt, Ref{Vector{T}}(distcoefs), kernelinvariants(dist, distcoefs)...) .+ logconst(dist, distcoefs)
 end
 
 function informationmatrix(am::ARCHModel; expected::Bool=true)
