@@ -137,7 +137,8 @@ as a scalar or vector.
 StdT(ν) = StdT([ν])
 StdT(ν::Integer) = StdT(float(ν))
 (rand(d::StdT{T})::T) where {T}  =  (ν=d.coefs[1]; tdistrand(ν)*sqrt((ν-2)/ν))
-@inline logkernel(::Type{<:StdT}, x, coefs) = (-(coefs[1] + 1) / 2) * log1p(abs2(x) / (coefs[1]-2))
+@inline kernelinvariants(::Type{<:StdT}, coefs) = (1/ (coefs[1]-2),)
+@inline logkernel(::Type{<:StdT}, x, coefs, iv) = (-(coefs[1] + 1) / 2) * log1p(abs2(x) *iv)
 @inline logconst(::Type{<:StdT}, coefs)  = (lgamma((coefs[1] + 1) / 2)
                                                - log((coefs[1]-2) * pi) / 2
                                                - lgamma(coefs[1] / 2)
