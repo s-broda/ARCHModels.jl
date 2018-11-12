@@ -101,7 +101,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Introduction and type hierarchy",
     "title": "Built-in distributions",
     "category": "section",
-    "text": "Different distributions of z_t are available as subtypes of StandardizedDistribution. StandardizedDistribution in turn subtypes Distribution{Univariate, Continuous} from Distributions.jl, though not the entire interface must necessarily be implemented. StandardizedDistributions again hold their parameters as vectors, but convenience constructors are provided. The following are currently available:StdNormal, the standard normal distribution:julia> StdNormal() # convenience constructor\nStdNormal{Float64}(coefs=Float64[])StdT, the standardized Student\'s t distribution:julia> StdT(3) # convenience constructor: 3 degrees of freedom\nStdT{Float64}(coefs=[3.0])"
+    "text": "Different standardized (mean zero, variance one) distributions for z_t are available as subtypes of StandardizedDistribution. StandardizedDistribution in turn subtypes Distribution{Univariate, Continuous} from Distributions.jl, though not the entire interface must necessarily be implemented. StandardizedDistributions again hold their parameters as vectors, but convenience constructors are provided. The following are currently available:StdNormal, the standard normal distribution:julia> StdNormal() # convenience constructor\nStdNormal{Float64}(coefs=Float64[])StdT, the standardized Student\'s t distribution:julia> StdT(3) # convenience constructor\nStdT{Float64}(coefs=[3.0])StdGED, the standardized Generalized Error Distribution:julia> StdGED(1) # convenience constructor\nStdGED{Float64}(coefs=[1.0])"
 },
 
 {
