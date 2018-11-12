@@ -227,6 +227,15 @@ end
                                        3.834033118707376,
                                        2.9918481871096083], rtol=1e-4))
     end
+    @testset "GED" begin
+        Random.seed!(1)
+        @test typeof(StdGED(3)) == typeof(StdGED(3.)) == typeof(StdGED([3.]))
+        data = rand(StdGED(1), T)
+        @test fit(StdGED, data).coefs[1] ≈ 1.0193004687300224 rtol=1e-4
+        @test coefnames(StdGED) == ["p"]
+        @test ARCH.distname(StdGED) == "GED"
+        @test quantile(StdGED(1), .05) ≈ -1.6281735335151468
+    end
     @testset "Standardized" begin
         using Distributions
         MyStdT=Standardized{TDist}

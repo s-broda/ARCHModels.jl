@@ -21,7 +21,7 @@ The ARCH package for Julia. For documentation, see https://s-broda.github.io/ARC
 module ARCH
 using Reexport
 @reexport using StatsBase
-using StatsFuns: normcdf, normccdf, normlogpdf, norminvcdf, log2π, logtwo, RFunctions.tdistrand, RFunctions.tdistinvcdf, RFunctions.gammarand
+using StatsFuns: normcdf, normccdf, normlogpdf, norminvcdf, log2π, logtwo, RFunctions.tdistrand, RFunctions.tdistinvcdf, RFunctions.gammarand, RFunctions.gammainvcdf
 using SpecialFunctions: beta, lgamma, gamma
 using Optim
 using ForwardDiff

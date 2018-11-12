@@ -67,18 +67,22 @@ Intercept{Float64}([3.0])
 ```
 ## Distributions
 ### Built-in distributions
-Different distributions of ``z_t`` are available as subtypes of [`StandardizedDistribution`](@ref). `StandardizedDistribution` in turn subtypes `Distribution{Univariate, Continuous}` from [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), though not the entire interface must necessarily be implemented. `StandardizedDistribution`s again hold their parameters as vectors, but convenience constructors are provided. The following are currently available:
-* [`StdNormal`](@ref), the standard normal distribution:
+Different standardized (mean zero, variance one) distributions for ``z_t`` are available as subtypes of [`StandardizedDistribution`](@ref). `StandardizedDistribution` in turn subtypes `Distribution{Univariate, Continuous}` from [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), though not the entire interface must necessarily be implemented. `StandardizedDistribution`s again hold their parameters as vectors, but convenience constructors are provided. The following are currently available:
+* [`StdNormal`](@ref), the standard [normal distribution](https://en.wikipedia.org/wiki/Normal_distribution):
 ```jldoctest TYPES
 julia> StdNormal() # convenience constructor
 StdNormal{Float64}(coefs=Float64[])
 ```
-* [`StdT`](@ref), the standardized Student's `t` distribution:
+* [`StdT`](@ref), the standardized [Student's `t` distribution](https://en.wikipedia.org/wiki/Student%27s_t-distribution):
 ```jldoctest TYPES
-julia> StdT(3) # convenience constructor: 3 degrees of freedom
+julia> StdT(3) # convenience constructor
 StdT{Float64}(coefs=[3.0])
 ```
-
+* [`StdGED`](@ref), the standardized [Generalized Error Distribution](https://en.wikipedia.org/wiki/Generalized_normal_distribution):
+```jldoctest TYPES
+julia> StdGED(1) # convenience constructor
+StdGED{Float64}(coefs=[1.0])
+```
 ### User-defined standardized distributions
 Apart from the natively supported standardized distributions, it is possible to wrap a continuous univariate distribution from the [Distributions package](https://github.com/JuliaStats/Distributions.jl) in the [`Standardized`](@ref) wrapper type. Below, we reimplement the standardized normal distribution:
 

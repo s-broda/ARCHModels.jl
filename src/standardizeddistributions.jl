@@ -174,8 +174,6 @@ end
 
 ################################################################################
 #StdGED
-#Nardon, M. and Pianca, P. (2009). Simulation techniques for generalized Gaussian densities. Journal
-#of Statistical Software and Simulation, 79(11):1317–1329.
 
 """
     StdGED{T} <: StandardizedDistribution{T}
@@ -193,7 +191,7 @@ Create a standardized generalized error distribution parameter `p`. `p` can be p
 as a scalar or vector.
 """
 StdGED(p) = StdGED([p])
-
+StdGED(p::Integer) = StdGED(float(p))
 
 (rand(d::StdGED{T})::T) where {T} = (p = d.coefs[1]; ip=1/p;  (2*rand()-1)*gammarand(1+ip, 1)^ip * sqrt(gamma(ip) / gamma(3*ip)) )
 
@@ -204,7 +202,7 @@ StdGED(p) = StdGED([p])
 
 nparams(::Type{<:StdGED}) = 1
 coefnames(::Type{<:StdGED}) = ["p"]
-distname(::Type{<:StdGED}) = "Generalized Error Distribution"
+distname(::Type{<:StdGED}) = "GED"
 
 function constraints(::Type{<:StdGED}, ::Type{T}) where {T}
     lower = [zero(T)]
@@ -228,4 +226,8 @@ function startingvals(::Type{<:StdGED}, data::Array{T}) where {T}
 end
 
 function quantile(dist::StdGED, q::Real)
+    p = dist.coefs[1]
+    ip = 1/p
+    qq = 2*q-1
+    return sign(qq) * (gammainvcdf(ip, 1., abs(qq)))^ip/kernelinvariants(StdGED, [p])[1]
 end
