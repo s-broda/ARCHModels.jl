@@ -632,11 +632,76 @@ include("meanspecs.jl")
 include("standardizeddistributions.jl")
 include("GARCH.jl")
 include("EGARCH.jl")
+using Base.Cartesian: @nexprs
 
+@generated function loglik2(::Type{VS}, ::Type{SD}, ::Type{MS},
+							data::Vector{T1}, coefs::AbstractVector{T2}
+							) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
+									 MS<:MeanSpec, T1<:AbstractFloat, T2
+									 }
+	r = presample(VS)
+	lowergarch, uppergarch = constraints(VS, T1)
+	lowerdist, upperdist = constraints(SD, T1)
+	lowermean, uppermean = constraints(MS, T1)
+	lower = vcat(lowergarch, lowerdist, lowermean)
+	upper = vcat(uppergarch, upperdist, uppermean)
+	quote
+		garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, MS)
+		all($lower.<coefs.<$upper) || return T2(-Inf)
+		T = length(data)
+		T > $r || error("Sample too small.")
+		ki = kernelinvariants(SD, distcoefs)
+		@inbounds begin
+			h0 = var(data)
+			h0 < 0 && return T2(NaN)
+			lh0 = log(h0)
+			LL = zero(T2)
+			@nexprs $r i -> h_i=h0
+			@nexprs $r i -> lh_i=log(h0)
+			@nexprs $r i -> a_{$r+1-i} = data[i]
+			@nexprs $r i -> z_{$r+1-i} = (a_{$r+1-i}-mean(MS, meancoefs))/sqrt(h_{$r+1-i})
+			@nexprs $r i -> LL += -lh0/2+logkernel(SD, z_{$r+1-i}, distcoefs, ki...)
+			for t = $r+1:T
+				$(update(VS))
+				@nexprs $(r-1) i-> (h_{$r+1-i}=h_{$r-i})
+				@nexprs $(r-1) i-> (lh_{$r+1-i}=lh_{$r-i})
+				@nexprs $(r-1) i-> (a_{$r+1-i}=a_{$r-i})
+				@nexprs $(r-1) i-> (z_{$r+1-i}=z_{$r-i})
+				h_1 = h
+				lh_1 = lh
+				a_1 = data[t]
+				z_1 = (data[t]-mean(MS, meancoefs))/sqrt(h_1)
+				LL += -lh/2 + logkernel(SD, z_1, distcoefs, ki...)
+			end
+		end#inbounds
+		LL += T*logconst(SD, distcoefs)
+	end #quote
+end#function
+
+
+function update(::Type{<:GARCH{p, q, T2} where T2} ) where {p, q}
+	quote
+		h = coefs[1]
+		@nexprs $p i -> (h += coefs[i+1]*h_i)
+		@nexprs $q i -> (h += coefs[i+$(1+p)]*a_i^2)
+		h < 0 && return T2(NaN)
+		lh = log(h)
+	end
+end
+
+function update(::Type{<:EGARCH{o, p, q, T2} where T2} ) where {o, p, q}
+	quote
+		lh = coefs[1]
+		@nexprs $o i -> (lh += coefs[i+1]*z_i)
+		@nexprs $p i -> (lh += coefs[i+$(1+o)]*lh_i)
+		@nexprs $q i -> (lh += coefs[i+$(1+p+o)]*(abs(z_i) - sqrt2invpi))
+		h = exp(lh)
+	end
+end
 #below is the fastest implementation that I can come up with, for reference.
 #instead of keeping σ²ₜ in CircularBuffer, it keeps them in scalars and thus
 #on the stack.
-using Base.Cartesian: @nexprs
+
 function fastfit(VS, data)
     obj = x-> fastmLL(VS, x, data, var(data))
     optimize(obj,
