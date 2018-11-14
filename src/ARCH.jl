@@ -656,10 +656,11 @@ using Base.Cartesian: @nexprs
 			h0 < 0 && return T2(NaN)
 			lh0 = log(h0)
 			LL = zero(T2)
+			m = mean(MS, meancoefs)
 			@nexprs $r i -> h_i=h0
 			@nexprs $r i -> lh_i=log(h0)
-			@nexprs $r i -> a_{$r+1-i} = data[i]
-			@nexprs $r i -> z_{$r+1-i} = (a_{$r+1-i}-mean(MS, meancoefs))/sqrt(h_{$r+1-i})
+			@nexprs $r i -> a_{$r+1-i} = data[i]-m
+			@nexprs $r i -> z_{$r+1-i} = a_{$r+1-i}/sqrt(h_{$r+1-i})
 			@nexprs $r i -> LL += -lh0/2+logkernel(SD, z_{$r+1-i}, distcoefs, ki...)
 			for t = $r+1:T
 				$(update(VS))
@@ -669,8 +670,8 @@ using Base.Cartesian: @nexprs
 				@nexprs $(r-1) i-> (z_{$r+1-i}=z_{$r-i})
 				h_1 = h
 				lh_1 = lh
-				a_1 = data[t]
-				z_1 = (data[t]-mean(MS, meancoefs))/sqrt(h_1)
+				a_1 = data[t]-m
+				z_1 = a_1/sqrt(h_1)
 				LL += -lh/2 + logkernel(SD, z_1, distcoefs, ki...)
 			end
 		end#inbounds
@@ -706,7 +707,7 @@ function fastfit(VS, data)
     obj = x-> fastmLL(VS, x, data, var(data))
     optimize(obj,
              startingvals(VS, data),
-             BFGS(), autodiff=:forward, Optim.Options(x_tol=1e-4)
+             BFGS(), autodiff=:forward
              )
 end
 
