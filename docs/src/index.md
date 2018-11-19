@@ -19,6 +19,7 @@ As for error distributions, the user may choose among the following:
 
   * Standard Normal
   * Standardized Student's ``t``
+  * Standardized Generalized Error Distribution
 
 ## Installation
 
