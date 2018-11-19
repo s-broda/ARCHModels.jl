@@ -156,14 +156,17 @@ isfitted(am::ARCHModel) = am.fitted
 
 """
     simulate(am::ARCHModel; warmup=100)
+	simulate(am::ARCHModel, nobs; warmup=100)
     simulate(spec::VolatilitySpec, nobs; warmup=100, dist=StdNormal(), meanspec=NoIntercept())
 Simulate an ARCHModel.
 """
 function simulate end
 
-function simulate(am::ARCHModel; warmup=100)
+simulate(am::ARCHModel; warmup=100) = simulate(am, nobs(am); warmup=warmup)
+
+function simulate(am::ARCHModel, nobs; warmup=100)
 	am2 = deepcopy(am)
-    simulate(am2.spec, nobs(am2); warmup=warmup, dist=am2.dist, meanspec=am2.meanspec)
+    simulate(am2.spec, nobs; warmup=warmup, dist=am2.dist, meanspec=am2.meanspec)
 end
 
 function simulate(spec::VolatilitySpec{T2}, nobs; warmup=100, dist::StandardizedDistribution{T2}=StdNormal{T2}(),

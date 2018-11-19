@@ -204,7 +204,7 @@ Volatility parameters:     1.0 0.9 0.05
                              ν
 Distribution parameters:   3.0
 
-julia> am4 = simulate(am3);
+julia> am4 = simulate(am3, 1000); # passing the number of observations is optional; the default is nobs(am3)
 ```
 ```@meta
 DocTestSetup = nothing

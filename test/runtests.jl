@@ -15,6 +15,9 @@ T = 10^4;
     Random.seed!(1)
     am00 = simulate(am0)
     @test all(am00.data .== am0.data)
+    Random.seed!(1)
+    am000 = simulate(am0, nobs(am0))
+    @test all(am000.data .== am0.data)
     am = selectmodel(GARCH, am0.data; meanspec=NoIntercept, show_trace=true)
     @test isfitted(am) == true
     #with unconditional as presample:
