@@ -13,7 +13,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "The ARCH Package",
     "category": "section",
-    "text": "ARCH (Autoregressive Conditional Heteroskedasticity) models are a class of models designed to capture a feature of financial returns data known as volatility clustering, i.e., the fact that large (in absolute value) returns tend to cluster together, such as during periods of financial turmoil, which then alternate with relatively calmer periods.The basic ARCH model was introduced by Engle (1982, Econometrica, pp. 987–1008), who in 2003 was awarded a Nobel Memorial Prize in Economic Sciences for its development. Today, the most popular variant is the generalized ARCH, or GARCH, model and its various extensions, due to Bollerslev (1986, Journal of Econometrics, pp. 307 - 327). The basic GARCH(1,1) model for a sample of daily asset returns r_t_tin1ldotsT isr_t=sigma_tz_tquad z_tsimmathrmN(01)quad\nsigma_t^2=omega+alpha r_t-1^2+beta sigma_t-1^2quad omega alpha beta0quad alpha+beta1This can be extended by including additional lags of past squared returns and volatilities: the GARCH(p, q) model  has q of the former and p of the latter. Another generalization is to allow  z_t to follow other, non-Gaussian distributions.This package implements simulation, estimation, and model selection for the following models:GARCH(p, q)\nEGARCH(o, p q)As for error distributions, the user may choose among the following:Standard Normal\nStandardized Student\'s t"
+    "text": "ARCH (Autoregressive Conditional Heteroskedasticity) models are a class of models designed to capture a feature of financial returns data known as volatility clustering, i.e., the fact that large (in absolute value) returns tend to cluster together, such as during periods of financial turmoil, which then alternate with relatively calmer periods.The basic ARCH model was introduced by Engle (1982, Econometrica, pp. 987–1008), who in 2003 was awarded a Nobel Memorial Prize in Economic Sciences for its development. Today, the most popular variant is the generalized ARCH, or GARCH, model and its various extensions, due to Bollerslev (1986, Journal of Econometrics, pp. 307 - 327). The basic GARCH(1,1) model for a sample of daily asset returns r_t_tin1ldotsT isr_t=sigma_tz_tquad z_tsimmathrmN(01)quad\nsigma_t^2=omega+alpha r_t-1^2+beta sigma_t-1^2quad omega alpha beta0quad alpha+beta1This can be extended by including additional lags of past squared returns and volatilities: the GARCH(p, q) model  has q of the former and p of the latter. Another generalization is to allow  z_t to follow other, non-Gaussian distributions.This package implements simulation, estimation, and model selection for the following models:GARCH(p, q)\nEGARCH(o, p q)As for error distributions, the user may choose among the following:Standard Normal\nStandardized Student\'s t\nStandardized Generalized Error Distribution"
 },
 
 {
@@ -181,7 +181,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Usage",
     "title": "Simulation",
     "category": "section",
-    "text": "To simulate from an ARCHModel, use simulate. You can either specify the VolatilitySpec (and optionally the distribution and mean specification) and desired number of observations, or pass an existing ARCHModel. Use simulate! to modify the data in place.julia> am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=500, meanspec=Intercept(5.), dist=StdT(3.))\n\nGARCH{1,1} model with Student\'s t errors, T=1000.\n\n\n                             μ\nMean equation parameters:  5.0\n\n                             ω  β₁   α₁\nVolatility parameters:     1.0 0.9 0.05\n\n                             ν\nDistribution parameters:   3.0\n\njulia> am4 = simulate(am3);DocTestSetup = nothing\nDocTestFilters = nothing"
+    "text": "To simulate from an ARCHModel, use simulate. You can either specify the VolatilitySpec (and optionally the distribution and mean specification) and desired number of observations, or pass an existing ARCHModel. Use simulate! to modify the data in place.julia> am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=500, meanspec=Intercept(5.), dist=StdT(3.))\n\nGARCH{1,1} model with Student\'s t errors, T=1000.\n\n\n                             μ\nMean equation parameters:  5.0\n\n                             ω  β₁   α₁\nVolatility parameters:     1.0 0.9 0.05\n\n                             ν\nDistribution parameters:   3.0\n\njulia> am4 = simulate(am3, 1000); # passing the number of observations is optional, the default being nobs(am3)DocTestSetup = nothing\nDocTestFilters = nothing"
 },
 
 {
@@ -413,7 +413,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference guide",
     "title": "ARCH.simulate",
     "category": "function",
-    "text": "simulate(am::ARCHModel; warmup=100)\nsimulate(spec::VolatilitySpec, nobs; warmup=100, dist=StdNormal(), meanspec=NoIntercept())\n\nSimulate an ARCHModel.\n\n\n\n\n\n"
+    "text": "simulate(am::ARCHModel; warmup=100)\nsimulate(am::ARCHModel, nobs; warmup=100)\nsimulate(spec::VolatilitySpec, nobs; warmup=100, dist=StdNormal(), meanspec=NoIntercept())\n\nSimulate an ARCHModel.\n\n\n\n\n\n"
 },
 
 {
