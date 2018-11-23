@@ -248,3 +248,10 @@ end
         @test  loglikelihood(fit(am)) ≈ -2700.9089012063323
     end
 end
+@testset "tests" begin
+    am = fit(GARCH{1, 1}, BG96)
+    LM = ARCHLMTest(am)
+    @test pvalue(LM) ≈ 0.1139758664282619
+    str = sprint(show, LM)
+    @test startswith(str, "ARCH LM test for conditional heteroskedasticity")
+end

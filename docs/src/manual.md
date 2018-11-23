@@ -30,6 +30,29 @@ julia> autocor(data.^2, 1:10, demean=true) # re-exported from StatsBase
 
 Using a critical value of ``1.96/\sqrt{1974}=0.044``, we see that there is indeed significant autocorrelation in the squared series.
 
+A more formal test for the presence of volatility clustering is [Engle's (1982)](https://doi.org/10.2307/1912773) ARCH LM test. The test statistic is given by ``LM\equiv TR^2_\mbox{aux}``, where ``R^2_\mbox{aux}`` is the coefficient of determination in a regression of the squared returns on an intercept and ``p`` of their own lags. The test statistic follows a $\Chi^2_p$ distribution under the null of no volatility clustering.
+
+```jldoctest MANUAL
+julia> ARCHLMTest(BG96, 1)
+ARCH LM test for conditional heteroskedasticity
+-----------------------------------------------
+Population details:
+    parameter of interest:   T⋅R² in auxiliary regression of uₜ² on an intercept and its own lags
+    value under h_0:         0
+    point estimate:          98.12107516935244
+
+Test summary:
+    outcome with 95% confidence: reject h_0
+    p-value:                     <1e-22
+
+Details:
+    sample size:                    1974
+    number of lags:                 1
+    LM statistic:                   98.12107516935244
+```
+
+The null is strongly rejected, again providing evidence for the presence of volatility clustering.
+
 ## Estimation
 Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a GARCH(1, 1) with standard normal errors;  for other model classes such as [`EGARCH`](@ref), see the [section on volatility specifications](@ref volaspec).
 
@@ -186,6 +209,29 @@ Testing volatility models in general relies on the estimated conditional volatil
 ``\hat{z}_t\equiv (r_t-\hat{\mu}_t)/\hat{\sigma}_t``, accessible via [`volatilities(::ARCHModel)`](@ref) and [`residuals(::ARCHModel)`](@ref), respectively. The non-standardized
 residuals ``\hat{u}_t\equiv r_t-\hat{\mu}_t`` can be obtained by passing `standardized=false` as a keyword argument to [`residuals`](@ref).
 
+One possibility to test a volatility specification is to apply the ARCH LM test to the standardized residuals. This is achieved by calling [`ARCHLMTest`](@ref) on the estimated [`ARCHModel`](@ref):
+
+```jldoctest MANUAL
+julia> am = fit(GARCH{1, 1}, BG96);
+
+julia> ARCHLMTest(am, 4)
+ARCH LM test for conditional heteroskedasticity
+-----------------------------------------------
+Population details:
+    parameter of interest:   T⋅R² in auxiliary regression of uₜ² on an intercept and its own lags
+    value under h_0:         0
+    point estimate:          4.211230445141555
+
+Test summary:
+    outcome with 95% confidence: fail to reject h_0
+    p-value:                     0.3782
+
+Details:
+    sample size:                    1974
+    number of lags:                 4
+    LM statistic:                   4.211230445141555
+```
+By default, the number of lags is chosen as the maximum order of the volatility specification (e.g., ``\max(p, q)`` for a GARCH(p, q) model). Here, the test does not reject, indicating that a GARCH(1, 1) specification is sufficient for modelling the volatility clustering (a common finding).
 ## Simulation
 To simulate from an [`ARCHModel`](@ref), use [`simulate`](@ref). You can either specify the [`VolatilitySpec`](@ref) (and optionally the distribution and mean specification) and desired number of observations, or pass an existing [`ARCHModel`](@ref). Use [`simulate!`](@ref) to modify the data in place.
 

@@ -26,21 +26,23 @@ using SpecialFunctions: beta, lgamma, gamma
 using Optim
 using ForwardDiff
 using Distributions
-import Distributions: quantile
+using HypothesisTests
 using Roots
 using LinearAlgebra
 using DataStructures: CircularBuffer
 using DelimitedFiles
+import Distributions: quantile
 import Base: show, showerror, eltype
 import Statistics: mean
 import Random: rand
+import HypothesisTests: HypothesisTest, testname, population_param_of_interest, default_tail, show_params, pvalue
 import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, confint, aic,
                   bic, aicc, dof, coef, coefnames, coeftable, CoefTable,
 				  informationmatrix, islinear, score, vcov, residuals, predict
 
 export ARCHModel, VolatilitySpec, StandardizedDistribution, Standardized, MeanSpec,
        simulate, simulate!, selectmodel, StdNormal, StdT, StdGED, Intercept,
-       NoIntercept, BG96, volatilities, mean, quantile, VaRs
+       NoIntercept, BG96, volatilities, mean, quantile, VaRs, pvalue
 
 """
     BG96
@@ -635,6 +637,7 @@ include("meanspecs.jl")
 include("standardizeddistributions.jl")
 include("GARCH.jl")
 include("EGARCH.jl")
+include("tests.jl")
 using Base.Cartesian: @nexprs
 
 @generated function loglik2(::Type{VS}, ::Type{SD}, ::Type{MS},
