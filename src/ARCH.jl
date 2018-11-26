@@ -637,6 +637,7 @@ include("meanspecs.jl")
 include("standardizeddistributions.jl")
 include("GARCH.jl")
 include("EGARCH.jl")
+include("TGARCH.jl")
 include("tests.jl")
 using Base.Cartesian: @nexprs
 
