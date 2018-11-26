@@ -401,6 +401,22 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "reference/#ARCH.TGARCH",
+    "page": "Reference guide",
+    "title": "ARCH.TGARCH",
+    "category": "type",
+    "text": "TGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#ARCH.TGARCH-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}, Tuple{o}} where T where q where p where o",
+    "page": "Reference guide",
+    "title": "ARCH.TGARCH",
+    "category": "method",
+    "text": "TGARCH{o, p, q}(coefs) -> VolatilitySpec\n\nConstruct a TGARCH specification with the given parameters.\n\nExample:\n\njulia> TGARCH{1, 1, 1}([1., .04, .9, .01])\nTGARCH{1,1,1} specification.\n\n               ω   γ₁  β₁   α₁\nParameters:  1.0 0.04 0.9 0.01\n\n\n\n\n\n"
+},
+
+{
     "location": "reference/#ARCH.VolatilitySpec",
     "page": "Reference guide",
     "title": "ARCH.VolatilitySpec",
