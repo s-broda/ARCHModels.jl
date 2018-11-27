@@ -12,9 +12,7 @@ implementations of (G)ARCH models (see, e.g., [Brooks et.al. (2001)](https://doi
 ```jldoctest MANUAL
 julia> using ARCH
 
-julia> data = BG96;
-
-julia> autocor(data.^2, 1:10, demean=true) # re-exported from StatsBase
+julia> autocor(BG96.^2, 1:10, demean=true) # re-exported from StatsBase
 10-element Array{Float64,1}:
  0.22294073831639766
  0.17663183540117078
@@ -57,7 +55,7 @@ The null is strongly rejected, again providing evidence for the presence of vola
 Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a GARCH(1, 1) with standard normal errors;  for other model classes such as [`EGARCH`](@ref), see the [section on volatility specifications](@ref volaspec).
 
 ```
-julia> fit(GARCH{1, 1}, data)
+julia> fit(GARCH{1, 1}, BG96)
 
 GARCH{1,1} model with Gaussian errors, T=1974.
 
@@ -90,7 +88,7 @@ The remaining keyword arguments are passed on to the optimizer.
 As an example, an EGARCH(1, 1, 1) model without intercept and with  Student's ``t`` errors is fitted as follows:
 
 ```jldoctest MANUAL
-julia> fit(EGARCH{1, 1, 1}, data; meanspec=NoIntercept, dist=StdT)
+julia> fit(EGARCH{1, 1, 1}, BG96; meanspec=NoIntercept, dist=StdT)
 
 EGARCH{1,1,1} model with Student's t errors, T=1974.
 
@@ -109,11 +107,11 @@ Distribution parameters:
 ν     4.12423   0.40059 10.2954   <1e-24
 ```
 
-An alternative approach to fitting a [`VolatilitySpec`](@ref) to `data` is to first construct
+An alternative approach to fitting a [`VolatilitySpec`](@ref) to `BG96` is to first construct
 an [`ARCHModel`](@ref) containing the data, and then using [`fit!`](@ref) to modify it in place:
 
 ```jldoctest MANUAL
-julia> am = ARCHModel(GARCH{1, 1}([1., 0., 0.]), data)
+julia> am = ARCHModel(GARCH{1, 1}([1., 0., 0.]), BG96)
 
 GARCH{1,1} model with Gaussian errors, T=1974.
 
@@ -156,7 +154,7 @@ parameters (i.e., ``p`` and ``q`` in the case of [`GARCH`](@ref)) chosen to mini
 Eg., the following selects the optimal (minimum AIC) EGARCH(o, p, q) model, where o, p, q < 2,  assuming ``t`` distributed errors.
 
 ```jldoctest MANUAL
-julia> selectmodel(EGARCH, data; criterion=aic, maxlags=2, dist=StdT)
+julia> selectmodel(EGARCH, BG96; criterion=aic, maxlags=2, dist=StdT)
 
 EGARCH{1,1,2} model with Student's t errors, T=1974.
 
@@ -192,9 +190,19 @@ Basic in-sample estimates for the Value at Risk implied by an estimated [`ARCHMo
 ```jldoctest MANUAL
 julia> am = fit(GARCH{1, 1}, BG96);
 
-julia> VaRs(am)[end]
-0.7945179524273573
+julia> vars = VaRs(am, 0.04);
+
+julia> using Plots; gr();
+
+julia> plot(-BG96, legend=:none, xlabel="\$t\$", ylabel="\$-r_t\$");
+
+julia> plot!(vars, color=:purple);
+
+julia> savefig(joinpath("build", "assets", "VaRplot.svg"))
 ```
+
+![VaR Plot](assets/VaRplot.svg)
+
 
 ## Forecasting
 The [`predict(am::ARCHModel)`](@ref) method can be used to construct one-step ahead forecasts for a number of quantities. Its signature is
