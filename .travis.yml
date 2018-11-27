@@ -22,10 +22,11 @@ jobs:
   include:
     - stage: "Documentation"
       os: linux
-      addons:
-        apt:
-          packages:
-            - qt5-default
+      #for GR:
+      #addons:
+      #  apt:
+      #    packages:
+      #      - qt5-default
       julia: 1.0
       script:
         - julia --project=docs/ -e 'using Pkg;
