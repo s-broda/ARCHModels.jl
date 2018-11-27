@@ -21,6 +21,10 @@ after_success:
 jobs:
   include:
     - stage: "Documentation"
+    addons:
+      apt:
+        packages:
+          - qt5-default
       julia: 1.0
       os: linux
       script:
