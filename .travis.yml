@@ -27,6 +27,7 @@ jobs:
           packages:
             - qt5-default
             - texlive
+            - dvipng
       julia: 1.0
       script:
         - julia --project=docs/ -e 'using Pkg;
