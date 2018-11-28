@@ -25,7 +25,7 @@ jobs:
       addons:
         apt:
           packages:
-            - qt5-default
+            - libqt5widgets5
             - texlive
             - dvipng
       julia: 1.0

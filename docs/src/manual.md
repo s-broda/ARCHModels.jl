@@ -198,7 +198,7 @@ julia> plot(-BG96, legend=:none, xlabel="\$t\$", ylabel="\$-r_t\$");
 
 julia> plot!(vars, color=:purple);
 
-julia> savefig(joinpath("build", "assets", "VaRplot.svg"))
+julia> ENV["GKSwstype']="svg"; savefig(joinpath("build", "assets", "VaRplot.svg"))
 ```
 
 ![VaR Plot](assets/VaRplot.svg)
