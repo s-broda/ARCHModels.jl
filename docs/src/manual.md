@@ -186,19 +186,16 @@ One of the primary uses of ARCH models is for estimating and forecasting risk me
 This section details the relevant functionality provided in this package.
 
 Basic in-sample estimates for the Value at Risk implied by an estimated [`ARCHModel`](@ref) can be obtained using [`VaRs`](@ref):
-
-```jldoctest MANUAL
-julia> am = fit(GARCH{1, 1}, BG96);
-
-julia> vars = VaRs(am, 0.04);
-
-julia> using Plots; gr();
-
-julia> plot(-BG96, legend=:none, xlabel="\$t\$", ylabel="\$-r_t\$");
-
-julia> plot!(vars, color=:purple);
-
-julia> ENV["GKSwstype']="svg"; savefig(joinpath("build", "assets", "VaRplot.svg"))
+```@setup PLOT
+using ARCH
+```
+```@repl PLOT
+am = fit(GARCH{1, 1}, BG96);
+vars = VaRs(am, 0.04);
+using Plots
+plot(-BG96, legend=:none, xlabel="\$t\$", ylabel="\$-r_t\$");
+plot!(vars, color=:purple);
+ENV["GKSwstype"]="svg"; savefig(joinpath("assets", "VaRplot.svg")); nothing # hide
 ```
 
 ![VaR Plot](assets/VaRplot.svg)
