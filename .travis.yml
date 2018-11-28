@@ -22,11 +22,11 @@ jobs:
   include:
     - stage: "Documentation"
       os: linux
-      #for GR:
-      #addons:
-      #  apt:
-      #    packages:
-      #      - qt5-default
+      addons:
+        apt:
+          packages:
+            - qt5-default
+            - texlive
       julia: 1.0
       script:
         - julia --project=docs/ -e 'using Pkg;
