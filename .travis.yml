@@ -13,8 +13,8 @@ matrix:
     - julia: nightly
 notifications:
   email: false
-script:
-  - - julia --check-bounds=yes --inline=no -e 'using Pkg;
+script: #don't use default script; need inline=no to get coverage correct; see https://github.com/JuliaLang/Pkg.jl/pull/870
+  - julia --check-bounds=yes --inline=no -e 'using Pkg;
                                                Pkg.develop(PackageSpec(path=pwd()));
                                                Pkg.instantiate();
                                                Pkg.build("ARCH");
