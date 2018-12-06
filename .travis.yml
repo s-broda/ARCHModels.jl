@@ -6,7 +6,7 @@ os:
 julia:
   - 1.0
 # - 1.0.0
-#  - nightly
+  - nightly
 
 matrix:
   allow_failures:
