@@ -108,7 +108,7 @@ Distribution parameters:
      Estimate Std.Error z value Pr(&gt;|z|)
 ν     4.18795  0.418697 10.0023   &lt;1e-22</code></pre><p>Passing the keyword argument <code>show_trace=false</code> will show the criterion for each model after it is estimated.</p><h2><a class="nav-anchor" id="Risk-measures-1" href="#Risk-measures-1">Risk measures</a></h2><p>One of the primary uses of ARCH models is for estimating and forecasting risk measures, such as <a href="https://en.wikipedia.org/wiki/Value_at_risk">Value at Risk</a> and <a href="https://en.wikipedia.org/wiki/Expected_shortfall">Expected Shortfall</a>. This section details the relevant functionality provided in this package.</p><p>Basic in-sample estimates for the Value at Risk implied by an estimated <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a> can be obtained using <a href="../reference/#ARCH.VaRs"><code>VaRs</code></a>:</p><div></div><pre><code class="language-julia-repl">julia&gt; am = fit(GARCH{1, 1}, BG96);
 
-julia&gt; vars = VaRs(am, 0.04);
+julia&gt; vars = VaRs(am, 0.05);
 
 julia&gt; using Plots
 

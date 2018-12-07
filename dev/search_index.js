@@ -157,7 +157,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Usage",
     "title": "Risk measures",
     "category": "section",
-    "text": "One of the primary uses of ARCH models is for estimating and forecasting risk measures, such as Value at Risk and Expected Shortfall. This section details the relevant functionality provided in this package.Basic in-sample estimates for the Value at Risk implied by an estimated ARCHModel can be obtained using VaRs:using ARCHam = fit(GARCH{1, 1}, BG96);\nvars = VaRs(am, 0.04);\nusing Plots\nplot(-BG96, legend=:none, xlabel=\"\\$t\\$\", ylabel=\"\\$-r_t\\$\");\nplot!(vars, color=:purple);\nENV[\"GKSwstype\"]=\"svg\"; savefig(joinpath(\"assets\", \"VaRplot.svg\")); nothing # hide(Image: VaR Plot)"
+    "text": "One of the primary uses of ARCH models is for estimating and forecasting risk measures, such as Value at Risk and Expected Shortfall. This section details the relevant functionality provided in this package.Basic in-sample estimates for the Value at Risk implied by an estimated ARCHModel can be obtained using VaRs:using ARCHam = fit(GARCH{1, 1}, BG96);\nvars = VaRs(am, 0.05);\nusing Plots\nplot(-BG96, legend=:none, xlabel=\"\\$t\\$\", ylabel=\"\\$-r_t\\$\");\nplot!(vars, color=:purple);\nENV[\"GKSwstype\"]=\"svg\"; savefig(joinpath(\"assets\", \"VaRplot.svg\")); nothing # hide(Image: VaR Plot)"
 },
 
 {
@@ -229,7 +229,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference guide",
     "title": "ARCH.ARCHLMTest",
     "category": "type",
-    "text": "ARCHLMTest <: HypothesisTest\n\nEngle\'s (1982) LM test for autoregressive conditional heteroskedasticity.\n\n\n\n\n\n"
+    "text": "ARCHLMTest(am::ARCHModel, p=max(o, p, q, ...))\n\nConduct Engle\'s (1982) LM test for autoregressive conditional heteroskedasticity with p lags in the test regression.\n\n\n\n\n\n"
 },
 
 {
@@ -237,7 +237,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference guide",
     "title": "ARCH.ARCHLMTest",
     "category": "type",
-    "text": "ARCHLMTest(am::ARCHModel, p=max(o, p, q, ...))\n\nConduct Engle\'s (1982) LM test for autoregressive conditional heteroskedasticity with p lags in the test regression.\n\n\n\n\n\n"
+    "text": "ARCHLMTest <: HypothesisTest\n\nEngle\'s (1982) LM test for autoregressive conditional heteroskedasticity.\n\n\n\n\n\n"
 },
 
 {
