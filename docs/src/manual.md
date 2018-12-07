@@ -191,7 +191,7 @@ using ARCH
 ```
 ```@repl PLOT
 am = fit(GARCH{1, 1}, BG96);
-vars = VaRs(am, 0.04);
+vars = VaRs(am, 0.05);
 using Plots
 plot(-BG96, legend=:none, xlabel="\$t\$", ylabel="\$-r_t\$");
 plot!(vars, color=:purple);
