@@ -265,6 +265,22 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "reference/#ARCH.DQTest",
+    "page": "Reference guide",
+    "title": "ARCH.DQTest",
+    "category": "type",
+    "text": "DQTest <: HypothesisTest\n\nEngle and Manganelli\'s (2004) out-of-sample dynamic quantile test.\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#ARCH.DQTest-Union{Tuple{T}, Tuple{Array{T,1},Array{T,1},AbstractFloat}, Tuple{Array{T,1},Array{T,1},AbstractFloat,Integer}} where T<:Real",
+    "page": "Reference guide",
+    "title": "ARCH.DQTest",
+    "category": "method",
+    "text": "DQTest(data, vars, p=1)\n\nConduct Engle and Manganelli\'s (2004) out-of-sample dynamic quantile test with p lags in the test regression. vars shoud be a vector of out-of-sample Value at Risk predictions.\n\n\n\n\n\n"
+},
+
+{
     "location": "reference/#ARCH.EGARCH",
     "page": "Reference guide",
     "title": "ARCH.EGARCH",
