@@ -1,4 +1,4 @@
-export ARCHLMTest
+export ARCHLMTest, DQTest
 
 """
     ARCHLMTest <: HypothesisTest
@@ -48,3 +48,49 @@ function show_params(io::IO, x::ARCHLMTest, ident)
 end
 
 pvalue(x::ARCHLMTest) = pvalue(Chisq(x.p), x.LM; tail=:right)
+
+
+"""
+    DQTest <: HypothesisTest
+Engle and Manganelli's (2004) out-of-sample dynamic quantile test.
+"""
+struct DQTest{T<:Real} <: HypothesisTest
+    n::Int         # number of observations
+    p::Int         # number of lags
+    level::T       # VaR level
+    DQ::T          # test statistic
+end
+
+"""
+    DQTest(data, vars, p=1)
+Conduct Engle and Manganelli's (2004) out-of-sample dynamic quantile test with
+p lags in the test regression. `vars` shoud be a vector of out-of-sample Value at Risk
+predictions.
+"""
+function DQTest(data::Vector{T}, vars::Vector{T}, level::AbstractFloat, p::Integer=1) where T<:Real
+    @assert p>0
+    @assert length(data) == length(vars)
+    n = length(data)
+    hit = (data .< -vars).*1 .- level
+    y = hit[p+1:n]
+    X = zeros(T, (n-p, p+2))
+    X[:, 1] .= one(T)
+    for i in 1:p
+        X[:, i+1] = hit[p-i+1:n-i]
+    end
+    X[:, p+2] = vars[p+1:n]
+    B = X \ y
+    DQ = B' * (X'*X) *B/(level*(1-level)) # y'X * inv(X'X) * X'y / (level*(1-level)); note 2 typos in the paper
+    DQTest(n, p, level, DQ)
+end
+
+testname(::DQTest) = "Engle and Manganelli's (2004) DQ test (out of sample)"
+population_param_of_interest(x::DQTest) = ("Wald statistic in auxiliary regression", 0, x.DQ)
+function show_params(io::IO, x::DQTest, ident)
+    println(io, ident, "sample size:                    ", x.n)
+    println(io, ident, "number of lags:                 ", x.p)
+    println(io, ident, "VaR level:                      ", x.level)
+    println(io, ident, "DQ statistic:                   ", x.DQ)
+end
+
+pvalue(x::DQTest) = pvalue(Chisq(x.p+2), x.DQ; tail=:right)

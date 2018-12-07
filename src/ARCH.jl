@@ -15,6 +15,7 @@
 #constructors for meanspec, distributions should check length of coef vector
 #logconst needs to return the correct type
 #rename ARCH -> ARCHModels, _ARCH-> ARCH, ARCHModel -> UnivariateARCHModel, make new type ARCHModel
+#document and test DQtest. Also, better API? Level as kward is prob better, including elsewhere.
 """
 The ARCH package for Julia. For documentation, see https://s-broda.github.io/ARCH.jl/dev.
 """
