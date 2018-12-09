@@ -35,7 +35,7 @@ julia> ARCHLMTest(BG96, 1)
 ARCH LM test for conditional heteroskedasticity
 -----------------------------------------------
 Population details:
-    parameter of interest:   T⋅R² in auxiliary regression of uₜ² on an intercept and its own lags
+    parameter of interest:   T⋅R² in auxiliary regression of rₜ² on an intercept and its own lags
     value under h_0:         0
     point estimate:          98.12107516935244
 
