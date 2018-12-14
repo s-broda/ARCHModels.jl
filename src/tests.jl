@@ -62,10 +62,10 @@ struct DQTest{T<:Real} <: HypothesisTest
 end
 
 """
-    DQTest(data, vars, p=1)
+    DQTest(data, vars, level, p=1)
 Conduct Engle and Manganelli's (2004) out-of-sample dynamic quantile test with
 p lags in the test regression. `vars` shoud be a vector of out-of-sample Value at Risk
-predictions.
+predictions at level `level`.
 """
 function DQTest(data::Vector{T}, vars::Vector{T}, level::AbstractFloat, p::Integer=1) where T<:Real
     @assert p>0
