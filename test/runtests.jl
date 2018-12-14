@@ -254,4 +254,9 @@ end
     @test pvalue(LM) ≈ 0.1139758664282619
     str = sprint(show, LM)
     @test startswith(str, "ARCH LM test for conditional heteroskedasticity")
+    vars = VaRs(am, 0.01)
+    DQ = DQTest(BG96, VaRs(am), 0.01)
+    @test pvalue(DQ) ≈ 2.3891461144184955e-11
+    str = sprint(show, DQ)
+    @test startswith(str, "Engle and Manganelli's (2004) DQ test (out of sample)")
 end
