@@ -209,6 +209,37 @@ The [`predict(am::ARCHModel)`](@ref) method can be used to construct one-step ah
 The keyword argument `what` controls which object is predicted;
 the choices are `:volatility` (the default), `:variance`, `:return`, and `:VaR`. The VaR level can be controlled with the keyword argument `level`.
 
+One way to use `predict` is in a backtesting exercise. The following code snippet constructs out-of-sample VaR forecasts for the `BG96` data by re-estimating the model
+in a rolling window fashion, and then tests the correctness of the VaR specification with `DQTest`.
+
+```jldoctest MANUAL; filter=r"[0-9\.]+"
+T = length(BG96);
+windowsize = 1000;
+vars = similar(BG96);
+for t = windowsize+1:T-1
+    m = fit(GARCH{1, 1}, BG96[t-windowsize:t]);
+    vars[t+1] = predict(m, :VaR; level=0.05);
+end
+DQTest(BG96[windowsize+1:end], vars[windowsize+1:end], 0.05)
+
+# output
+Engle and Manganelli's (2004) DQ test (out of sample)
+-----------------------------------------------------
+Population details:
+    parameter of interest:   Wald statistic in auxiliary regression
+    value under h_0:         0
+    point estimate:          2.5272613188161177
+
+Test summary:
+    outcome with 95% confidence: fail to reject h_0
+    p-value:                     0.4704
+
+Details:
+    sample size:                    974
+    number of lags:                 1
+    VaR level:                      0.05
+    DQ statistic:                   2.5272613188161177
+```
 ## Model diagnostics and specification tests
 Testing volatility models in general relies on the estimated conditional volatilities ``\hat{\sigma}_t`` and the standardized residuals
 ``\hat{z}_t\equiv (r_t-\hat{\mu}_t)/\hat{\sigma}_t``, accessible via [`volatilities(::ARCHModel)`](@ref) and [`residuals(::ARCHModel)`](@ref), respectively. The non-standardized
