@@ -165,7 +165,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Usage",
     "title": "Forecasting",
     "category": "section",
-    "text": "The predict(am::ARCHModel) method can be used to construct one-step ahead forecasts for a number of quantities. Its signature is    predict(am::ARCHModel, what=:volatility; level=0.01)The keyword argument what controls which object is predicted; the choices are :volatility (the default), :variance, :return, and :VaR. The VaR level can be controlled with the keyword argument level."
+    "text": "The predict(am::ARCHModel) method can be used to construct one-step ahead forecasts for a number of quantities. Its signature is    predict(am::ARCHModel, what=:volatility; level=0.01)The keyword argument what controls which object is predicted; the choices are :volatility (the default), :variance, :return, and :VaR. The VaR level can be controlled with the keyword argument level.One way to use predict is in a backtesting exercise. The following code snippet constructs out-of-sample VaR forecasts for the BG96 data by re-estimating the model in a rolling window fashion, and then tests the correctness of the VaR specification with DQTest.T = length(BG96);\nwindowsize = 1000;\nvars = similar(BG96);\nfor t = windowsize+1:T-1\n    m = fit(GARCH{1, 1}, BG96[t-windowsize:t]);\n    vars[t+1] = predict(m, :VaR; level=0.05);\nend\nDQTest(BG96[windowsize+1:end], vars[windowsize+1:end], 0.05)\n\n# output\nEngle and Manganelli\'s (2004) DQ test (out of sample)\n-----------------------------------------------------\nPopulation details:\n    parameter of interest:   Wald statistic in auxiliary regression\n    value under h_0:         0\n    point estimate:          2.5272613188161177\n\nTest summary:\n    outcome with 95% confidence: fail to reject h_0\n    p-value:                     0.4704\n\nDetails:\n    sample size:                    974\n    number of lags:                 1\n    VaR level:                      0.05\n    DQ statistic:                   2.5272613188161177"
 },
 
 {
@@ -277,7 +277,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference guide",
     "title": "ARCH.DQTest",
     "category": "method",
-    "text": "DQTest(data, vars, p=1)\n\nConduct Engle and Manganelli\'s (2004) out-of-sample dynamic quantile test with p lags in the test regression. vars shoud be a vector of out-of-sample Value at Risk predictions.\n\n\n\n\n\n"
+    "text": "DQTest(data, vars, level, p=1)\n\nConduct Engle and Manganelli\'s (2004) out-of-sample dynamic quantile test with p lags in the test regression. vars shoud be a vector of out-of-sample Value at Risk predictions at level level.\n\n\n\n\n\n"
 },
 
 {
@@ -414,22 +414,6 @@ var documenterSearchIndex = {"docs": [
     "title": "ARCH.StdT",
     "category": "method",
     "text": "StdT(v)\n\nCreate a standardized t distribution with v degrees of freedom. ν` can be passed as a scalar or vector.\n\n\n\n\n\n"
-},
-
-{
-    "location": "reference/#ARCH.TGARCH",
-    "page": "Reference guide",
-    "title": "ARCH.TGARCH",
-    "category": "type",
-    "text": "TGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}\n\n\n\n\n\n"
-},
-
-{
-    "location": "reference/#ARCH.TGARCH-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}, Tuple{o}} where T where q where p where o",
-    "page": "Reference guide",
-    "title": "ARCH.TGARCH",
-    "category": "method",
-    "text": "TGARCH{o, p, q}(coefs) -> VolatilitySpec\n\nConstruct a TGARCH specification with the given parameters.\n\nExample:\n\njulia> TGARCH{1, 1, 1}([1., .04, .9, .01])\nTGARCH{1,1,1} specification.\n\n               ω   γ₁  β₁   α₁\nParameters:  1.0 0.04 0.9 0.01\n\n\n\n\n\n"
 },
 
 {

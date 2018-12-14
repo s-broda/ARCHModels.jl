@@ -114,7 +114,32 @@ julia&gt; using Plots
 
 julia&gt; plot(-BG96, legend=:none, xlabel=&quot;\$t\$&quot;, ylabel=&quot;\$-r_t\$&quot;);
 
-julia&gt; plot!(vars, color=:purple);</code></pre><p><img src="../assets/VaRplot.svg" alt="VaR Plot"/></p><h2><a class="nav-anchor" id="Forecasting-1" href="#Forecasting-1">Forecasting</a></h2><p>The <a href="../reference/#StatsBase.predict-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}, Tuple{ARCHModel{T,VS,SD,MS},Any}} where MS where SD where VS where T"><code>predict(am::ARCHModel)</code></a> method can be used to construct one-step ahead forecasts for a number of quantities. Its signature is</p><pre><code class="language-none">    predict(am::ARCHModel, what=:volatility; level=0.01)</code></pre><p>The keyword argument <code>what</code> controls which object is predicted; the choices are <code>:volatility</code> (the default), <code>:variance</code>, <code>:return</code>, and <code>:VaR</code>. The VaR level can be controlled with the keyword argument <code>level</code>.</p><h2><a class="nav-anchor" id="Model-diagnostics-and-specification-tests-1" href="#Model-diagnostics-and-specification-tests-1">Model diagnostics and specification tests</a></h2><p>Testing volatility models in general relies on the estimated conditional volatilities <span>$\hat{\sigma}_t$</span> and the standardized residuals <span>$\hat{z}_t\equiv (r_t-\hat{\mu}_t)/\hat{\sigma}_t$</span>, accessible via <a href="../reference/#ARCH.volatilities-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>volatilities(::ARCHModel)</code></a> and <a href="../reference/#StatsBase.residuals-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>residuals(::ARCHModel)</code></a>, respectively. The non-standardized residuals <span>$\hat{u}_t\equiv r_t-\hat{\mu}_t$</span> can be obtained by passing <code>standardized=false</code> as a keyword argument to <a href="../reference/#StatsBase.residuals-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>residuals</code></a>.</p><p>One possibility to test a volatility specification is to apply the ARCH-LM test to the standardized residuals. This is achieved by calling <a href="../reference/#ARCH.ARCHLMTest"><code>ARCHLMTest</code></a> on the estimated <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a>:</p><pre><code class="language-julia-repl">julia&gt; am = fit(GARCH{1, 1}, BG96);
+julia&gt; plot!(vars, color=:purple);</code></pre><p><img src="../assets/VaRplot.svg" alt="VaR Plot"/></p><h2><a class="nav-anchor" id="Forecasting-1" href="#Forecasting-1">Forecasting</a></h2><p>The <a href="../reference/#StatsBase.predict-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}, Tuple{ARCHModel{T,VS,SD,MS},Any}} where MS where SD where VS where T"><code>predict(am::ARCHModel)</code></a> method can be used to construct one-step ahead forecasts for a number of quantities. Its signature is</p><pre><code class="language-none">    predict(am::ARCHModel, what=:volatility; level=0.01)</code></pre><p>The keyword argument <code>what</code> controls which object is predicted; the choices are <code>:volatility</code> (the default), <code>:variance</code>, <code>:return</code>, and <code>:VaR</code>. The VaR level can be controlled with the keyword argument <code>level</code>.</p><p>One way to use <code>predict</code> is in a backtesting exercise. The following code snippet constructs out-of-sample VaR forecasts for the <code>BG96</code> data by re-estimating the model in a rolling window fashion, and then tests the correctness of the VaR specification with <code>DQTest</code>.</p><pre><code class="language-julia">T = length(BG96);
+windowsize = 1000;
+vars = similar(BG96);
+for t = windowsize+1:T-1
+    m = fit(GARCH{1, 1}, BG96[t-windowsize:t]);
+    vars[t+1] = predict(m, :VaR; level=0.05);
+end
+DQTest(BG96[windowsize+1:end], vars[windowsize+1:end], 0.05)
+
+# output
+Engle and Manganelli&#39;s (2004) DQ test (out of sample)
+-----------------------------------------------------
+Population details:
+    parameter of interest:   Wald statistic in auxiliary regression
+    value under h_0:         0
+    point estimate:          2.5272613188161177
+
+Test summary:
+    outcome with 95% confidence: fail to reject h_0
+    p-value:                     0.4704
+
+Details:
+    sample size:                    974
+    number of lags:                 1
+    VaR level:                      0.05
+    DQ statistic:                   2.5272613188161177</code></pre><h2><a class="nav-anchor" id="Model-diagnostics-and-specification-tests-1" href="#Model-diagnostics-and-specification-tests-1">Model diagnostics and specification tests</a></h2><p>Testing volatility models in general relies on the estimated conditional volatilities <span>$\hat{\sigma}_t$</span> and the standardized residuals <span>$\hat{z}_t\equiv (r_t-\hat{\mu}_t)/\hat{\sigma}_t$</span>, accessible via <a href="../reference/#ARCH.volatilities-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>volatilities(::ARCHModel)</code></a> and <a href="../reference/#StatsBase.residuals-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>residuals(::ARCHModel)</code></a>, respectively. The non-standardized residuals <span>$\hat{u}_t\equiv r_t-\hat{\mu}_t$</span> can be obtained by passing <code>standardized=false</code> as a keyword argument to <a href="../reference/#StatsBase.residuals-Union{Tuple{ARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T"><code>residuals</code></a>.</p><p>One possibility to test a volatility specification is to apply the ARCH-LM test to the standardized residuals. This is achieved by calling <a href="../reference/#ARCH.ARCHLMTest"><code>ARCHLMTest</code></a> on the estimated <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a>:</p><pre><code class="language-julia-repl">julia&gt; am = fit(GARCH{1, 1}, BG96);
 
 julia&gt; ARCHLMTest(am, 4) # 4 lags in test regression.
 ARCH LM test for conditional heteroskedasticity
