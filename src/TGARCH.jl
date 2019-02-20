@@ -1,6 +1,7 @@
-#make _ARCH, GARCH special cases
-#docs, tests
 export TGARCH
+export GARCH
+export _ARCH
+
 
 """
     TGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}
@@ -16,15 +17,54 @@ end
 """
     TGARCH{o, p, q}(coefs) -> VolatilitySpec
 Construct a TGARCH specification with the given parameters.
+
 # Example:
 ```jldoctest
 julia> TGARCH{1, 1, 1}([1., .04, .9, .01])
 TGARCH{1,1,1} specification.
+
                ω   γ₁  β₁   α₁
 Parameters:  1.0 0.04 0.9 0.01
 ```
 """
 TGARCH{o, p, q}(coefs::Vector{T}) where {o, p, q, T}  = TGARCH{o, p, q, T}(coefs)
+
+"""
+    GARCH{p, q, T<:AbstractFloat} <: VolatilitySpec{T}
+---
+    GARCH{p, q}(coefs) -> VolatilitySpec
+
+Construct a GARCH specification with the given parameters.
+
+# Example:
+```jldoctest
+julia> GARCH{2, 1}([1., .3, .4, .05 ])
+TGARCH{0,2,1} specification.
+
+               ω  β₁  β₂   α₁
+Parameters:  1.0 0.3 0.4 0.05
+```
+
+"""
+const GARCH = TGARCH{0}
+
+"""
+    _ARCH{q, T<:AbstractFloat} <: VolatilitySpec{T}
+---
+    _ARCH{q}(coefs) -> VolatilitySpec
+
+Construct an _ARCH specification with the given parameters.
+
+# Example:
+```jldoctest
+julia> _ARCH{2}([1., .3, .4])
+TGARCH{0,0,2} specification.
+
+               ω  α₁  α₂
+Parameters:  1.0 0.3 0.4
+```
+"""
+const _ARCH = GARCH{0}
 
 @inline nparams(::Type{<:TGARCH{o, p, q}}) where {o, p, q} = o+p+q+1
 

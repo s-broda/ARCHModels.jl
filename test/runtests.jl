@@ -3,7 +3,16 @@ using Test
 using ARCH
 using Random
 T = 10^4;
-@testset "GARCH" begin
+@testset "TGARCH" begin
+    Random.seed!(1)
+    spec = TGARCH{1,1,1}([1., .05, .9, .01]);
+    am = simulate(spec, T);
+    am = selectmodel(TGARCH, am.data; meanspec=NoIntercept, show_trace=true, maxlags=2)
+    @test all(isapprox.(coef(am), [0.9439667311150648
+                                   0.04573706835008625
+                                   0.9043902283152758
+                                   0.012555948398277313], rtol=1e-4))
+   #everything below is just pure GARCH, in fact
     Random.seed!(1)
     spec = GARCH{1, 1}([1., .9, .05])
     am0 = simulate(spec, T);
@@ -41,18 +50,42 @@ T = 10^4;
     @test isfitted(am2) == false
     io = IOBuffer()
     str = sprint(io -> show(io, am2))
-    @test startswith(str, "\nGARCH{1,1}")
+    @test startswith(str, "\nTGARCH{0,1,1}")
     fit!(am2)
     @test isfitted(am2) == true
     io = IOBuffer()
     str = sprint(io -> show(io, am2))
-    @test startswith(str, "\nGARCH{1,1}")
+    @test startswith(str, "\nTGARCH{0,1,1}")
     am3 = fit(am2)
     @test isfitted(am3) == true
     @test all(am2.spec.coefs .== am.spec.coefs)
     @test all(am3.spec.coefs .== am2.spec.coefs)
 end
+@testset "ARCH" begin
+    Random.seed!(1);
+    spec = _ARCH{2}([1., .3, .4]);
+    am = simulate(spec, T);
+    @test selectmodel(_ARCH, am.data).spec.coefs == fit(_ARCH{2}, am.data).spec.coefs
+end
 
+@testset "EGARCH" begin
+    Random.seed!(1)
+    am = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), T; meanspec=Intercept(3))
+    am7 = selectmodel(EGARCH, am.data; maxlags=2, show_trace=true)
+    #with unconditional as presample:
+    #@test all(isapprox(coef(am7), [0.08502955535533116,
+    #                               0.004709708474515596,
+    #                               0.9164935566284109,
+    #                               0.09325947325535855,
+    #                               3.0137461089470308], rtol=1e-4))
+    @test all(isapprox(coef(am7), [0.08504883253172882,
+                                   0.0047015720582706125,
+                                   0.9164488571272553,
+                                   0.09323297680588628,
+                                   3.013732273404755], rtol=1e-4))
+
+    @test coefnames(EGARCH{2, 2, 2}) == ["ω", "γ₁", "γ₂", "β₁", "β₂", "α₁", "α₂"]
+end
 @testset "StatisticalModel" begin
     #not implemented: adjr2, deviance, mss, nulldeviance, r2, rss, weights
     Random.seed!(1);
@@ -131,32 +164,6 @@ end
                                   0.027707836268720806], rtol=1e-4))
 
     @test typeof(NoIntercept()) == NoIntercept{Float64}
-end
-
-@testset "ARCH" begin
-    Random.seed!(1);
-    spec = _ARCH{2}([1., .3, .4]);
-    am = simulate(spec, T);
-    @test selectmodel(_ARCH, am.data).spec.coefs == fit(_ARCH{2}, am.data).spec.coefs
-end
-
-@testset "EGARCH" begin
-    Random.seed!(1)
-    am = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), T; meanspec=Intercept(3))
-    am7 = selectmodel(EGARCH, am.data; maxlags=2, show_trace=true)
-    #with unconditional as presample:
-    #@test all(isapprox(coef(am7), [0.08502955535533116,
-    #                               0.004709708474515596,
-    #                               0.9164935566284109,
-    #                               0.09325947325535855,
-    #                               3.0137461089470308], rtol=1e-4))
-    @test all(isapprox(coef(am7), [0.08504883253172882,
-                                   0.0047015720582706125,
-                                   0.9164488571272553,
-                                   0.09323297680588628,
-                                   3.013732273404755], rtol=1e-4))
-
-    @test coefnames(EGARCH{2, 2, 2}) == ["ω", "γ₁", "γ₂", "β₁", "β₂", "α₁", "α₂"]
 end
 
 @testset "VaR" begin
