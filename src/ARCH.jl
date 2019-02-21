@@ -114,7 +114,7 @@ Create an ARCHModel.
 ```jldoctest
 julia> ARCHModel(GARCH{1, 1}([1., .9, .05]), randn(10))
 
-GARCH{1,1} model with Gaussian errors, T=10.
+TGARCH{0,1,1} model with Gaussian errors, T=10.
 
 
                              ω  β₁   α₁
@@ -635,8 +635,8 @@ end
 
 include("meanspecs.jl")
 include("standardizeddistributions.jl")
-include("GARCH.jl")
 include("EGARCH.jl")
+include("TGARCH.jl")
 include("tests.jl")
 
 ## some speed experiments

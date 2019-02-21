@@ -11,8 +11,9 @@ r_t=\sigma_tz_t,\quad z_t\sim\mathrm{N}(0,1),\quad
 This can be extended by including additional lags of past squared returns and volatilities: the GARCH(p, q) model  has ``q`` of the former and ``p`` of the latter. Another generalization is to allow  ``z_t`` to follow other, non-Gaussian distributions.
 
 This package implements simulation, estimation, and model selection for the following models:
-
+  * ARCH(q)
   * GARCH(p, q)
+  * TGARCH(o, p, q)
   * EGARCH(o, p q)
 
 As for error distributions, the user may choose among the following:

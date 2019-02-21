@@ -57,7 +57,7 @@ Having established the presence of volatility clustering, we can begin by fittin
 ```
 julia> fit(GARCH{1, 1}, BG96)
 
-GARCH{1,1} model with Gaussian errors, T=1974.
+TGARCH{0,1,1} model with Gaussian errors, T=1974.
 
 
 Mean equation parameters:
@@ -113,7 +113,7 @@ an [`ARCHModel`](@ref) containing the data, and then using [`fit!`](@ref) to mod
 ```jldoctest MANUAL
 julia> am = ARCHModel(GARCH{1, 1}([1., 0., 0.]), BG96)
 
-GARCH{1,1} model with Gaussian errors, T=1974.
+TGARCH{0, 1,1} model with Gaussian errors, T=1974.
 
 
                              ω  β₁  α₁
@@ -123,7 +123,7 @@ Volatility parameters:     1.0 0.0 0.0
 
 julia> fit!(am)
 
-GARCH{1,1} model with Gaussian errors, T=1974.
+TGARCH{0, 1,1} model with Gaussian errors, T=1974.
 
 
 Volatility parameters:
@@ -274,7 +274,7 @@ To simulate from an [`ARCHModel`](@ref), use [`simulate`](@ref). You can either 
 ```jldoctest MANUAL
 julia> am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=500, meanspec=Intercept(5.), dist=StdT(3.))
 
-GARCH{1,1} model with Student's t errors, T=1000.
+TGARCH{0,1,1} model with Student's t errors, T=1000.
 
 
                              μ
