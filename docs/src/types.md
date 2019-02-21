@@ -8,11 +8,11 @@ where ``z_t`` is identically and independently distributed according to some law
 This package represents a (G)ARCH model as an instance of [`ARCHModel`](@ref), which implements the interface of `StatisticalModel` from [`StatsBase`](http://juliastats.github.io/StatsBase.jl/stable/statmodels.html). An instance of this type contains a vector of data (such as equity returns), and encapsulates information about the [volatility specification](@ref volaspec) (e.g., [GARCH](@ref) or [EGARCH](@ref)), the [mean specification](@ref meanspec) (e.g., whether an intercept is included), and the [error distribution](@ref Distributions).
 
 ## [Volatility specifications](@id volaspec)
-Volatility specifications describe the evolution of ``\sigma_t``. They are modelled as subtypes of [`VolatilitySpec`](@ref). There is one type for each class of (G)ARCH model, parameterized by numbers of lags (e.g., ``p``, ``q``, etc). For each volatility specification, the order of the parameters in the coefficient vector is such that all parameters pertaining to the first type parameter (e.g., ``p``) appear before those pertaining to the second (e.g., ``q``).
+Volatility specifications describe the evolution of ``\sigma_t``. They are modelled as subtypes of [`VolatilitySpec`](@ref). There is one type for each class of (G)ARCH model, parameterized by the number(s) of lags (e.g., ``p``, ``q`` for a GARCH(p, q) model). For each volatility specification, the order of the parameters in the coefficient vector is such that all parameters pertaining to the first type parameter (``p``) appear before those pertaining to the second (``q``).
 ### ARCH
 The ARCH(q) volatility specification, due to [Engle (1982)](https://doi.org/10.2307/1912773 ), is
 ```math
-\sigma_t^2=\omega+\sum_{i=1}^q\alpha_i r_{t-i}^2.
+\sigma_t^2=\omega+\sum_{i=1}^q\alpha_i r_{t-i}^2, \quad \omega, \alpha_i>0,\quad \sum_{i=1}^{q} \alpha_i<1.
 ```
 The corresponding type is [`_ARCH{q}`](@ref). For example, an ARCH(2) model with ``ω=1``, ``α₁=.5``, and ``α₂=.4`` is obtained with
 ```jldoctest TYPES
@@ -26,7 +26,7 @@ Parameters:  1.0 0.5 0.4
 ```
 
 ### GARCH
-The GARCH(p, q) model, due to [Bollerslev (1986)](https://doi.org/10.1016/0304-4076(86)90063-1) specifies the volatility as
+The GARCH(p, q) model, due to [Bollerslev (1986)](https://doi.org/10.1016/0304-4076(86)90063-1), specifies the volatility as
 ```math
 \sigma_t^2=\omega+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i r_{t-i}^2, \quad \omega, \alpha_i, \beta_i>0,\quad \sum_{i=1}^{\max p,q} \alpha_i+\beta_i<1.
 ```
@@ -43,10 +43,10 @@ Parameters:  1.0 0.9 0.05
 This creates a GARCH(1, 1) specification with ``ω=1``, ``β=.9``, and ``α=.05``.
 
 ### TGARCH
-As may have been guessed from the output above, the ARCH and GARCH models are actually special cases of a more general class of models, known as TGARCH (the T is for threshold), due to [Glosten, Jagannathan, and Runkle](https://doi.org/10.1111/j.1540-6261.1993.tb05128.x), given by
+As may have been guessed from the output above, the ARCH and GARCH models are actually special cases of a more general class of models, known as TGARCH (Threshold GARCH), due to [Glosten, Jagannathan, and Runkle](https://doi.org/10.1111/j.1540-6261.1993.tb05128.x). The TGARCH{o, p, q} model takes the form
 
 ```math
-\sigma_t^2=\omega+\sum_{i=1}^o\gamma_i 1_{r_{t-i}<0} r_{t-i}^2 +\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i r_{t-i}^2, \quad \omega, \alpha_i, \beta_i, \gamma_i>0,\quad \sum_{i=1}^{\max o,p,q} \alpha_i+\beta_i+\gamma_i/2<1.
+\sigma_t^2=\omega+\sum_{i=1}^o\gamma_i  r_{t-i}^2 1_{r_{t-i}<0}+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i r_{t-i}^2, \quad \omega, \alpha_i, \beta_i, \gamma_i>0, \sum_{i=1}^{\max o,p,q} \alpha_i+\beta_i+\gamma_i/2<1.
 ```
 
 The TGARCH model allows the volatility to react differently (typically more strongly) to negative shocks, a feature known as the (statistical) leverage effect. Is available as [`TGARCH{o, p, q}`](@ref):
@@ -67,7 +67,7 @@ The EGARCH{o, p, q} volatility specification, due to [Nelson (1991)](https://doi
 \log(\sigma_t^2)=\omega+\sum_{i=1}^o\gamma_i z_{t-i}+\sum_{i=1}^p\beta_i \log(\sigma_{t-i}^2)+\sum_{i=1}^q\alpha_i (|z_{t-i}|-\sqrt{2/\pi}), \quad z_t=r_t/\sigma_t,\quad \sum_{i=1}^{p}\beta_i<1.
 ```
 
-The corresponding type is [`EGARCH{o, p, q}`](@ref):
+Like the TGARCH model, it can account for the leverage effect. The corresponding type is [`EGARCH{o, p, q}`](@ref):
 ```jldoctest TYPES
 julia> EGARCH{1, 1, 1}([-0.1, .1, .9, .04])
 EGARCH{1,1,1} specification.
