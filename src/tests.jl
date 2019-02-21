@@ -11,11 +11,11 @@ struct ARCHLMTest{T<:Real} <: HypothesisTest
 end
 
 """
-    ARCHLMTest(am::ARCHModel, p=max(o, p, q, ...))
+    ARCHLMTest(am::UnivariateARCHModel, p=max(o, p, q, ...))
 Conduct Engle's (1982) LM test for autoregressive conditional heteroskedasticity with
 p lags in the test regression.
 """
-ARCHLMTest(am::ARCHModel, p=presample(typeof(am.spec))) = ARCHLMTest(residuals(am), p)
+ARCHLMTest(am::UnivariateARCHModel, p=presample(typeof(am.spec))) = ARCHLMTest(residuals(am), p)
 
 """
     ARCHLMTest(u::Vector, p::Integer)
