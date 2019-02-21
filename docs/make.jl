@@ -1,7 +1,7 @@
 push!(LOAD_PATH,"../src/")
-using Documenter, ARCH
-makedocs(modules=[ARCH],
-        sitename="ARCH.jl",
+using Documenter, ARCHModels
+makedocs(modules=[ARCHModels],
+        sitename="ARCHModels.jl",
         assets=["assets/invenia.css"],
         doctest=true,
         strict=true,
@@ -12,4 +12,4 @@ makedocs(modules=[ARCH],
                  ]
         )
 
-deploydocs(repo="github.com/s-broda/ARCH.jl.git")
+deploydocs(repo="github.com/s-broda/ARCHModels.jl.git")
