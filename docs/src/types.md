@@ -16,7 +16,7 @@ The ARCH(q) volatility specification, due to [Engle (1982)](https://doi.org/10.2
 ```
 The corresponding type is [`ARCH{q}`](@ref). For example, an ARCH(2) model with ``ω=1``, ``α₁=.5``, and ``α₂=.4`` is obtained with
 ```jldoctest TYPES
-julia> using ARCH
+julia> using ARCHModels
 
 julia> ARCH{2}([1., .5, .4])
 TGARCH{0,0,2} specification.
@@ -32,7 +32,7 @@ The GARCH(p, q) model, due to [Bollerslev (1986)](https://doi.org/10.1016/0304-4
 ```
 It is available as [`GARCH{p, q}`](@ref):
 ```jldoctest TYPES
-julia> using ARCH
+julia> using ARCHModels
 
 julia> GARCH{1, 1}([1., .9, .05])
 TGARCH{0,1,1} specification.
@@ -52,7 +52,7 @@ As may have been guessed from the output above, the ARCH and GARCH models are ac
 The TGARCH model allows the volatility to react differently (typically more strongly) to negative shocks, a feature known as the (statistical) leverage effect. Is available as [`TGARCH{o, p, q}`](@ref):
 
 ```jldoctest TYPES
-julia> using ARCH
+julia> using ARCHModels
 
 julia> TGARCH{1, 1, 1}([1., .04, .9, .01])
 TGARCH{1,1,1} specification.
@@ -121,7 +121,7 @@ A final remark concerns the domain of the parameters: the estimation process rel
 ```jldoctest TYPES
 julia> const MyStdT = Standardized{TDist};
 
-julia> ARCH.startingvals(::Type{<:MyStdT}, data::Vector{T}) where T = T[3.]
+julia> ARCHModels.startingvals(::Type{<:MyStdT}, data::Vector{T}) where T = T[3.]
 ```
 ## Working with UnivariateARCHModels
 The constructor for [`UnivariateARCHModel`](@ref) takes two mandatory arguments: an instance of a subtype of [`VolatilitySpec`](@ref), and a vector of returns. The mean specification and error distribution can be changed via the keyword arguments `meanspec` and `dist`, which respectively default to `NoIntercept` and `StdNormal`.

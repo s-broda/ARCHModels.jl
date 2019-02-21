@@ -10,7 +10,7 @@ We will be using the data from [Bollerslev and Ghysels (1986)](https://doi.org/1
 implementations of (G)ARCH models (see, e.g., [Brooks et.al. (2001)](https://doi.org/10.1016/S0169-2070(00)00070-4). We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:
 
 ```jldoctest MANUAL
-julia> using ARCH
+julia> using ARCHModels
 
 julia> autocor(BG96.^2, 1:10, demean=true) # re-exported from StatsBase
 10-element Array{Float64,1}:
@@ -187,7 +187,7 @@ This section details the relevant functionality provided in this package.
 
 Basic in-sample estimates for the Value at Risk implied by an estimated [`UnivariateARCHModel`](@ref) can be obtained using [`VaRs`](@ref):
 ```@setup PLOT
-using ARCH
+using ARCHModels
 ```
 ```@repl PLOT
 am = fit(GARCH{1, 1}, BG96);

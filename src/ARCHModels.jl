@@ -364,13 +364,13 @@ end
 
 function informationmatrix(am::UnivariateARCHModel; expected::Bool=true)
 	expected && error("expected informationmatrix is not implemented for UnivariateARCHModel. Use expected=false.")
-	g = x -> sum(ARCH.logliks(typeof(am.spec), typeof(am.dist), typeof(am.meanspec), am.data, x))
+	g = x -> sum(logliks(typeof(am.spec), typeof(am.dist), typeof(am.meanspec), am.data, x))
 	H = ForwardDiff.hessian(g, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
 	J = -H/nobs(am)
 end
 
 function scores(am::UnivariateARCHModel)
-	f = x -> ARCH.logliks(typeof(am.spec), typeof(am.dist), typeof(am.meanspec), am.data, x)
+	f = x -> logliks(typeof(am.spec), typeof(am.dist), typeof(am.meanspec), am.data, x)
 	S = ForwardDiff.jacobian(f, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
 end
 

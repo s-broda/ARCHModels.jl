@@ -92,7 +92,7 @@ end
     spec = GARCH{1, 1}([1., .9, .05])
     am = simulate(spec, T)
     fit!(am)
-    @test loglikelihood(am) ==  ARCH.loglik!(Float64[],
+    @test loglikelihood(am) ==  ARCHModels.loglik!(Float64[],
                                                                 Float64[],
                                                                 Float64[],
                                                                 typeof(spec),
@@ -177,13 +177,13 @@ end
     #with unconditional as presample:
     #@test_warn "non-positive" stderror(UnivariateARCHModel(GARCH{3, 0}([1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
     @test_logs (:warn, "non-positive variance encountered; vcov matrix is inaccurate.") stderror(UnivariateARCHModel(GARCH{1, 0}( [1.0, .1]), [1., 1.]))
-    e = @test_throws ARCH.NumParamError ARCH.loglik!(Float64[], Float64[], Float64[], GARCH{1, 1}, StdNormal{Float64},
+    e = @test_throws ARCHModels.NumParamError ARCHModels.loglik!(Float64[], Float64[], Float64[], GARCH{1, 1}, StdNormal{Float64},
                                                      NoIntercept{Float64}, zeros(T),
                                                      [0., 0., 0., 0.]
                                                      )
     str = sprint(showerror, e.value)
     @test startswith(str, "incorrect number of parameters")
-    @test_throws ARCH.NumParamError GARCH{1, 1}([.1])
+    @test_throws ARCHModels.NumParamError GARCH{1, 1}([.1])
     e = @test_throws ErrorException predict(UnivariateARCHModel(GARCH{0, 0}([1.]), zeros(10)), :blah)
     str = sprint(showerror, e.value)
     @test startswith(str, "Prediction target blah unknown")
@@ -197,7 +197,7 @@ end
         @test typeof(StdNormal())==typeof(StdNormal(Float64[]))
         @test fit(StdNormal, data).coefs == Float64[]
         @test coefnames(StdNormal) == String[]
-        @test ARCH.distname(StdNormal) == "Gaussian"
+        @test ARCHModels.distname(StdNormal) == "Gaussian"
         @test quantile(StdNormal(), .05) ≈ -1.6448536269514724
     end
     @testset "Student" begin
@@ -206,7 +206,7 @@ end
         spec = GARCH{1, 1}([1., .9, .05])
         @test fit(StdT, data).coefs[1] ≈ 3.972437329588246 rtol=1e-4
         @test coefnames(StdT) == ["ν"]
-        @test ARCH.distname(StdT) == "Student's t"
+        @test ARCHModels.distname(StdT) == "Student's t"
         @test quantile(StdT(3), .05) ≈ -2.3533634348018255
         Random.seed!(1);
         datat = simulate(spec, T; dist=StdT(4)).data
@@ -243,13 +243,13 @@ end
         data = rand(StdGED(1), T)
         @test fit(StdGED, data).coefs[1] ≈ 1.0193004687300224 rtol=1e-4
         @test coefnames(StdGED) == ["p"]
-        @test ARCH.distname(StdGED) == "GED"
+        @test ARCHModels.distname(StdGED) == "GED"
         @test quantile(StdGED(1), .05) ≈ -1.6281735335151468
     end
     @testset "Standardized" begin
         using Distributions
         MyStdT=Standardized{TDist}
-        ARCH.startingvals(::Type{<:MyStdT}, data::Vector{T}) where T = T[3.]
+        ARCHModels.startingvals(::Type{<:MyStdT}, data::Vector{T}) where T = T[3.]
         Random.seed!(1)
         am = simulate(GARCH{1, 1}([1, 0.9, .05]), 1000, dist=MyStdT(3.))
         @test  loglikelihood(fit(am)) ≈ -2700.9089012063323

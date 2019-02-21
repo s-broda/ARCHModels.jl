@@ -7,7 +7,7 @@
 ## Public API
 ```@meta
 DocTestSetup = quote
-    using ARCH
+    using ARCHModels
     using Random
     Random.seed!(1)
 end
@@ -15,7 +15,7 @@ DocTestFilters = r".*[0-9\.]"
 ```
 
 ```@autodocs
-Modules = [ARCH]
+Modules = [ARCHModels]
 Private = false
 ```
 
