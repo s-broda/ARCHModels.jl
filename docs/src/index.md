@@ -1,4 +1,4 @@
-# The ARCH Package
+# The ARCHModels Package
 ARCH (Autoregressive Conditional Heteroskedasticity) models are a class of models designed to capture a feature of financial returns data known as *volatility clustering*, *i.e.*, the fact that large (in absolute value) returns tend to cluster together, such as during periods of financial turmoil, which then alternate with relatively calmer periods.
 
 The basic ARCH model was introduced by Engle (1982, Econometrica, pp. 987–1008), who in 2003 was awarded a Nobel Memorial Prize in Economic Sciences for its development. Today, the most popular variant is the generalized ARCH, or GARCH, model and its various extensions, due to Bollerslev (1986, Journal of Econometrics, pp. 307 - 327). The basic GARCH(1,1) model for a sample of daily asset returns ``\{r_t\}_{t\in\{1,\ldots,T\}}`` is
@@ -27,7 +27,7 @@ As for error distributions, the user may choose among the following:
 The package is not yet registered. To install it in Julia 1.0 or later, do
 
 ```
-add https://github.com/s-broda/ARCH.jl
+add https://github.com/s-broda/ARCHModels.jl
 ```
 
 in the Pkg REPL mode (which is entered by pressing `]` at the prompt).

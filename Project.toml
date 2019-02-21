@@ -1,4 +1,4 @@
-name = "ARCH"
+name = "ARCHModels"
 uuid = "3b77d220-9fb7-11e8-275e-b305abbbeb18"
 authors = ["Simon Broda <simon.broda@uzh.ch>"]
 version = "0.1.0"

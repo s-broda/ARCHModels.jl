@@ -35,6 +35,6 @@ jobs:
         - julia --project=docs/ -e 'using Pkg;
                                     Pkg.develop(PackageSpec(path=pwd()));
                                     Pkg.instantiate();
-                                    Pkg.build("ARCH")' #https://github.com/JuliaLang/Pkg.jl/issues/862
+                                    Pkg.build("ARCHModels")' #https://github.com/JuliaLang/Pkg.jl/issues/862
         - julia --project=docs/ docs/make.jl
       after_success: skip

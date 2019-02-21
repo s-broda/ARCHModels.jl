@@ -1,6 +1,6 @@
 using Test
 
-using ARCH
+using ARCHModels
 using Random
 T = 10^4;
 @testset "TGARCH" begin

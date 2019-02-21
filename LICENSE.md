@@ -1,4 +1,4 @@
-The ARCH.jl package is licensed under the MIT "Expat" License:
+The ARCHModels.jl package is licensed under the MIT "Expat" License:
 
 > Copyright (c) 2018: Simon A. Broda.
 >
@@ -21,7 +21,7 @@ The ARCH.jl package is licensed under the MIT "Expat" License:
 > SOFTWARE.
 >
 
-ARCH.jl relies on StatsFuns.jl and Distributions.jl, which in turn use the RMath
+ARCHModels.jl relies on StatsFuns.jl and Distributions.jl, which in turn use the RMath
 library that has its own license:
 
 - [RMath](http://www.r-project.org/Licenses/)

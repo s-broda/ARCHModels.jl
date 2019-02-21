@@ -14,11 +14,10 @@
 #  (change for meanspec and dist ), document, and test. Also, NaN is prob. safer than undef.
 #constructors for meanspec, distributions should check length of coef vector
 #logconst needs to return the correct type
-#rename ARCH -> ARCHModels, _ARCH-> ARCH
 """
-The ARCH package for Julia. For documentation, see https://s-broda.github.io/ARCH.jl/dev.
+The ARCHModels package for Julia. For documentation, see https://s-broda.github.io/ARCHModels.jl/dev.
 """
-module ARCH
+module ARCHModels
 using Reexport
 @reexport using StatsBase
 using StatsFuns: normcdf, normccdf, normlogpdf, norminvcdf, log2π, logtwo, RFunctions.tdistrand, RFunctions.tdistinvcdf, RFunctions.gammarand, RFunctions.gammainvcdf
