@@ -9,9 +9,9 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "#The-ARCH-Package-1",
+    "location": "#The-ARCHModels-Package-1",
     "page": "Home",
-    "title": "The ARCH Package",
+    "title": "The ARCHModels Package",
     "category": "section",
     "text": "ARCH (Autoregressive Conditional Heteroskedasticity) models are a class of models designed to capture a feature of financial returns data known as volatility clustering, i.e., the fact that large (in absolute value) returns tend to cluster together, such as during periods of financial turmoil, which then alternate with relatively calmer periods.The basic ARCH model was introduced by Engle (1982, Econometrica, pp. 987–1008), who in 2003 was awarded a Nobel Memorial Prize in Economic Sciences for its development. Today, the most popular variant is the generalized ARCH, or GARCH, model and its various extensions, due to Bollerslev (1986, Journal of Econometrics, pp. 307 - 327). The basic GARCH(1,1) model for a sample of daily asset returns r_t_tin1ldotsT isr_t=sigma_tz_tquad z_tsimmathrmN(01)quad\nsigma_t^2=omega+alpha r_t-1^2+beta sigma_t-1^2quad omega alpha beta0quad alpha+beta1This can be extended by including additional lags of past squared returns and volatilities: the GARCH(p, q) model  has q of the former and p of the latter. Another generalization is to allow  z_t to follow other, non-Gaussian distributions.This package implements simulation, estimation, and model selection for the following models:ARCH(q)\nGARCH(p, q)\nTGARCH(o, p, q)\nEGARCH(o, p q)As for error distributions, the user may choose among the following:Standard Normal\nStandardized Student\'s t\nStandardized Generalized Error Distribution"
 },
@@ -21,7 +21,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Installation",
     "category": "section",
-    "text": "The package is not yet registered. To install it in Julia 1.0 or later, doadd https://github.com/s-broda/ARCH.jlin the Pkg REPL mode (which is entered by pressing ] at the prompt). For Julia 0.6, check out the 0.6 branch."
+    "text": "The package is not yet registered. To install it in Julia 1.0 or later, doadd https://github.com/s-broda/ARCHModels.jlin the Pkg REPL mode (which is entered by pressing ] at the prompt). For Julia 0.6, check out the 0.6 branch."
 },
 
 {
@@ -69,7 +69,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Introduction and type hierarchy",
     "title": "ARCH",
     "category": "section",
-    "text": "The ARCH(q) volatility specification, due to Engle (1982), issigma_t^2=omega+sum_i=1^qalpha_i r_t-i^2 quad omega alpha_i0quad sum_i=1^q alpha_i1The corresponding type is _ARCH{q}. For example, an ARCH(2) model with ω=1, α₁=5, and α₂=4 is obtained withjulia> using ARCH\n\njulia> _ARCH{2}([1., .5, .4])\nTGARCH{0,0,2} specification.\n\n               ω  α₁  α₂\nParameters:  1.0 0.5 0.4"
+    "text": "The ARCH(q) volatility specification, due to Engle (1982), issigma_t^2=omega+sum_i=1^qalpha_i r_t-i^2 quad omega alpha_i0quad sum_i=1^q alpha_i1The corresponding type is ARCH{q}. For example, an ARCH(2) model with ω=1, α₁=5, and α₂=4 is obtained withjulia> using ARCHModels\n\njulia> ARCH{2}([1., .5, .4])\nTGARCH{0,0,2} specification.\n\n               ω  α₁  α₂\nParameters:  1.0 0.5 0.4"
 },
 
 {
@@ -77,7 +77,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Introduction and type hierarchy",
     "title": "GARCH",
     "category": "section",
-    "text": "The GARCH(p, q) model, due to Bollerslev (1986), specifies the volatility assigma_t^2=omega+sum_i=1^pbeta_i sigma_t-i^2+sum_i=1^qalpha_i r_t-i^2 quad omega alpha_i beta_i0quad sum_i=1^max pq alpha_i+beta_i1It is available as GARCH{p, q}:julia> using ARCH\n\njulia> GARCH{1, 1}([1., .9, .05])\nTGARCH{0,1,1} specification.\n\n               ω  β₁   α₁\nParameters:  1.0 0.9 0.05This creates a GARCH(1, 1) specification with ω=1, β=9, and α=05."
+    "text": "The GARCH(p, q) model, due to Bollerslev (1986), specifies the volatility assigma_t^2=omega+sum_i=1^pbeta_i sigma_t-i^2+sum_i=1^qalpha_i r_t-i^2 quad omega alpha_i beta_i0quad sum_i=1^max pq alpha_i+beta_i1It is available as GARCH{p, q}:julia> using ARCHModels\n\njulia> GARCH{1, 1}([1., .9, .05])\nTGARCH{0,1,1} specification.\n\n               ω  β₁   α₁\nParameters:  1.0 0.9 0.05This creates a GARCH(1, 1) specification with ω=1, β=9, and α=05."
 },
 
 {
@@ -85,7 +85,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Introduction and type hierarchy",
     "title": "TGARCH",
     "category": "section",
-    "text": "As may have been guessed from the output above, the ARCH and GARCH models are actually special cases of a more general class of models, known as TGARCH (Threshold GARCH), due to Glosten, Jagannathan, and Runkle. The TGARCH{o, p, q} model takes the formsigma_t^2=omega+sum_i=1^ogamma_i  r_t-i^2 1_r_t-i0+sum_i=1^pbeta_i sigma_t-i^2+sum_i=1^qalpha_i r_t-i^2 quad omega alpha_i beta_i gamma_i0 sum_i=1^max opq alpha_i+beta_i+gamma_i21The TGARCH model allows the volatility to react differently (typically more strongly) to negative shocks, a feature known as the (statistical) leverage effect. Is available as TGARCH{o, p, q}:julia> using ARCH\n\njulia> TGARCH{1, 1, 1}([1., .04, .9, .01])\nTGARCH{1,1,1} specification.\n\n               ω   γ₁  β₁   α₁\nParameters:  1.0 0.04 0.9 0.01"
+    "text": "As may have been guessed from the output above, the ARCH and GARCH models are actually special cases of a more general class of models, known as TGARCH (Threshold GARCH), due to Glosten, Jagannathan, and Runkle. The TGARCH{o, p, q} model takes the formsigma_t^2=omega+sum_i=1^ogamma_i  r_t-i^2 1_r_t-i0+sum_i=1^pbeta_i sigma_t-i^2+sum_i=1^qalpha_i r_t-i^2 quad omega alpha_i beta_i gamma_i0 sum_i=1^max opq alpha_i+beta_i+gamma_i21The TGARCH model allows the volatility to react differently (typically more strongly) to negative shocks, a feature known as the (statistical) leverage effect. Is available as TGARCH{o, p, q}:julia> using ARCHModels\n\njulia> TGARCH{1, 1, 1}([1., .04, .9, .01])\nTGARCH{1,1,1} specification.\n\n               ω   γ₁  β₁   α₁\nParameters:  1.0 0.04 0.9 0.01"
 },
 
 {
@@ -125,7 +125,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Introduction and type hierarchy",
     "title": "User-defined standardized distributions",
     "category": "section",
-    "text": "Apart from the natively supported standardized distributions, it is possible to wrap a continuous univariate distribution from the Distributions package in the Standardized wrapper type. Below, we reimplement the standardized normal distribution:julia> using Distributions\n\njulia> const MyStdNormal = Standardized{Normal};MyStdNormal can be used whereever a built-in distribution could, albeit with a speed penalty. Note also that if the underlying distribution (such as Normal in the example above) contains location and/or scale parameters, then these are no longer identifiable, which implies that the estimated covariance matrix of the estimators will be singular.A final remark concerns the domain of the parameters: the estimation process relies on a starting value for the parameters of the distribution, say thetaequiv(theta_1 ldots theta_p). For a distribution wrapped in Standardized, the starting value for theta_i is taken to be a small positive value ϵ. This will fail if ϵ is not in the domain of theta_i; as an example, the standardized Student\'s t distribution is only defined for degrees of freedom larger than 2, because a finite variance is required for standardization. In that case, it is necessary to define a method of the (non-exported) function startingvals that returns a feasible vector of starting values, as follows:julia> const MyStdT = Standardized{TDist};\n\njulia> ARCH.startingvals(::Type{<:MyStdT}, data::Vector{T}) where T = T[3.]"
+    "text": "Apart from the natively supported standardized distributions, it is possible to wrap a continuous univariate distribution from the Distributions package in the Standardized wrapper type. Below, we reimplement the standardized normal distribution:julia> using Distributions\n\njulia> const MyStdNormal = Standardized{Normal};MyStdNormal can be used whereever a built-in distribution could, albeit with a speed penalty. Note also that if the underlying distribution (such as Normal in the example above) contains location and/or scale parameters, then these are no longer identifiable, which implies that the estimated covariance matrix of the estimators will be singular.A final remark concerns the domain of the parameters: the estimation process relies on a starting value for the parameters of the distribution, say thetaequiv(theta_1 ldots theta_p). For a distribution wrapped in Standardized, the starting value for theta_i is taken to be a small positive value ϵ. This will fail if ϵ is not in the domain of theta_i; as an example, the standardized Student\'s t distribution is only defined for degrees of freedom larger than 2, because a finite variance is required for standardization. In that case, it is necessary to define a method of the (non-exported) function startingvals that returns a feasible vector of starting values, as follows:julia> const MyStdT = Standardized{TDist};\n\njulia> ARCHModels.startingvals(::Type{<:MyStdT}, data::Vector{T}) where T = T[3.]"
 },
 
 {
@@ -149,7 +149,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Usage",
     "title": "Usage",
     "category": "section",
-    "text": "We will be using the data from Bollerslev and Ghysels (1986), available as the constant BG96. The data consist of daily German mark/British pound exchange rates (1974 observations) and are often used in evaluating implementations of (G)ARCH models (see, e.g., Brooks et.al. (2001). We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:julia> using ARCH\n\njulia> autocor(BG96.^2, 1:10, demean=true) # re-exported from StatsBase\n10-element Array{Float64,1}:\n 0.22294073831639766\n 0.17663183540117078\n 0.14086005904595456\n 0.1263198344036979\n 0.18922204038617135\n 0.09068404029331875\n 0.08465365332525085\n 0.09671690899919724\n 0.09217329577285414\n 0.11984168975215709Using a critical value of 196sqrt1974=0044, we see that there is indeed significant autocorrelation in the squared series.A more formal test for the presence of volatility clustering is Engle\'s (1982) ARCH-LM test. The test statistic is given by LMequiv TR^2_aux, where R^2_aux is the coefficient of determination in a regression of the squared returns on an intercept and p of their own lags. The test statistic follows a chi^2_p distribution under the null of no volatility clustering.julia> ARCHLMTest(BG96, 1)\nARCH LM test for conditional heteroskedasticity\n-----------------------------------------------\nPopulation details:\n    parameter of interest:   T⋅R² in auxiliary regression of rₜ² on an intercept and its own lags\n    value under h_0:         0\n    point estimate:          98.12107516935244\n\nTest summary:\n    outcome with 95% confidence: reject h_0\n    p-value:                     <1e-22\n\nDetails:\n    sample size:                    1974\n    number of lags:                 1\n    LM statistic:                   98.12107516935244The null is strongly rejected, again providing evidence for the presence of volatility clustering."
+    "text": "We will be using the data from Bollerslev and Ghysels (1986), available as the constant BG96. The data consist of daily German mark/British pound exchange rates (1974 observations) and are often used in evaluating implementations of (G)ARCH models (see, e.g., Brooks et.al. (2001). We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:julia> using ARCHModels\n\njulia> autocor(BG96.^2, 1:10, demean=true) # re-exported from StatsBase\n10-element Array{Float64,1}:\n 0.22294073831639766\n 0.17663183540117078\n 0.14086005904595456\n 0.1263198344036979\n 0.18922204038617135\n 0.09068404029331875\n 0.08465365332525085\n 0.09671690899919724\n 0.09217329577285414\n 0.11984168975215709Using a critical value of 196sqrt1974=0044, we see that there is indeed significant autocorrelation in the squared series.A more formal test for the presence of volatility clustering is Engle\'s (1982) ARCH-LM test. The test statistic is given by LMequiv TR^2_aux, where R^2_aux is the coefficient of determination in a regression of the squared returns on an intercept and p of their own lags. The test statistic follows a chi^2_p distribution under the null of no volatility clustering.julia> ARCHLMTest(BG96, 1)\nARCH LM test for conditional heteroskedasticity\n-----------------------------------------------\nPopulation details:\n    parameter of interest:   T⋅R² in auxiliary regression of rₜ² on an intercept and its own lags\n    value under h_0:         0\n    point estimate:          98.12107516935244\n\nTest summary:\n    outcome with 95% confidence: reject h_0\n    p-value:                     <1e-22\n\nDetails:\n    sample size:                    1974\n    number of lags:                 1\n    LM statistic:                   98.12107516935244The null is strongly rejected, again providing evidence for the presence of volatility clustering."
 },
 
 {
@@ -173,7 +173,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Usage",
     "title": "Risk measures",
     "category": "section",
-    "text": "One of the primary uses of ARCH models is for estimating and forecasting risk measures, such as Value at Risk and Expected Shortfall. This section details the relevant functionality provided in this package.Basic in-sample estimates for the Value at Risk implied by an estimated UnivariateARCHModel can be obtained using VaRs:using ARCHam = fit(GARCH{1, 1}, BG96);\nvars = VaRs(am, 0.05);\nusing Plots\nplot(-BG96, legend=:none, xlabel=\"\\$t\\$\", ylabel=\"\\$-r_t\\$\");\nplot!(vars, color=:purple);\nENV[\"GKSwstype\"]=\"svg\"; savefig(joinpath(\"assets\", \"VaRplot.svg\")); nothing # hide(Image: VaR Plot)"
+    "text": "One of the primary uses of ARCH models is for estimating and forecasting risk measures, such as Value at Risk and Expected Shortfall. This section details the relevant functionality provided in this package.Basic in-sample estimates for the Value at Risk implied by an estimated UnivariateARCHModel can be obtained using VaRs:using ARCHModelsam = fit(GARCH{1, 1}, BG96);\nvars = VaRs(am, 0.05);\nusing Plots\nplot(-BG96, legend=:none, xlabel=\"\\$t\\$\", ylabel=\"\\$-r_t\\$\");\nplot!(vars, color=:purple);\nENV[\"GKSwstype\"]=\"svg\"; savefig(joinpath(\"assets\", \"VaRplot.svg\")); nothing # hide(Image: VaR Plot)"
 },
 
 {
@@ -225,281 +225,281 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference/#ARCH.ARCH",
+    "location": "reference/#ARCHModels.ARCHModels",
     "page": "Reference guide",
-    "title": "ARCH.ARCH",
+    "title": "ARCHModels.ARCHModels",
     "category": "module",
-    "text": "The ARCH package for Julia. For documentation, see https://s-broda.github.io/ARCH.jl/dev.\n\n\n\n\n\n"
+    "text": "The ARCHModels package for Julia. For documentation, see https://s-broda.github.io/ARCHModels.jl/dev.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.BG96",
+    "location": "reference/#ARCHModels.BG96",
     "page": "Reference guide",
-    "title": "ARCH.BG96",
+    "title": "ARCHModels.BG96",
     "category": "constant",
     "text": "BG96\n\nData from Bollerslev and Ghysels (JBES 1996).\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.ARCHLMTest",
+    "location": "reference/#ARCHModels.ARCH",
     "page": "Reference guide",
-    "title": "ARCH.ARCHLMTest",
+    "title": "ARCHModels.ARCH",
+    "category": "type",
+    "text": "ARCH{q, T<:AbstractFloat} <: VolatilitySpec{T}\n\n\n\nARCH{q}(coefs) -> VolatilitySpec\n\nConstruct an ARCH specification with the given parameters.\n\nExample:\n\njulia> ARCH{2}([1., .3, .4])\nTGARCH{0,0,2} specification.\n\n               ω  α₁  α₂\nParameters:  1.0 0.3 0.4\n\n\n\n\n\n"
+},
+
+{
+    "location": "reference/#ARCHModels.ARCHLMTest",
+    "page": "Reference guide",
+    "title": "ARCHModels.ARCHLMTest",
     "category": "type",
     "text": "ARCHLMTest <: HypothesisTest\n\nEngle\'s (1982) LM test for autoregressive conditional heteroskedasticity.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.ARCHLMTest",
+    "location": "reference/#ARCHModels.ARCHLMTest",
     "page": "Reference guide",
-    "title": "ARCH.ARCHLMTest",
+    "title": "ARCHModels.ARCHLMTest",
     "category": "type",
     "text": "ARCHLMTest(am::UnivariateARCHModel, p=max(o, p, q, ...))\n\nConduct Engle\'s (1982) LM test for autoregressive conditional heteroskedasticity with p lags in the test regression.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.ARCHLMTest-Union{Tuple{T}, Tuple{Array{T,1},Integer}} where T<:Real",
+    "location": "reference/#ARCHModels.ARCHLMTest-Union{Tuple{T}, Tuple{Array{T,1},Integer}} where T<:Real",
     "page": "Reference guide",
-    "title": "ARCH.ARCHLMTest",
+    "title": "ARCHModels.ARCHLMTest",
     "category": "method",
     "text": "ARCHLMTest(u::Vector, p::Integer)\n\nConduct Engle\'s (1982) LM test for autoregressive conditional heteroskedasticity with p lags in the test regression.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.ARCHModel",
+    "location": "reference/#ARCHModels.ARCHModel",
     "page": "Reference guide",
-    "title": "ARCH.ARCHModel",
+    "title": "ARCHModels.ARCHModel",
     "category": "type",
     "text": "ARCHModel <: StatisticalModel\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.DQTest",
+    "location": "reference/#ARCHModels.DQTest",
     "page": "Reference guide",
-    "title": "ARCH.DQTest",
+    "title": "ARCHModels.DQTest",
     "category": "type",
     "text": "DQTest <: HypothesisTest\n\nEngle and Manganelli\'s (2004) out-of-sample dynamic quantile test.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.DQTest-Union{Tuple{T}, Tuple{Array{T,1},Array{T,1},AbstractFloat}, Tuple{Array{T,1},Array{T,1},AbstractFloat,Integer}} where T<:Real",
+    "location": "reference/#ARCHModels.DQTest-Union{Tuple{T}, Tuple{Array{T,1},Array{T,1},AbstractFloat}, Tuple{Array{T,1},Array{T,1},AbstractFloat,Integer}} where T<:Real",
     "page": "Reference guide",
-    "title": "ARCH.DQTest",
+    "title": "ARCHModels.DQTest",
     "category": "method",
     "text": "DQTest(data, vars, level, p=1)\n\nConduct Engle and Manganelli\'s (2004) out-of-sample dynamic quantile test with p lags in the test regression. vars shoud be a vector of out-of-sample Value at Risk predictions at level level.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.EGARCH",
+    "location": "reference/#ARCHModels.EGARCH",
     "page": "Reference guide",
-    "title": "ARCH.EGARCH",
+    "title": "ARCHModels.EGARCH",
     "category": "type",
     "text": "EGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.EGARCH-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}, Tuple{o}} where T where q where p where o",
+    "location": "reference/#ARCHModels.EGARCH-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}, Tuple{o}} where T where q where p where o",
     "page": "Reference guide",
-    "title": "ARCH.EGARCH",
+    "title": "ARCHModels.EGARCH",
     "category": "method",
     "text": "EGARCH{o, p, q}(coefs) -> VolatilitySpec\n\nConstruct an EGARCH specification with the given parameters.\n\nExample:\n\njulia> EGARCH{1, 1, 1}([-0.1, .1, .9, .04])\nEGARCH{1,1,1} specification.\n\n                ω  γ₁  β₁   α₁\nParameters:  -0.1 0.1 0.9 0.04\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.GARCH",
+    "location": "reference/#ARCHModels.GARCH",
     "page": "Reference guide",
-    "title": "ARCH.GARCH",
+    "title": "ARCHModels.GARCH",
     "category": "type",
     "text": "GARCH{p, q, T<:AbstractFloat} <: VolatilitySpec{T}\n\n\n\nGARCH{p, q}(coefs) -> VolatilitySpec\n\nConstruct a GARCH specification with the given parameters.\n\nExample:\n\njulia> GARCH{2, 1}([1., .3, .4, .05 ])\nTGARCH{0,2,1} specification.\n\n               ω  β₁  β₂   α₁\nParameters:  1.0 0.3 0.4 0.05\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.Intercept",
+    "location": "reference/#ARCHModels.Intercept",
     "page": "Reference guide",
-    "title": "ARCH.Intercept",
+    "title": "ARCHModels.Intercept",
     "category": "type",
     "text": "Intercept{T} <: MeanSpec{T}\n\nA mean specification with just an intercept.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.Intercept-Tuple{Any}",
+    "location": "reference/#ARCHModels.Intercept-Tuple{Any}",
     "page": "Reference guide",
-    "title": "ARCH.Intercept",
+    "title": "ARCHModels.Intercept",
     "category": "method",
     "text": "Intercept(mu)\n\nCreate an instance of Intercept. mu can be passed as a scalar or vector.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.MeanSpec",
+    "location": "reference/#ARCHModels.MeanSpec",
     "page": "Reference guide",
-    "title": "ARCH.MeanSpec",
+    "title": "ARCHModels.MeanSpec",
     "category": "type",
     "text": "MeanSpec{T}\n\nAbstract supertype that mean specifications inherit from.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.NoIntercept",
+    "location": "reference/#ARCHModels.NoIntercept",
     "page": "Reference guide",
-    "title": "ARCH.NoIntercept",
+    "title": "ARCHModels.NoIntercept",
     "category": "type",
     "text": "NoIntercept{T} <: MeanSpec{T}\n\nA mean specification without an intercept (i.e., the mean is zero).\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.NoIntercept",
+    "location": "reference/#ARCHModels.NoIntercept",
     "page": "Reference guide",
-    "title": "ARCH.NoIntercept",
+    "title": "ARCHModels.NoIntercept",
     "category": "type",
     "text": "NoIntercept(T::Type=Float64)\nNoIntercept{T}()\nNoIntercept(v::Vector)\n\nCreate an instance of NoIntercept.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.Standardized",
+    "location": "reference/#ARCHModels.Standardized",
     "page": "Reference guide",
-    "title": "ARCH.Standardized",
+    "title": "ARCHModels.Standardized",
     "category": "type",
     "text": "Standardized{D<:ContinuousUnivariateDistribution, T}  <: StandardizedDistribution{T}\n\nA wrapper type for standardizing a distribution from Distributions.jl.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.StandardizedDistribution",
+    "location": "reference/#ARCHModels.StandardizedDistribution",
     "page": "Reference guide",
-    "title": "ARCH.StandardizedDistribution",
+    "title": "ARCHModels.StandardizedDistribution",
     "category": "type",
     "text": "StandardizedDistribution{T} <: Distributions.Distribution{Univariate, Continuous}\n\nAbstract supertype that standardized distributions inherit from.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.StdGED",
+    "location": "reference/#ARCHModels.StdGED",
     "page": "Reference guide",
-    "title": "ARCH.StdGED",
+    "title": "ARCHModels.StdGED",
     "category": "type",
     "text": "StdGED{T} <: StandardizedDistribution{T}\n\nThe standardized (mean zero, variance one) generalized error distribution.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.StdGED-Tuple{Any}",
+    "location": "reference/#ARCHModels.StdGED-Tuple{Any}",
     "page": "Reference guide",
-    "title": "ARCH.StdGED",
+    "title": "ARCHModels.StdGED",
     "category": "method",
     "text": "StdGED(p)\n\nCreate a standardized generalized error distribution parameter p. p can be passed as a scalar or vector.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.StdNormal",
+    "location": "reference/#ARCHModels.StdNormal",
     "page": "Reference guide",
-    "title": "ARCH.StdNormal",
+    "title": "ARCHModels.StdNormal",
     "category": "type",
     "text": "StdNormal{T} <: StandardizedDistribution{T}\n\nThe standard Normal distribution.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.StdNormal",
+    "location": "reference/#ARCHModels.StdNormal",
     "page": "Reference guide",
-    "title": "ARCH.StdNormal",
+    "title": "ARCHModels.StdNormal",
     "category": "type",
     "text": "StdNormal(T::Type=Float64)\nStdNormal(v::Vector)\nStdNormal{T}()\n\nConstruct an instance of StdNormal.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.StdT",
+    "location": "reference/#ARCHModels.StdT",
     "page": "Reference guide",
-    "title": "ARCH.StdT",
+    "title": "ARCHModels.StdT",
     "category": "type",
     "text": "StdT{T} <: StandardizedDistribution{T}\n\nThe standardized (mean zero, variance one) Student\'s t distribution.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.StdT-Tuple{Any}",
+    "location": "reference/#ARCHModels.StdT-Tuple{Any}",
     "page": "Reference guide",
-    "title": "ARCH.StdT",
+    "title": "ARCHModels.StdT",
     "category": "method",
     "text": "StdT(v)\n\nCreate a standardized t distribution with v degrees of freedom. ν` can be passed as a scalar or vector.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.TGARCH",
+    "location": "reference/#ARCHModels.TGARCH",
     "page": "Reference guide",
-    "title": "ARCH.TGARCH",
+    "title": "ARCHModels.TGARCH",
     "category": "type",
     "text": "TGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.TGARCH-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}, Tuple{o}} where T where q where p where o",
+    "location": "reference/#ARCHModels.TGARCH-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}, Tuple{o}} where T where q where p where o",
     "page": "Reference guide",
-    "title": "ARCH.TGARCH",
+    "title": "ARCHModels.TGARCH",
     "category": "method",
     "text": "TGARCH{o, p, q}(coefs) -> VolatilitySpec\n\nConstruct a TGARCH specification with the given parameters.\n\nExample:\n\njulia> TGARCH{1, 1, 1}([1., .04, .9, .01])\nTGARCH{1,1,1} specification.\n\n               ω   γ₁  β₁   α₁\nParameters:  1.0 0.04 0.9 0.01\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.UnivariateARCHModel",
+    "location": "reference/#ARCHModels.UnivariateARCHModel",
     "page": "Reference guide",
-    "title": "ARCH.UnivariateARCHModel",
+    "title": "ARCHModels.UnivariateARCHModel",
     "category": "type",
     "text": "UnivariateARCHModel{T<:AbstractFloat,\n          		    VS<:VolatilitySpec,\n          			SD<:StandardizedDistribution{T},\n          			MS<:MeanSpec{T}\n          			} <: StatisticalModel\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.UnivariateARCHModel-Union{Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}, Tuple{VS,Array{T,1}}} where MS<:MeanSpec where SD<:StandardizedDistribution where VS<:VolatilitySpec where T<:AbstractFloat",
+    "location": "reference/#ARCHModels.UnivariateARCHModel-Union{Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}, Tuple{VS,Array{T,1}}} where MS<:MeanSpec where SD<:StandardizedDistribution where VS<:VolatilitySpec where T<:AbstractFloat",
     "page": "Reference guide",
-    "title": "ARCH.UnivariateARCHModel",
+    "title": "ARCHModels.UnivariateARCHModel",
     "category": "method",
     "text": "UnivariateARCHModel(spec::VolatilitySpec, data::Vector; dist=StdNormal(),\n          			meanspec=NoIntercept(), fitted=false\n          			)\n\nCreate a UnivariateARCHModel.\n\nExample:\n\njulia> UnivariateARCHModel(GARCH{1, 1}([1., .9, .05]), randn(10))\n\nTGARCH{0,1,1} model with Gaussian errors, T=10.\n\n\n                             ω  β₁   α₁\nVolatility parameters:     1.0 0.9 0.05\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.VolatilitySpec",
+    "location": "reference/#ARCHModels.VolatilitySpec",
     "page": "Reference guide",
-    "title": "ARCH.VolatilitySpec",
+    "title": "ARCHModels.VolatilitySpec",
     "category": "type",
     "text": "VolatilitySpec{T}\n\nAbstract supertype that volatility specifications inherit from.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH._ARCH",
+    "location": "reference/#ARCHModels.VaRs",
     "page": "Reference guide",
-    "title": "ARCH._ARCH",
-    "category": "type",
-    "text": "_ARCH{q, T<:AbstractFloat} <: VolatilitySpec{T}\n\n\n\n_ARCH{q}(coefs) -> VolatilitySpec\n\nConstruct an _ARCH specification with the given parameters.\n\nExample:\n\njulia> _ARCH{2}([1., .3, .4])\nTGARCH{0,0,2} specification.\n\n               ω  α₁  α₂\nParameters:  1.0 0.3 0.4\n\n\n\n\n\n"
-},
-
-{
-    "location": "reference/#ARCH.VaRs",
-    "page": "Reference guide",
-    "title": "ARCH.VaRs",
+    "title": "ARCHModels.VaRs",
     "category": "function",
     "text": "VaRs(am::UnivariateARCHModel, level=0.01)\n\nReturn the in-sample Value at Risk implied by am.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.selectmodel-Union{Tuple{MS}, Tuple{SD}, Tuple{T}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where MS<:MeanSpec where SD<:StandardizedDistribution where T<:AbstractFloat where VS<:VolatilitySpec",
+    "location": "reference/#ARCHModels.selectmodel-Union{Tuple{MS}, Tuple{SD}, Tuple{T}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where MS<:MeanSpec where SD<:StandardizedDistribution where T<:AbstractFloat where VS<:VolatilitySpec",
     "page": "Reference guide",
-    "title": "ARCH.selectmodel",
+    "title": "ARCHModels.selectmodel",
     "category": "method",
     "text": "selectmodel(::Type{VS}, data; kwargs...) -> UnivariateARCHModel\n\nFit the volatility specification VS with varying lag lengths and return that which minimizes the BIC.\n\nKeyword arguments:\n\ndist=StdNormal: the error distribution.\nmeanspec=Intercept: the mean specification.\nmaxlags=3: maximum lag length to try in each parameter of VS.\ncriterion=bic: function that takes a UnivariateARCHModel and returns the criterion to minimize.\nshow_trace=false: print criterion to screen for each estimated model.\nalgorithm=BFGS(), autodiff=:forward, kwargs...: passed on to the optimizer.\n\nExample\n\njulia> selectmodel(EGARCH, BG96)\n\nEGARCH{1,1,2} model with Gaussian errors, T=1974.\n\n\nMean equation parameters:\n\n        Estimate  Std.Error   z value Pr(>|z|)\nμ    -0.00900018 0.00943948 -0.953461   0.3404\n\nVolatility parameters:\n\n       Estimate Std.Error   z value Pr(>|z|)\nω    -0.0544398 0.0592073 -0.919478   0.3578\nγ₁   -0.0243368 0.0270414 -0.899985   0.3681\nβ₁     0.960301 0.0388183   24.7384   <1e-99\nα₁     0.405788  0.067466    6.0147    <1e-8\nα₂    -0.207357  0.114161  -1.81636   0.0693\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.simulate",
+    "location": "reference/#ARCHModels.simulate",
     "page": "Reference guide",
-    "title": "ARCH.simulate",
+    "title": "ARCHModels.simulate",
     "category": "function",
     "text": "simulate(am::UnivariateARCHModel; warmup=100)\nsimulate(am::UnivariateARCHModel, nobs; warmup=100)\nsimulate(spec::VolatilitySpec, nobs; warmup=100, dist=StdNormal(), meanspec=NoIntercept())\n\nSimulate a UnivariateARCHModel.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.simulate!-Tuple{UnivariateARCHModel}",
+    "location": "reference/#ARCHModels.simulate!-Tuple{UnivariateARCHModel}",
     "page": "Reference guide",
-    "title": "ARCH.simulate!",
+    "title": "ARCHModels.simulate!",
     "category": "method",
     "text": "simulate!(am::UnivariateARCHModel; warmup=100)\n\nSimulate a UnivariateARCHModel, modifying am in place.\n\n\n\n\n\n"
 },
 
 {
-    "location": "reference/#ARCH.volatilities-Union{Tuple{UnivariateARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T",
+    "location": "reference/#ARCHModels.volatilities-Union{Tuple{UnivariateARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T",
     "page": "Reference guide",
-    "title": "ARCH.volatilities",
+    "title": "ARCHModels.volatilities",
     "category": "method",
     "text": "volatilities(am::UnivariateARCHModel)\n\nReturn the conditional volatilities.\n\n\n\n\n\n"
 },
@@ -565,7 +565,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference guide",
     "title": "Public API",
     "category": "section",
-    "text": "DocTestSetup = quote\n    using ARCH\n    using Random\n    Random.seed!(1)\nend\nDocTestFilters = r\".*[0-9\\.]\"Modules = [ARCH]\nPrivate = falseDocTestSetup = nothing\nDocTestFilters = nothing"
+    "text": "DocTestSetup = quote\n    using ARCHModels\n    using Random\n    Random.seed!(1)\nend\nDocTestFilters = r\".*[0-9\\.]\"Modules = [ARCHModels]\nPrivate = falseDocTestSetup = nothing\nDocTestFilters = nothing"
 },
 
 ]}
