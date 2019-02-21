@@ -29,7 +29,7 @@ Details:
     number of lags:                 1
     LM statistic:                   98.12107516935244</code></pre><p>The null is strongly rejected, again providing evidence for the presence of volatility clustering.</p><h2><a class="nav-anchor" id="Estimation-1" href="#Estimation-1">Estimation</a></h2><p>Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a GARCH(1, 1) with standard normal errors;  for other model classes such as <a href="../reference/#ARCH.EGARCH"><code>EGARCH</code></a>, see the <a href="../types/#volaspec-1">section on volatility specifications</a>.</p><pre><code class="language-none">julia&gt; fit(GARCH{1, 1}, BG96)
 
-GARCH{1,1} model with Gaussian errors, T=1974.
+TGARCH{0,1,1} model with Gaussian errors, T=1974.
 
 
 Mean equation parameters:
@@ -60,7 +60,7 @@ Distribution parameters:
      Estimate Std.Error z value Pr(&gt;|z|)
 ν     4.12423   0.40059 10.2954   &lt;1e-24</code></pre><p>An alternative approach to fitting a <a href="../reference/#ARCH.VolatilitySpec"><code>VolatilitySpec</code></a> to <code>BG96</code> is to first construct an <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a> containing the data, and then using <a href="../reference/#StatsBase.fit!-Tuple{ARCHModel}"><code>fit!</code></a> to modify it in place:</p><pre><code class="language-julia-repl">julia&gt; am = ARCHModel(GARCH{1, 1}([1., 0., 0.]), BG96)
 
-GARCH{1,1} model with Gaussian errors, T=1974.
+TGARCH{0, 1,1} model with Gaussian errors, T=1974.
 
 
                              ω  β₁  α₁
@@ -70,7 +70,7 @@ Volatility parameters:     1.0 0.0 0.0
 
 julia&gt; fit!(am)
 
-GARCH{1,1} model with Gaussian errors, T=1974.
+TGARCH{0, 1,1} model with Gaussian errors, T=1974.
 
 
 Volatility parameters:
@@ -158,7 +158,7 @@ Details:
     number of lags:                 4
     LM statistic:                   4.211230445141555</code></pre><p>By default, the number of lags is chosen as the maximum order of the volatility specification (e.g., <span>$\max(p, q)$</span> for a GARCH(p, q) model). Here, the test does not reject, indicating that a GARCH(1, 1) specification is sufficient for modelling the volatility clustering (a common finding).</p><h2><a class="nav-anchor" id="Simulation-1" href="#Simulation-1">Simulation</a></h2><p>To simulate from an <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a>, use <a href="../reference/#ARCH.simulate"><code>simulate</code></a>. You can either specify the <a href="../reference/#ARCH.VolatilitySpec"><code>VolatilitySpec</code></a> (and optionally the distribution and mean specification) and desired number of observations, or pass an existing <a href="../reference/#ARCH.ARCHModel"><code>ARCHModel</code></a>. Use <a href="../reference/#ARCH.simulate!-Tuple{ARCHModel}"><code>simulate!</code></a> to modify the data in place.</p><pre><code class="language-julia-repl">julia&gt; am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=500, meanspec=Intercept(5.), dist=StdT(3.))
 
-GARCH{1,1} model with Student&#39;s t errors, T=1000.
+TGARCH{0,1,1} model with Student&#39;s t errors, T=1000.
 
 
                              μ
