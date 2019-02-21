@@ -1,6 +1,6 @@
 export TGARCH
 export GARCH
-export _ARCH
+export ARCH
 
 
 """
@@ -49,22 +49,22 @@ Parameters:  1.0 0.3 0.4 0.05
 const GARCH = TGARCH{0}
 
 """
-    _ARCH{q, T<:AbstractFloat} <: VolatilitySpec{T}
+    ARCH{q, T<:AbstractFloat} <: VolatilitySpec{T}
 ---
-    _ARCH{q}(coefs) -> VolatilitySpec
+    ARCH{q}(coefs) -> VolatilitySpec
 
-Construct an _ARCH specification with the given parameters.
+Construct an ARCH specification with the given parameters.
 
 # Example:
 ```jldoctest
-julia> _ARCH{2}([1., .3, .4])
+julia> ARCH{2}([1., .3, .4])
 TGARCH{0,0,2} specification.
 
                ω  α₁  α₂
 Parameters:  1.0 0.3 0.4
 ```
 """
-const _ARCH = GARCH{0}
+const ARCH = GARCH{0}
 
 @inline nparams(::Type{<:TGARCH{o, p, q}}) where {o, p, q} = o+p+q+1
 

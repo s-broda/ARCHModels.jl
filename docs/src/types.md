@@ -14,11 +14,11 @@ The ARCH(q) volatility specification, due to [Engle (1982)](https://doi.org/10.2
 ```math
 \sigma_t^2=\omega+\sum_{i=1}^q\alpha_i r_{t-i}^2, \quad \omega, \alpha_i>0,\quad \sum_{i=1}^{q} \alpha_i<1.
 ```
-The corresponding type is [`_ARCH{q}`](@ref). For example, an ARCH(2) model with ``ω=1``, ``α₁=.5``, and ``α₂=.4`` is obtained with
+The corresponding type is [`ARCH{q}`](@ref). For example, an ARCH(2) model with ``ω=1``, ``α₁=.5``, and ``α₂=.4`` is obtained with
 ```jldoctest TYPES
 julia> using ARCH
 
-julia> _ARCH{2}([1., .5, .4])
+julia> ARCH{2}([1., .5, .4])
 TGARCH{0,0,2} specification.
 
                ω  α₁  α₂

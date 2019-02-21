@@ -63,9 +63,9 @@ T = 10^4;
 end
 @testset "ARCH" begin
     Random.seed!(1);
-    spec = _ARCH{2}([1., .3, .4]);
+    spec = ARCH{2}([1., .3, .4]);
     am = simulate(spec, T);
-    @test selectmodel(_ARCH, am.data).spec.coefs == fit(_ARCH{2}, am.data).spec.coefs
+    @test selectmodel(ARCH, am.data).spec.coefs == fit(ARCH{2}, am.data).spec.coefs
 end
 
 @testset "EGARCH" begin
