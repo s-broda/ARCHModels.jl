@@ -47,7 +47,7 @@ export ARCHModel, UnivariateARCHModel, VolatilitySpec, StandardizedDistribution,
     BG96
 Data from [Bollerslev and Ghysels (JBES 1996)](https://doi.org/10.2307/1392425).
 """
-const BG96 = readdlm(joinpath(dirname(pathof(ARCH)), "data", "bollerslev_ghysels.txt"), skipstart=1)[:, 1];
+const BG96 = readdlm(joinpath(dirname(pathof(ARCHModels)), "data", "bollerslev_ghysels.txt"), skipstart=1)[:, 1];
 
 """
 	ARCHModel <: StatisticalModel
