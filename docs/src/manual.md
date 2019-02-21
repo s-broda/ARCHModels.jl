@@ -73,7 +73,7 @@ Volatility parameters:
 α₁    0.153411  0.0536586 2.85903   0.0042
 ```
 
-This returns an instance of [`ARCHModel`](@ref), as described in the section [Working with ARCHModels](@ref). The parameters ``\alpha_1`` and ``\beta_1`` in the volatility equation are highly significant, again confirming the presence of volatility clustering. Note also that the fitted values are the same as those found by [Bollerslev and Ghysels (1986)](https://doi.org/10.2307/1392425) and [Brooks et.al. (2001)](https://doi.org/10.1016/S0169-2070(00)00070-4) for the same dataset.
+This returns an instance of [`UnivariateARCHModel`](@ref), as described in the section [Working with UnivariateARCHModels](@ref). The parameters ``\alpha_1`` and ``\beta_1`` in the volatility equation are highly significant, again confirming the presence of volatility clustering. Note also that the fitted values are the same as those found by [Bollerslev and Ghysels (1986)](https://doi.org/10.2307/1392425) and [Brooks et.al. (2001)](https://doi.org/10.1016/S0169-2070(00)00070-4) for the same dataset.
 
 The [`fit`](@ref) method supports a number of keyword arguments; the full signature is
 ```julia
@@ -108,10 +108,10 @@ Distribution parameters:
 ```
 
 An alternative approach to fitting a [`VolatilitySpec`](@ref) to `BG96` is to first construct
-an [`ARCHModel`](@ref) containing the data, and then using [`fit!`](@ref) to modify it in place:
+a [`UnivariateARCHModel`](@ref) containing the data, and then using [`fit!`](@ref) to modify it in place:
 
 ```jldoctest MANUAL
-julia> am = ARCHModel(GARCH{1, 1}([1., 0., 0.]), BG96)
+julia> am = UnivariateARCHModel(GARCH{1, 1}([1., 0., 0.]), BG96)
 
 TGARCH{0, 1,1} model with Gaussian errors, T=1974.
 
@@ -134,7 +134,7 @@ Volatility parameters:
 α₁    0.154597  0.0539319 2.86651   0.0042
 ```
 
-Calling `fit(am)` will return a new instance of ARCHModel instead:
+Calling `fit(am)` will return a new instance of `UnivariateARCHModel` instead:
 
 ```jldoctest MANUAL
 julia> am2 = fit(am);
@@ -148,7 +148,7 @@ true
 
 ## Model selection
 The function [`selectmodel`](@ref) can be used for automatic model selection, based on an information crititerion. Given
-a class of model (i.e., a subtype of [`VolatilitySpec`](@ref)), it will return a fitted [`ARCHModel`](@ref), with the lag length
+a class of model (i.e., a subtype of [`VolatilitySpec`](@ref)), it will return a fitted [`UnivariateARCHModel`](@ref), with the lag length
 parameters (i.e., ``p`` and ``q`` in the case of [`GARCH`](@ref)) chosen to minimize the desired criterion. The [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion) is used by default.
 
 Eg., the following selects the optimal (minimum AIC) EGARCH(o, p, q) model, where o, p, q < 2,  assuming ``t`` distributed errors.
@@ -185,7 +185,7 @@ Passing the keyword argument `show_trace=false` will show the criterion for each
 One of the primary uses of ARCH models is for estimating and forecasting risk measures, such as [Value at Risk](https://en.wikipedia.org/wiki/Value_at_risk) and [Expected Shortfall](https://en.wikipedia.org/wiki/Expected_shortfall).
 This section details the relevant functionality provided in this package.
 
-Basic in-sample estimates for the Value at Risk implied by an estimated [`ARCHModel`](@ref) can be obtained using [`VaRs`](@ref):
+Basic in-sample estimates for the Value at Risk implied by an estimated [`UnivariateARCHModel`](@ref) can be obtained using [`VaRs`](@ref):
 ```@setup PLOT
 using ARCH
 ```
@@ -202,9 +202,9 @@ ENV["GKSwstype"]="svg"; savefig(joinpath("assets", "VaRplot.svg")); nothing # hi
 
 
 ## Forecasting
-The [`predict(am::ARCHModel)`](@ref) method can be used to construct one-step ahead forecasts for a number of quantities. Its signature is
+The [`predict(am::UnivariateARCHModel)`](@ref) method can be used to construct one-step ahead forecasts for a number of quantities. Its signature is
 ```
-    predict(am::ARCHModel, what=:volatility; level=0.01)
+    predict(am::UnivariateARCHModel, what=:volatility; level=0.01)
 ```
 The keyword argument `what` controls which object is predicted;
 the choices are `:volatility` (the default), `:variance`, `:return`, and `:VaR`. The VaR level can be controlled with the keyword argument `level`.
@@ -242,10 +242,10 @@ Details:
 ```
 ## Model diagnostics and specification tests
 Testing volatility models in general relies on the estimated conditional volatilities ``\hat{\sigma}_t`` and the standardized residuals
-``\hat{z}_t\equiv (r_t-\hat{\mu}_t)/\hat{\sigma}_t``, accessible via [`volatilities(::ARCHModel)`](@ref) and [`residuals(::ARCHModel)`](@ref), respectively. The non-standardized
+``\hat{z}_t\equiv (r_t-\hat{\mu}_t)/\hat{\sigma}_t``, accessible via [`volatilities(::UnivariateARCHModel)`](@ref) and [`residuals(::UnivariateARCHModel)`](@ref), respectively. The non-standardized
 residuals ``\hat{u}_t\equiv r_t-\hat{\mu}_t`` can be obtained by passing `standardized=false` as a keyword argument to [`residuals`](@ref).
 
-One possibility to test a volatility specification is to apply the ARCH-LM test to the standardized residuals. This is achieved by calling [`ARCHLMTest`](@ref) on the estimated [`ARCHModel`](@ref):
+One possibility to test a volatility specification is to apply the ARCH-LM test to the standardized residuals. This is achieved by calling [`ARCHLMTest`](@ref) on the estimated [`UnivariateARCHModel`](@ref):
 
 ```jldoctest MANUAL
 julia> am = fit(GARCH{1, 1}, BG96);
@@ -269,7 +269,7 @@ Details:
 ```
 By default, the number of lags is chosen as the maximum order of the volatility specification (e.g., ``\max(p, q)`` for a GARCH(p, q) model). Here, the test does not reject, indicating that a GARCH(1, 1) specification is sufficient for modelling the volatility clustering (a common finding).
 ## Simulation
-To simulate from an [`ARCHModel`](@ref), use [`simulate`](@ref). You can either specify the [`VolatilitySpec`](@ref) (and optionally the distribution and mean specification) and desired number of observations, or pass an existing [`ARCHModel`](@ref). Use [`simulate!`](@ref) to modify the data in place.
+To simulate from a [`UnivariateARCHModel`](@ref), use [`simulate`](@ref). You can either specify the [`VolatilitySpec`](@ref) (and optionally the distribution and mean specification) and desired number of observations, or pass an existing [`UnivariateARCHModel`](@ref). Use [`simulate!`](@ref) to modify the data in place.
 
 ```jldoctest MANUAL
 julia> am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=500, meanspec=Intercept(5.), dist=StdT(3.))

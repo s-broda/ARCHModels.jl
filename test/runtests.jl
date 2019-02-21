@@ -46,7 +46,7 @@ T = 10^4;
     @test sum(volatilities(am0)) ≈ 44768.17421580251
     @test sum(abs, residuals(am0)) ≈ 8022.163087384836
     @test sum(abs, residuals(am0, standardized=false)) ≈ 35939.07066637026
-    am2 = ARCHModel(spec, am0.data)
+    am2 = UnivariateARCHModel(spec, am0.data)
     @test isfitted(am2) == false
     io = IOBuffer()
     str = sprint(io -> show(io, am2))
@@ -139,7 +139,7 @@ end
     #with unconditional as presample:
     #@test all(isapprox(score(am), [-4.091261171623728e-6 3.524550271549742e-5 -6.989366926291041e-5], rtol=1e-4))
     @test all(isapprox(score(am), [0. 0. 0.], atol=1e-3))
-    @test islinear(am::ARCHModel) == false
+    @test islinear(am::UnivariateARCHModel) == false
     @test predict(am) ≈ 4.366619452770822
     @test predict(am, :variance) ≈ 19.067365445316554
     @test predict(am, :return) == 0.0
@@ -172,11 +172,11 @@ end
 end
 @testset "Errors" begin
     #with unconditional as presample:
-    #@test_warn "Fisher" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), [.1, .2, .3, .4, .5, .6, .7]))
-    @test_logs (:warn, "Fisher information is singular; vcov matrix is inaccurate.") stderror(ARCHModel(GARCH{1, 0}( [1.0, .1]), [0., 1.]))
+    #@test_warn "Fisher" stderror(UnivariateARCHModel(GARCH{3, 0}([1., .1, .2, .3]), [.1, .2, .3, .4, .5, .6, .7]))
+    @test_logs (:warn, "Fisher information is singular; vcov matrix is inaccurate.") stderror(UnivariateARCHModel(GARCH{1, 0}( [1.0, .1]), [0., 1.]))
     #with unconditional as presample:
-    #@test_warn "non-positive" stderror(ARCHModel(GARCH{3, 0}([1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
-    @test_logs (:warn, "non-positive variance encountered; vcov matrix is inaccurate.") stderror(ARCHModel(GARCH{1, 0}( [1.0, .1]), [1., 1.]))
+    #@test_warn "non-positive" stderror(UnivariateARCHModel(GARCH{3, 0}([1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
+    @test_logs (:warn, "non-positive variance encountered; vcov matrix is inaccurate.") stderror(UnivariateARCHModel(GARCH{1, 0}( [1.0, .1]), [1., 1.]))
     e = @test_throws ARCH.NumParamError ARCH.loglik!(Float64[], Float64[], Float64[], GARCH{1, 1}, StdNormal{Float64},
                                                      NoIntercept{Float64}, zeros(T),
                                                      [0., 0., 0., 0.]
@@ -184,7 +184,7 @@ end
     str = sprint(showerror, e.value)
     @test startswith(str, "incorrect number of parameters")
     @test_throws ARCH.NumParamError GARCH{1, 1}([.1])
-    e = @test_throws ErrorException predict(ARCHModel(GARCH{0, 0}([1.]), zeros(10)), :blah)
+    e = @test_throws ErrorException predict(UnivariateARCHModel(GARCH{0, 0}([1.]), zeros(10)), :blah)
     str = sprint(showerror, e.value)
     @test startswith(str, "Prediction target blah unknown")
 

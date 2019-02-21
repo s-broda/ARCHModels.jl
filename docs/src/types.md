@@ -5,7 +5,7 @@ r_t=\mu_t+\sigma_tz_t,\quad \mu_t\equiv\mathbb{E}[r_t\mid\mathcal{F}_{t-1}],\qua
 ```
 where ``z_t`` is identically and independently distributed according to some law with mean zero and unit variance and ``\\{\mathcal{F}_t\\}`` is the natural filtration of ``\\{r_t\\}`` (i.e., it encodes information about past returns).
 
-This package represents a (G)ARCH model as an instance of [`ARCHModel`](@ref), which implements the interface of `StatisticalModel` from [`StatsBase`](http://juliastats.github.io/StatsBase.jl/stable/statmodels.html). An instance of this type contains a vector of data (such as equity returns), and encapsulates information about the [volatility specification](@ref volaspec) (e.g., [GARCH](@ref) or [EGARCH](@ref)), the [mean specification](@ref meanspec) (e.g., whether an intercept is included), and the [error distribution](@ref Distributions).
+This package represents a univariate (G)ARCH model as an instance of [`UnivariateARCHModel`](@ref), which implements the interface of `StatisticalModel` from [`StatsBase`](http://juliastats.github.io/StatsBase.jl/stable/statmodels.html). An instance of this type contains a vector of data (such as equity returns), and encapsulates information about the [volatility specification](@ref volaspec) (e.g., [GARCH](@ref) or [EGARCH](@ref)), the [mean specification](@ref meanspec) (e.g., whether an intercept is included), and the [error distribution](@ref Distributions).
 
 ## [Volatility specifications](@id volaspec)
 Volatility specifications describe the evolution of ``\sigma_t``. They are modelled as subtypes of [`VolatilitySpec`](@ref). There is one type for each class of (G)ARCH model, parameterized by the number(s) of lags (e.g., ``p``, ``q`` for a GARCH(p, q) model). For each volatility specification, the order of the parameters in the coefficient vector is such that all parameters pertaining to the first type parameter (``p``) appear before those pertaining to the second (``q``).
@@ -123,8 +123,8 @@ julia> const MyStdT = Standardized{TDist};
 
 julia> ARCH.startingvals(::Type{<:MyStdT}, data::Vector{T}) where T = T[3.]
 ```
-## Working with ARCHModels
-The constructor for [`ARCHModel`](@ref) takes two mandatory arguments: an instance of a subtype of [`VolatilitySpec`](@ref), and a vector of returns. The mean specification and error distribution can be changed via the keyword arguments `meanspec` and `dist`, which respectively default to `NoIntercept` and `StdNormal`.
+## Working with UnivariateARCHModels
+The constructor for [`UnivariateARCHModel`](@ref) takes two mandatory arguments: an instance of a subtype of [`VolatilitySpec`](@ref), and a vector of returns. The mean specification and error distribution can be changed via the keyword arguments `meanspec` and `dist`, which respectively default to `NoIntercept` and `StdNormal`.
 
 For example, to construct a GARCH(1, 1) model with an intercept and ``t``-distributed errors, one would do
 ```jldoctest TYPES
@@ -132,7 +132,7 @@ julia> spec = GARCH{1, 1}([1., .9, .05]);
 
 julia> data = BG96;
 
-julia> am = ARCHModel(spec, data; dist=StdT(3.), meanspec=Intercept(1.))
+julia> am = UnivariateARCHModel(spec, data; dist=StdT(3.), meanspec=Intercept(1.))
 
 TGARCH{0,1,1} model with Student's t errors, T=1974.
 
@@ -173,9 +173,9 @@ Distribution parameters:
 ν     4.11211  0.400384 10.2704   <1e-24
 ```
 
-It should, however, rarely be necessary to construct an `ARCHModel` manually via its constructor; typically, instances of it are created by calling [`fit`](@ref), [`selectmodel`](@ref), or [`simulate`](@ref).
+It should, however, rarely be necessary to construct an `UnivariateARCHModel` manually via its constructor; typically, instances of it are created by calling [`fit`](@ref), [`selectmodel`](@ref), or [`simulate`](@ref).
 
-As discussed earlier, [`ARCHModel`](@ref) implements the interface of StatisticalModel from [`StatsBase`](http://juliastats.github.io/StatsBase.jl/stable/statmodels.html), so you
+As discussed earlier, [`UnivariateARCHModel`](@ref) implements the interface of StatisticalModel from [`StatsBase`](http://juliastats.github.io/StatsBase.jl/stable/statmodels.html), so you
 can call `coef`, `coefnames`, `confint`, `dof`, `informationmatrix`, `isfitted`, `loglikelihood`, `nobs`,  `score`, `stderror`, `vcov`, etc. on its instances:
 
 ```jldoctest TYPES
