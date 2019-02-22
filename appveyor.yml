@@ -2,7 +2,7 @@ environment:
   matrix:
    - julia_version: 1.0 # latest 1.0.x
    - julia_version: 1   # latest 1.x.y
-  #- julia_version: nightly
+   - julia_version: nightly
 
 platform:
   - x86 # 32-bit
