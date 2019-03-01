@@ -21,7 +21,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Installation",
     "category": "section",
-    "text": "The package is not yet registered. To install it in Julia 1.0 or later, doadd https://github.com/s-broda/ARCHModels.jlin the Pkg REPL mode (which is entered by pressing ] at the prompt). For Julia 0.6, check out the 0.6 branch."
+    "text": "ARCHModels is a registered Julia package. To install it in Julia 1.0 or later, doadd ARCHModelsin the Pkg REPL mode (which is entered by pressing ] at the prompt)."
 },
 
 {
@@ -253,7 +253,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference guide",
     "title": "ARCHModels.ARCHLMTest",
     "category": "type",
-    "text": "ARCHLMTest <: HypothesisTest\n\nEngle\'s (1982) LM test for autoregressive conditional heteroskedasticity.\n\n\n\n\n\n"
+    "text": "ARCHLMTest(am::UnivariateARCHModel, p=max(o, p, q, ...))\n\nConduct Engle\'s (1982) LM test for autoregressive conditional heteroskedasticity with p lags in the test regression.\n\n\n\n\n\n"
 },
 
 {
@@ -261,7 +261,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference guide",
     "title": "ARCHModels.ARCHLMTest",
     "category": "type",
-    "text": "ARCHLMTest(am::UnivariateARCHModel, p=max(o, p, q, ...))\n\nConduct Engle\'s (1982) LM test for autoregressive conditional heteroskedasticity with p lags in the test regression.\n\n\n\n\n\n"
+    "text": "ARCHLMTest <: HypothesisTest\n\nEngle\'s (1982) LM test for autoregressive conditional heteroskedasticity.\n\n\n\n\n\n"
 },
 
 {
