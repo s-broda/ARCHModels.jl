@@ -24,14 +24,14 @@ As for error distributions, the user may choose among the following:
 
 ## Installation
 
-The package is not yet registered. To install it in Julia 1.0 or later, do
+`ARCHModels` is a registered Julia package. To install it in Julia 1.0 or later, do
 
 ```
-add https://github.com/s-broda/ARCHModels.jl
+add ARCHModels
 ```
 
 in the Pkg REPL mode (which is entered by pressing `]` at the prompt).
-For Julia 0.6, check out the 0.6 branch.
+
 ## Contents
 ```@contents
 Pages = ["types.md", "manual.md", "reference.md"]
