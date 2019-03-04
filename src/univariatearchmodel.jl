@@ -524,6 +524,11 @@ function show(io::IO, am::UnivariateARCHModel)
    end
 end
 
+function modname(::Type{VS}) where VS<:VolatilitySpec
+    s = "$(VS)"
+    s = s[1:findlast(isequal(','), s)-1] * '}'
+end
+
 ## some speed experiments
 # using Base.Cartesian: @nexprs
 #
