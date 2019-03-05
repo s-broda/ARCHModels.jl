@@ -40,9 +40,13 @@ import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, co
 				  informationmatrix, islinear, score, vcov, residuals, predict
 
 export ARCHModel, UnivariateARCHModel, VolatilitySpec, StandardizedDistribution, Standardized, MeanSpec,
-	   MultivariateVolatilitySpec, MultivariateStandardizedDistribution, MultivariateARCHMode,
+	   MultivariateVolatilitySpec, MultivariateStandardizedDistribution, MultivariateARCHModel, MultivariateStdNormal,
+	   EGARCH, TGARCH, GARCH, ARCH, DCC,
        simulate, simulate!, selectmodel, StdNormal, StdT, StdGED, Intercept,
-       NoIntercept, BG96, volatilities, mean, quantile, VaRs, pvalue
+       NoIntercept, BG96, volatilities, mean, quantile, VaRs, pvalue,
+	   ARCHLMTest, DQTest
+
+
 
 
 include("utils.jl")
@@ -54,4 +58,6 @@ include("EGARCH.jl")
 include("TGARCH.jl")
 include("tests.jl")
 include("multivariatearchmodel.jl")
+include("multivariatestandardizeddistributions.jl")
+include("DCC.jl")
 end#module

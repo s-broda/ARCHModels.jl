@@ -1,8 +1,3 @@
-export TGARCH
-export GARCH
-export ARCH
-
-
 """
     TGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}
 """

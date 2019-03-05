@@ -1,4 +1,3 @@
-
 abstract type MultivariateVolatilitySpec{T, d} end
 
 abstract type MultivariateStandardizedDistribution{T, d} <: Distribution{Multivariate, Continuous} end
@@ -10,7 +9,7 @@ mutable struct MultivariateARCHModel{T<:AbstractFloat,
                  				     MS<:MeanSpec{T}
                  				   	} <: ARCHModel
     spec::VS
-    data::Array{T, n}
+    data::Matrix{T}
     dist::SD
     meanspec::MS
 	fitted::Bool
@@ -20,7 +19,7 @@ mutable struct MultivariateARCHModel{T<:AbstractFloat,
 end
 
 function MultivariateARCHModel(spec::VS,
-							   data::Array{T, d};
+							   data::Matrix{T},
           					   dist::SD=MultivariateStdNormal{T}(),
           				 	   meanspec::MS=NoIntercept{T}(),
 		  			 		   fitted::Bool=false
@@ -30,7 +29,7 @@ function MultivariateARCHModel(spec::VS,
                    					   SD<:MultivariateStandardizedDistribution,
                    					   MS<:MeanSpec
                    			 		  }
-    UnivariateARCHModel{T, d, VS, SD, MS}(spec, data, dist, meanspec, fitted)
+    MultivariateARCHModel{T, d, VS, SD, MS}(spec, data, dist, meanspec, fitted)
 end
 
 
