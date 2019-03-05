@@ -53,5 +53,5 @@ include("univariatestandardizeddistributions.jl")
 include("EGARCH.jl")
 include("TGARCH.jl")
 include("tests.jl")
-
+include("multivariatearchmodel.jl")
 end#module
