@@ -49,8 +49,8 @@ include("general.jl")
 include("univariatearchmodel.jl")
 include("meanspecs.jl")
 include("univariatestandardizeddistributions.jl")
-include("egarch.jl")
-include("tgarch.jl")
+include("EGARCH.jl")
+include("TGARCH.jl")
 include("tests.jl")
 
 end#module
