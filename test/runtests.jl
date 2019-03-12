@@ -7,7 +7,7 @@ T = 10^4;
     Random.seed!(1)
     spec = TGARCH{1,1,1}([1., .05, .9, .01]);
     am = simulate(spec, T);
-    am = selectmodel(TGARCH, am.data; meanspec=NoIntercept, show_trace=true, maxlags=2)
+    am = selectmodel(TGARCH, am.data; meanspec=NoIntercept(), show_trace=true, maxlags=2)
     @test all(isapprox.(coef(am), [0.9439667311150648
                                    0.04573706835008625
                                    0.9043902283152758
@@ -27,7 +27,7 @@ T = 10^4;
     Random.seed!(1)
     am000 = simulate(am0, nobs(am0))
     @test all(am000.data .== am0.data)
-    am = selectmodel(GARCH, am0.data; meanspec=NoIntercept, show_trace=true)
+    am = selectmodel(GARCH, am0.data; meanspec=NoIntercept(), show_trace=true)
     @test isfitted(am) == true
     #with unconditional as presample:
     #@test all(isapprox.(coef(am), [0.9086632896184081,
@@ -97,7 +97,7 @@ end
                                                                 Float64[],
                                                                 typeof(spec),
                                                                 StdNormal{Float64},
-                                                                NoIntercept{Float64},
+                                                                NoIntercept{Float64}(),
                                                                 am.data,
                                                                 spec.coefs
                                                                 )
@@ -178,7 +178,7 @@ end
     #@test_warn "non-positive" stderror(UnivariateARCHModel(GARCH{3, 0}([1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
     @test_logs (:warn, "non-positive variance encountered; vcov matrix is inaccurate.") stderror(UnivariateARCHModel(GARCH{1, 0}( [1.0, .1]), [1., 1.]))
     e = @test_throws ARCHModels.NumParamError ARCHModels.loglik!(Float64[], Float64[], Float64[], GARCH{1, 1}, StdNormal{Float64},
-                                                     NoIntercept{Float64}, zeros(T),
+                                                     NoIntercept{Float64}(), zeros(T),
                                                      [0., 0., 0., 0.]
                                                      )
     str = sprint(showerror, e.value)
@@ -212,7 +212,7 @@ end
         datat = simulate(spec, T; dist=StdT(4)).data
         Random.seed!(1);
         datam = simulate(spec, T; dist=StdT(4), meanspec=Intercept(3)).data
-        am4 = selectmodel(GARCH, datat; dist=StdT, meanspec=NoIntercept, show_trace=true)
+        am4 = selectmodel(GARCH, datat; dist=StdT, meanspec=NoIntercept{Float64}(), show_trace=true)
         am5 = selectmodel(GARCH, datam; dist=StdT, show_trace=true)
         @test coefnames(am5) == ["ω", "β₁", "α₁", "ν", "μ"]
         @test all(coeftable(am4).cols[2] .== stderror(am4))

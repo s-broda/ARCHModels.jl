@@ -73,17 +73,17 @@ function UnivariateARCHModel(spec::VS,
 end
 
 loglikelihood(am::UnivariateARCHModel) = loglik(typeof(am.spec), typeof(am.dist),
-                                      typeof(am.meanspec), am.data,
+                                      am.meanspec, am.data,
                                       vcat(am.spec.coefs, am.dist.coefs,
                                            am.meanspec.coefs
                                            )
                                       )
 
-dof(am::UnivariateARCHModel) = nparams(typeof(am.spec)) + nparams(typeof(am.dist)) + nparams(typeof(am.meanspec))
+dof(am::UnivariateARCHModel) = nparams(typeof(am.spec)) + nparams(typeof(am.dist)) + nparams(am.meanspec)
 coef(am::UnivariateARCHModel)=vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs)
 coefnames(am::UnivariateARCHModel) = vcat(coefnames(typeof(am.spec)),
                                 coefnames(typeof(am.dist)),
-                                coefnames(typeof(am.meanspec))
+                                coefnames(am.meanspec)
                                 )
 
 
@@ -137,7 +137,7 @@ function _simulate!(data::Vector{T2}, spec::VolatilitySpec{T2};
         h0 > 0 || error("Model is nonstationary.")
         for t = 1:T
             if t>r
-                update!(ht, lht, zt, typeof(spec), typeof(meanspec),
+                update!(ht, lht, zt, typeof(spec), meanspec,
                         data, spec.coefs, meanspec.coefs, t
                         )
             else
@@ -145,16 +145,16 @@ function _simulate!(data::Vector{T2}, spec::VolatilitySpec{T2};
                 push!(lht, log(h0))
             end
             push!(zt, rand(dist))
-            data[t] = mean(typeof(meanspec), meanspec.coefs) + sqrt(ht[end])*zt[end]
+            data[t] = mean(meanspec) + sqrt(ht[end])*zt[end]
         end
     end
     deleteat!(data, 1:warmup)
 end
 
-@inline function splitcoefs(coefs, VS, SD, MS)
+@inline function splitcoefs(coefs, VS, SD, meanspec)
     ng = nparams(VS)
     nd = nparams(SD)
-    nm = nparams(MS)
+    nm = nparams(meanspec)
     length(coefs) == ng+nd+nm || throw(NumParamError(ng+nd+nm, length(coefs)))
     garchcoefs = coefs[1:ng]
     distcoefs = coefs[ng+1:ng+nd]
@@ -165,11 +165,11 @@ end
     volatilities(am::UnivariateARCHModel)
 Return the conditional volatilities.
 """
-function volatilities(am::UnivariateARCHModel{T, VS, SD, MS}) where {T, VS, SD, MS}
+function volatilities(am::UnivariateARCHModel{T, VS, SD}) where {T, VS, SD}
 	ht = Vector{T}(undef, 0)
 	lht = Vector{T}(undef, 0)
 	zt = Vector{T}(undef, 0)
-	loglik!(ht, lht, zt, VS, SD, MS, am.data, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
+	loglik!(ht, lht, zt, VS, SD, am.meanspec, am.data, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
 	return sqrt.(ht)
 end
 
@@ -179,12 +179,12 @@ Form a 1-step ahead prediction from `am`. `what` controls which object is predic
 The choices are `:volatility` (the default), `:variance`, `:return`, and `:VaR`. The VaR
 level can be controlled with the keyword argument `level`.
 """
-function predict(am::UnivariateARCHModel{T, VS, SD, MS}, what=:volatility; level=0.01) where {T, VS, SD, MS}
+function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility; level=0.01) where {T, VS, SD, MS}
 	ht = volatilities(am).^2
 	lht = log.(ht)
 	zt = residuals(am)
 	t = length(am.data)
-	update!(ht, lht, zt, VS, MS, am.data, am.spec.coefs, am.meanspec.coefs, t)
+	update!(ht, lht, zt, VS, am.meanspec, am.data, am.spec.coefs, am.meanspec.coefs, t)
 	#this (and a loop) is what we'd need for n-step. but this will only work vor the variance, and only for GARCH:
 	#push!(zt, zero(T))
 	#push!(am.data, mean(am.meanspec))
@@ -204,12 +204,12 @@ end
     residuals(am::UnivariateARCHModel; standardized=true)
 Return the residuals of the model. Pass `standardized=false` for the non-devolatized residuals.
 """
-function residuals(am::UnivariateARCHModel{T, VS, SD, MS}; standardized=true) where {T, VS, SD, MS}
+function residuals(am::UnivariateARCHModel{T, VS, SD}; standardized=true) where {T, VS, SD}
 	if standardized
 		ht = Vector{T}(undef, 0)
 		lht = Vector{T}(undef, 0)
 		zt = Vector{T}(undef, 0)
-		loglik!(ht, lht, zt, VS, SD, MS, am.data, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
+		loglik!(ht, lht, zt, VS, SD, am.meanspec, am.data, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
 		return zt
 	else
 		return am.data.-mean(am.meanspec)
@@ -230,12 +230,12 @@ end
 #but grows them by length(data); hence it should be called with an empty one-
 #dimensional array of the right type.
 @inline function loglik!(ht::AbstractVector{T2}, lht::AbstractVector{T2},
-                         zt::AbstractVector{T2}, ::Type{VS}, ::Type{SD}, ::Type{MS},
+                         zt::AbstractVector{T2}, ::Type{VS}, ::Type{SD}, meanspec::MS,
                          data::Vector{T1}, coefs::AbstractVector{T2}
                          ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
                                   MS<:MeanSpec, T1<:AbstractFloat, T2
                                   }
-    garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, MS)
+    garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, meanspec)
     #the below 6 lines can be removed when using Fminbox
     lowergarch, uppergarch = constraints(VS, T1)
     lowerdist, upperdist = constraints(SD, T1)
@@ -254,20 +254,20 @@ end
         LL = zero(T2)
         for t = 1:T
             if t > r
-                update!(ht, lht, zt, VS, MS, data, garchcoefs, meancoefs, t)
+                update!(ht, lht, zt, VS, meanspec, data, garchcoefs, meancoefs, t)
             else
                 push!(ht, h0)
                 push!(lht, log(h0))
             end
             ht[end] < 0 && return T2(NaN)
-            push!(zt, (data[t]-mean(MS, meancoefs))/sqrt(ht[end]))
+            push!(zt, (data[t]-mean(meanspec, meancoefs))/sqrt(ht[end]))
             LL += -lht[end]/2 + logkernel(SD, zt[end], distcoefs, ki...)
         end#for
     end#inbounds
     LL += T*logconst(SD, distcoefs)
 end#function
 
-function loglik(spec::Type{VS}, dist::Type{SD}, meanspec::Type{MS},
+function loglik(spec::Type{VS}, dist::Type{SD}, meanspec::MS,
                    data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}
                    ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
                             MS<:MeanSpec, T2
@@ -291,24 +291,24 @@ end
 
 function informationmatrix(am::UnivariateARCHModel; expected::Bool=true)
 	expected && error("expected informationmatrix is not implemented for UnivariateARCHModel. Use expected=false.")
-	g = x -> sum(logliks(typeof(am.spec), typeof(am.dist), typeof(am.meanspec), am.data, x))
+	g = x -> sum(logliks(typeof(am.spec), typeof(am.dist), am.meanspec, am.data, x))
 	H = ForwardDiff.hessian(g, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
 	J = -H/nobs(am)
 end
 
 function scores(am::UnivariateARCHModel)
-	f = x -> logliks(typeof(am.spec), typeof(am.dist), typeof(am.meanspec), am.data, x)
+	f = x -> logliks(typeof(am.spec), typeof(am.dist), am.meanspec, am.data, x)
 	S = ForwardDiff.jacobian(f, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
 end
 
 
 function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
-              meancoefs::Vector{T}, ::Type{VS}, ::Type{SD}, ::Type{MS},
+              meancoefs::Vector{T}, ::Type{VS}, ::Type{SD}, meanspec::MS,
               data::Vector{T}; algorithm=BFGS(), autodiff=:forward, kwargs...
               ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
                        MS<:MeanSpec, T<:AbstractFloat
                        }
-    obj = x -> -loglik(VS, SD, MS, data, x)
+    obj = x -> -loglik(VS, SD, meanspec, data, x)
     coefs = vcat(garchcoefs, distcoefs, meancoefs)
     #for fminbox:
     # lowergarch, uppergarch = constraints(VS, T)
@@ -321,7 +321,7 @@ function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
     coefs .= Optim.minimizer(res)
     ng = nparams(VS)
     ns = nparams(SD)
-    nm = nparams(MS)
+    nm = nparams(meanspec)
     garchcoefs .= coefs[1:ng]
     distcoefs .= coefs[ng+1:ng+ns]
     meancoefs .= coefs[ng+ns+1:ng+ns+nm]
@@ -361,16 +361,16 @@ Distribution parameters:
 ```
 """
 function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
-             meanspec::Type{MS}=Intercept{T}, algorithm=BFGS(),
+             meanspec::MS=Intercept{T}(T[0]), algorithm=BFGS(),
              autodiff=:forward, kwargs...
              ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
                       MS<:MeanSpec, T<:AbstractFloat
                       }
     coefs = startingvals(VS, data)
     distcoefs = startingvals(SD, data)
-    meancoefs = startingvals(MS, data)
-    _fit!(coefs, distcoefs, meancoefs, VS, SD, MS, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
-	return UnivariateARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=MS(meancoefs), fitted=true)
+    meancoefs = startingvals(meanspec, data)
+    _fit!(coefs, distcoefs, meancoefs, VS, SD, meanspec, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
+	return UnivariateARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=MS(meancoefs, data), fitted=true)
 end
 
 """
@@ -382,9 +382,9 @@ are passed on to the optimizer.
 function fit!(am::UnivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
     am.spec.coefs.=startingvals(typeof(am.spec), am.data)
     am.dist.coefs.=startingvals(typeof(am.dist), am.data)
-    am.meanspec.coefs.=startingvals(typeof(am.meanspec), am.data)
+    am.meanspec.coefs.=startingvals(am.meanspec, am.data)
     _fit!(am.spec.coefs, am.dist.coefs, am.meanspec.coefs, typeof(am.spec),
-         typeof(am.dist), typeof(am.meanspec), am.data; algorithm=algorithm,
+         typeof(am.dist), am.meanspec, am.data; algorithm=algorithm,
          autodiff=autodiff, kwargs...
          )
 	am.fitted=true
@@ -440,7 +440,7 @@ Volatility parameters:
 ```
 """
 function selectmodel(::Type{VS}, data::Vector{T};
-                     dist::Type{SD}=StdNormal{T}, meanspec::Type{MS}=Intercept{T},
+                     dist::Type{SD}=StdNormal{T}, meanspec::MS=Intercept{T}(T[0]),
                      maxlags=3, criterion=bic, show_trace=false, algorithm=BFGS(),
                      autodiff=:forward, kwargs...
                      ) where {VS<:VolatilitySpec, T<:AbstractFloat,
@@ -485,10 +485,10 @@ function show(io::IO, am::UnivariateARCHModel)
 		cc = coef(am)
 	    se = stderror(am)
 	    ccg, ccd, ccm = splitcoefs(cc, typeof(am.spec),
-	                               typeof(am.dist), typeof(am.meanspec)
+	                               typeof(am.dist), am.meanspec
 	                               )
 	    seg, sed, sem = splitcoefs(se, typeof(am.spec),
-	                               typeof(am.dist), typeof(am.meanspec)
+	                               typeof(am.dist), am.meanspec
 	                               )
 	    zzg = ccg ./ seg
 	    zzd = ccd ./ sed
@@ -499,7 +499,7 @@ function show(io::IO, am::UnivariateARCHModel)
 	    length(sem) > 0 && println(io, "Mean equation parameters:", "\n\n",
 	                               CoefTable(hcat(ccm, sem, zzm, 2.0 * normccdf.(abs.(zzm))),
 	                                         ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
-	                                         coefnames(typeof(am.meanspec)), 4
+	                                         coefnames(am.meanspec), 4
 	                                         )
 	                              )
 	    println(io, "Volatility parameters:", "\n\n",

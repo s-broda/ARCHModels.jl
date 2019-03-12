@@ -4,7 +4,7 @@
     mean(spec::MeanSpec)
 Return the mean implied by MeanSpec
 """
-mean(spec::MeanSpec) = mean(typeof(spec), spec.coefs)
+mean(spec::MeanSpec) = mean(spec, spec.coefs)
 ################################################################################
 #NoIntercept
 """
@@ -22,10 +22,11 @@ end
 
 Create an instance of NoIntercept.
 """
+NoIntercept{T}(coef::Vector{T}, data) where {T} = NoIntercept(coef)
 NoIntercept(T::Type=Float64) = NoIntercept(T[])
 NoIntercept{T}() where {T} = NoIntercept(T[])
-nparams(::Type{<:NoIntercept}) = 0
-coefnames(::Type{<:NoIntercept}) = String[]
+nparams(::NoIntercept) = 0
+coefnames(::NoIntercept) = String[]
 
 function constraints(::Type{<:NoIntercept}, ::Type{T})  where {T<:AbstractFloat}
     lower = T[]
@@ -33,11 +34,11 @@ function constraints(::Type{<:NoIntercept}, ::Type{T})  where {T<:AbstractFloat}
     return lower, upper
 end
 
-function startingvals(::Type{<:NoIntercept}, data::Vector{T})  where {T<:AbstractFloat}
+function startingvals(::NoIntercept{T}, data)  where {T<:AbstractFloat}
     return T[]
 end
 
-function mean(::Type{<:NoIntercept}, meancoefs::Vector{T}) where {T}
+@inline function mean(::NoIntercept, meancoefs::Vector{T}) where {T}
     return zero(T)
 end
 
@@ -57,10 +58,11 @@ end
 
 Create an instance of Intercept. `mu` can be passed as a scalar or vector.
 """
+Intercept{T}(mu::Vector{T}, data) where {T} = Intercept(mu)
 Intercept(mu) = Intercept([mu])
 Intercept(mu::Integer) = Intercept(float(mu))
-nparams(::Type{<:Intercept}) = 1
-coefnames(::Type{<:Intercept}) = ["μ"]
+nparams(::Intercept) = 1
+coefnames(::Intercept) = ["μ"]
 
 function constraints(::Type{<:Intercept}, ::Type{T})  where {T<:AbstractFloat}
     lower = T[-Inf]
@@ -68,10 +70,10 @@ function constraints(::Type{<:Intercept}, ::Type{T})  where {T<:AbstractFloat}
     return lower, upper
 end
 
-function startingvals(::Type{<:Intercept}, data::Vector{T})  where {T<:AbstractFloat}
+function startingvals(::Intercept, data::Vector{T})  where {T<:AbstractFloat}
     return T[mean(data)]
 end
 
-function mean(::Type{<:Intercept}, meancoefs::Vector{T}) where {T}
-    return meancoefs[1]
+@inline function mean(::Intercept, meancoefs::Vector{T}) where {T}
+    return @inbounds meancoefs[1]
 end

@@ -4,7 +4,6 @@
 #HAC s.e.s from CovariancesMatrices.jl?
 #how to export arch?
 #Forecasting
-#actually pass instances everywhere, at least for mean
 #Float16/32 don't seem to work anymore. Problem in Optim?
 #support missing data? timeseries?
 #a simulated AM should probably contain a (zero) intercept, so that fit! is consistent with fit.
