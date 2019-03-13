@@ -77,3 +77,19 @@ end
 @inline function mean(::Intercept, meancoefs::Vector{T}) where {T}
     return @inbounds meancoefs[1]
 end
+
+################################################################################
+#ARMA
+struct ARMA{p, q, T} <: MeanSpec{T}
+    coef::Vector{T}
+    data::Matrix{T}
+end
+nparams(::ARMA) = p+q+1
+function coefnames(::ARMA{p, q}) where {p, q}
+    names = Array{String, 1}(undef, p+q+1)
+    names[1] = "μ"
+    names[2:p+1] .= (i -> "φ"*subscript(i)).([1:p...])
+    names[2+p:p+q+1] .= (i -> "θ"*subscript(i)).([1:q...])
+
+    return names
+end
