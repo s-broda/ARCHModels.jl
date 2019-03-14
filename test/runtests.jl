@@ -141,10 +141,10 @@ end
     #@test all(isapprox(score(am), [-4.091261171623728e-6 3.524550271549742e-5 -6.989366926291041e-5], rtol=1e-4))
     @test all(isapprox(score(am), [0. 0. 0.], atol=1e-3))
     @test islinear(am::UnivariateARCHModel) == false
-    @test predict(am) ≈ 4.366619452770822
-    @test predict(am, :variance) ≈ 19.067365445316554
+    @test predict(am) ≈ 4.361606730361275
+    @test predict(am, :variance) ≈ 19.023613270332767
     @test predict(am, :return) == 0.0
-    @test predict(am, :VaR) ≈ 10.158275880698804
+    @test predict(am, :VaR) ≈ 10.146614544578197
 end
 
 @testset "MeanSpecs" begin
