@@ -184,7 +184,7 @@ function predict(am::UnivariateARCHModel{T, VS, SD, MS}, what=:volatility; level
 	lht = log.(ht)
 	zt = residuals(am)
 	t = length(am.data)
-	update!(ht, lht, zt, VS, MS, am.data, am.spec.coefs, am.meanspec.coefs, t)
+	update!(ht, lht, zt, VS, MS, am.data, am.spec.coefs, am.meanspec.coefs, t+1)
 	#this (and a loop) is what we'd need for n-step. but this will only work vor the variance, and only for GARCH:
 	#push!(zt, zero(T))
 	#push!(am.data, mean(am.meanspec))
