@@ -22,7 +22,6 @@ end
 
 Create an instance of NoIntercept.
 """
-NoIntercept{T}(coef::Vector{T}, data) where {T} = NoIntercept(coef)
 NoIntercept(T::Type=Float64) = NoIntercept(T[])
 NoIntercept{T}() where {T} = NoIntercept(T[])
 nparams(::NoIntercept) = 0
@@ -59,7 +58,7 @@ end
 
 Create an instance of Intercept. `mu` can be passed as a scalar or vector.
 """
-Intercept{T}(mu::Vector{T}, data) where {T} = Intercept(mu)
+
 Intercept(mu) = Intercept([mu])
 Intercept(mu::Integer) = Intercept(float(mu))
 nparams(::Intercept) = 1
@@ -85,7 +84,6 @@ end
 #ARMA
 struct ARMA{p, q, T} <: MeanSpec{T}
     coef::Vector{T}
-    data::Matrix{T}
 end
 nparams(::ARMA) = p+q+1
 function coefnames(::ARMA{p, q}) where {p, q}

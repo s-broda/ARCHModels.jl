@@ -370,8 +370,8 @@ function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
     coefs = startingvals(VS, data)
     distcoefs = startingvals(SD, data)
     meancoefs = startingvals(meanspec, data)
-    _fit!(coefs, distcoefs, meancoefs, VS, SD, meanspec, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
-	return UnivariateARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=MS(meancoefs, data), fitted=true)
+	_fit!(coefs, distcoefs, meancoefs, VS, SD, meanspec, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
+	return UnivariateARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=MS(meancoefs), fitted=true)
 end
 
 """
