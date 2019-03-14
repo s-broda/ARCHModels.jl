@@ -137,7 +137,7 @@ function _simulate!(data::Vector{T2}, spec::VolatilitySpec{T2};
         h0 = uncond(typeof(spec), spec.coefs)
         h0 > 0 || error("Model is nonstationary.")
         for t = 1:T
-            if t>r
+			if t>r
                 update!(ht, lht, zt, at, typeof(spec), meanspec,
                         data, spec.coefs, meanspec.coefs, t
                         )
@@ -146,7 +146,8 @@ function _simulate!(data::Vector{T2}, spec::VolatilitySpec{T2};
                 push!(lht, log(h0))
             end
             push!(zt, rand(dist))
-            data[t] = mean(meanspec) + sqrt(ht[end])*zt[end]
+			push!(at, sqrt(ht[end])*zt[end])
+            data[t] = mean(meanspec) + at[end]
         end
     end
     deleteat!(data, 1:warmup)
@@ -187,7 +188,7 @@ function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility; level=0.0
 	zt = residuals(am)
 	at = residuals(am, standardized=false)
 	t = length(am.data)
-	update!(ht, lht, zt, at, VS, am.meanspec, am.data, am.spec.coefs, am.meanspec.coefs, t)
+	update!(ht, lht, zt, at, VS, am.meanspec, am.data, am.spec.coefs, am.meanspec.coefs, t+1)
 	if what == :return
 		return mean(am.meanspec)
 	elseif what == :volatility
@@ -250,7 +251,6 @@ end
         #h0 > 0 || return T2(NaN)
         LL = zero(T2)
         for t = 1:T
-			push!(at, data[t]-mean(meanspec, meancoefs))
 			if t > r
                 update!(ht, lht, zt, at, VS, meanspec, data, garchcoefs, meancoefs, t)
             else
@@ -258,7 +258,7 @@ end
                 push!(lht, log(h0))
             end
             ht[end] < 0 && return T2(NaN)
-
+			push!(at, data[t]-mean(meanspec, meancoefs))
             push!(zt, at[end]/sqrt(ht[end]))
             LL += -lht[end]/2 + logkernel(SD, zt[end], distcoefs, ki...)
         end#for
