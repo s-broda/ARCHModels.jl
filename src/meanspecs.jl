@@ -42,6 +42,7 @@ end
     return zero(T)
 end
 
+@inline presample(::NoIntercept) = 0
 ################################################################################
 #Intercept
 """
@@ -78,6 +79,8 @@ end
     return @inbounds meancoefs[1]
 end
 
+@inline presample(::Intercept) = 0
+
 ################################################################################
 #ARMA
 struct ARMA{p, q, T} <: MeanSpec{T}
@@ -93,3 +96,4 @@ function coefnames(::ARMA{p, q}) where {p, q}
 
     return names
 end
+@inline presample(::ARMA{p, q}) where {p, q} = max(p, q)

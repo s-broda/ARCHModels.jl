@@ -128,16 +128,17 @@ function _simulate!(data::Vector{T2}, spec::VolatilitySpec{T2};
 	@assert warmup>0
 	append!(data, zeros(T2, warmup))
     T = length(data)
-    r = presample(typeof(spec))
+    r = max(presample(typeof(spec)), presample(meanspec))
     ht = CircularBuffer{T2}(r)
     lht = CircularBuffer{T2}(r)
     zt = CircularBuffer{T2}(r)
+	at = CircularBuffer{T2}(r)
     @inbounds begin
         h0 = uncond(typeof(spec), spec.coefs)
         h0 > 0 || error("Model is nonstationary.")
         for t = 1:T
             if t>r
-                update!(ht, lht, zt, typeof(spec), meanspec,
+                update!(ht, lht, zt, at, typeof(spec), meanspec,
                         data, spec.coefs, meanspec.coefs, t
                         )
             else
@@ -169,7 +170,8 @@ function volatilities(am::UnivariateARCHModel{T, VS, SD}) where {T, VS, SD}
 	ht = Vector{T}(undef, 0)
 	lht = Vector{T}(undef, 0)
 	zt = Vector{T}(undef, 0)
-	loglik!(ht, lht, zt, VS, SD, am.meanspec, am.data, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
+	at = Vector{T}(undef, 0)
+	loglik!(ht, lht, zt, at, VS, SD, am.meanspec, am.data, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
 	return sqrt.(ht)
 end
 
@@ -183,11 +185,9 @@ function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility; level=0.0
 	ht = volatilities(am).^2
 	lht = log.(ht)
 	zt = residuals(am)
+	at = residuals(am, standardized=false)
 	t = length(am.data)
-	update!(ht, lht, zt, VS, am.meanspec, am.data, am.spec.coefs, am.meanspec.coefs, t)
-	#this (and a loop) is what we'd need for n-step. but this will only work vor the variance, and only for GARCH:
-	#push!(zt, zero(T))
-	#push!(am.data, mean(am.meanspec))
+	update!(ht, lht, zt, at, VS, am.meanspec, am.data, am.spec.coefs, am.meanspec.coefs, t)
 	if what == :return
 		return mean(am.meanspec)
 	elseif what == :volatility
@@ -205,15 +205,12 @@ end
 Return the residuals of the model. Pass `standardized=false` for the non-devolatized residuals.
 """
 function residuals(am::UnivariateARCHModel{T, VS, SD}; standardized=true) where {T, VS, SD}
-	if standardized
 		ht = Vector{T}(undef, 0)
 		lht = Vector{T}(undef, 0)
 		zt = Vector{T}(undef, 0)
-		loglik!(ht, lht, zt, VS, SD, am.meanspec, am.data, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
-		return zt
-	else
-		return am.data.-mean(am.meanspec)
-	end
+		at = Vector{T}(undef, 0)
+		loglik!(ht, lht, zt, at, VS, SD, am.meanspec, am.data, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
+	return standardized ? zt : at
 end
 
 """
@@ -230,7 +227,7 @@ end
 #but grows them by length(data); hence it should be called with an empty one-
 #dimensional array of the right type.
 @inline function loglik!(ht::AbstractVector{T2}, lht::AbstractVector{T2},
-                         zt::AbstractVector{T2}, ::Type{VS}, ::Type{SD}, meanspec::MS,
+                         zt::AbstractVector{T2}, at::AbstractVector{T2}, ::Type{VS}, ::Type{SD}, meanspec::MS,
                          data::Vector{T1}, coefs::AbstractVector{T2}
                          ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
                                   MS<:MeanSpec, T1<:AbstractFloat, T2
@@ -244,7 +241,7 @@ end
     upper = vcat(uppergarch, upperdist, uppermean)
     all(lower.<coefs.<upper) || return T2(-Inf)
     T = length(data)
-    r = presample(VS)
+    r = max(presample(VS), presample(meanspec))
     T > r || error("Sample too small.")
 	ki = kernelinvariants(SD, distcoefs)
     @inbounds begin
@@ -253,14 +250,16 @@ end
         #h0 > 0 || return T2(NaN)
         LL = zero(T2)
         for t = 1:T
-            if t > r
-                update!(ht, lht, zt, VS, meanspec, data, garchcoefs, meancoefs, t)
+			push!(at, data[t]-mean(meanspec, meancoefs))
+			if t > r
+                update!(ht, lht, zt, at, VS, meanspec, data, garchcoefs, meancoefs, t)
             else
                 push!(ht, h0)
                 push!(lht, log(h0))
             end
             ht[end] < 0 && return T2(NaN)
-            push!(zt, (data[t]-mean(meanspec, meancoefs))/sqrt(ht[end]))
+
+            push!(zt, at[end]/sqrt(ht[end]))
             LL += -lht[end]/2 + logkernel(SD, zt[end], distcoefs, ki...)
         end#for
     end#inbounds
@@ -272,11 +271,12 @@ function loglik(spec::Type{VS}, dist::Type{SD}, meanspec::MS,
                    ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
                             MS<:MeanSpec, T2
                             }
-    r = presample(VS)
+    r = max(presample(VS), presample(meanspec))
     ht = CircularBuffer{T2}(r)
     lht = CircularBuffer{T2}(r)
     zt = CircularBuffer{T2}(r)
-    loglik!(ht, lht, zt, spec, dist, meanspec, data, coefs)
+	at = CircularBuffer{T2}(r)
+    loglik!(ht, lht, zt, at, spec, dist, meanspec, data, coefs)
 
 end
 
@@ -285,7 +285,8 @@ function logliks(spec, dist, meanspec, data, coefs::Vector{T}) where {T}
     ht = T[]
     lht = T[]
     zt = T[]
-    loglik!(ht, lht, zt, spec, dist, meanspec, data, coefs)
+	at = T[]
+    loglik!(ht, lht, zt, at, spec, dist, meanspec, data, coefs)
     LLs = -lht./2 .+ logkernel.(dist, zt, Ref{Vector{T}}(distcoefs), kernelinvariants(dist, distcoefs)...) .+ logconst(dist, distcoefs)
 end
 

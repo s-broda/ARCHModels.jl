@@ -95,6 +95,7 @@ end
     @test loglikelihood(am) ==  ARCHModels.loglik!(Float64[],
                                                                 Float64[],
                                                                 Float64[],
+                                                                Float64[],
                                                                 typeof(spec),
                                                                 StdNormal{Float64},
                                                                 NoIntercept{Float64}(),
@@ -177,7 +178,7 @@ end
     #with unconditional as presample:
     #@test_warn "non-positive" stderror(UnivariateARCHModel(GARCH{3, 0}([1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
     @test_logs (:warn, "non-positive variance encountered; vcov matrix is inaccurate.") stderror(UnivariateARCHModel(GARCH{1, 0}( [1.0, .1]), [1., 1.]))
-    e = @test_throws ARCHModels.NumParamError ARCHModels.loglik!(Float64[], Float64[], Float64[], GARCH{1, 1}, StdNormal{Float64},
+    e = @test_throws ARCHModels.NumParamError ARCHModels.loglik!(Float64[], Float64[], Float64[], Float64[], GARCH{1, 1}, StdNormal{Float64},
                                                      NoIntercept{Float64}(), zeros(T),
                                                      [0., 0., 0., 0.]
                                                      )

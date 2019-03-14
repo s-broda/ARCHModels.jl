@@ -161,7 +161,8 @@ function startingvals(::Type{<:StdT}, data::Array{T}) where {T}
     ht = T[]
     lht = T[]
     zt = T[]
-    loglik!(ht, lht, zt, GARCH{1, 1}, StdNormal, Intercept(0.), data, vcat(startingvals(GARCH{1, 1}, data), startingvals(Intercept(0.), data)))
+    at = T[]
+    loglik!(ht, lht, zt, at,  GARCH{1, 1}, StdNormal, Intercept(0.), data, vcat(startingvals(GARCH{1, 1}, data), startingvals(Intercept(0.), data)))
     lower = convert(T, 2)
     upper = convert(T, 30)
     z = mean(abs.(data.-mean(data))./sqrt.(ht))
@@ -214,7 +215,8 @@ function startingvals(::Type{<:StdGED}, data::Array{T}) where {T}
     ht = T[]
     lht = T[]
     zt = T[]
-    loglik!(ht, lht, zt, GARCH{1, 1}, StdNormal, Intercept(0.), data, vcat(startingvals(GARCH{1, 1}, data), startingvals(Intercept(0.), data)))
+    at = T[]
+    loglik!(ht, lht, zt, at, GARCH{1, 1}, StdNormal, Intercept(0.), data, vcat(startingvals(GARCH{1, 1}, data), startingvals(Intercept(0.), data)))
     z = mean((abs.(data.-mean(data))./sqrt.(ht)).^4)
     lower = T(0.05)
     upper = T(25.)

@@ -70,11 +70,11 @@ const ARCH = GARCH{0}
 
 @inline presample(::Type{<:TGARCH{o, p, q}}) where {o, p, q} = max(o, p, q)
 
-@inline function update!(ht, lht, zt, ::Type{<:TGARCH{o, p, q}}, meanspec::MeanSpec,
+@inline function update!(ht, lht, zt, at, ::Type{<:TGARCH{o, p, q}}, meanspec::MeanSpec,
                          data, garchcoefs, meancoefs, t
                          ) where {o, p, q}
     mht = garchcoefs[1]
-    for i = 1:o
+    for i = 1:o        
         mht += garchcoefs[i+1]*min(data[t-i]-mean(meanspec, meancoefs), 0)^2
     end
     for i = 1:p
