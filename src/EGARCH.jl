@@ -33,7 +33,7 @@ EGARCH{o, p, q}(coefs::Vector{T}) where {o, p, q, T}  = EGARCH{o, p, q, T}(coefs
 
 Base.@propagate_inbounds @inline function update!(
             ht, lht, zt, at, ::Type{<:EGARCH{o, p ,q}}, meanspec::MeanSpec,
-            data, garchcoefs, meancoefs, t
+            data, garchcoefs, meancoefs
             ) where {o, p, q}
     mlht = garchcoefs[1]
     for i = 1:o

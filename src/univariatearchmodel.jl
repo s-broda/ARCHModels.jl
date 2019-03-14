@@ -139,7 +139,7 @@ function _simulate!(data::Vector{T2}, spec::VolatilitySpec{T2};
         for t = 1:T
 			if t>r
                 update!(ht, lht, zt, at, typeof(spec), meanspec,
-                        data, spec.coefs, meanspec.coefs, t
+                        data, spec.coefs, meanspec.coefs
                         )
             else
                 push!(ht, h0)
@@ -188,7 +188,7 @@ function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility; level=0.0
 	zt = residuals(am)
 	at = residuals(am, standardized=false)
 	t = length(am.data)
-	update!(ht, lht, zt, at, VS, am.meanspec, am.data, am.spec.coefs, am.meanspec.coefs, t+1)
+	update!(ht, lht, zt, at, VS, am.meanspec, am.data, am.spec.coefs, am.meanspec.coefs)
 	if what == :return
 		return mean(am.meanspec)
 	elseif what == :volatility
@@ -252,7 +252,7 @@ end
         LL = zero(T2)
         for t = 1:T
 			if t > r
-                update!(ht, lht, zt, at, VS, meanspec, data, garchcoefs, meancoefs, t)
+                update!(ht, lht, zt, at, VS, meanspec, data, garchcoefs, meancoefs)
             else
                 push!(ht, h0)
                 push!(lht, log(h0))

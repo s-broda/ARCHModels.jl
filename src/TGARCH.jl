@@ -72,7 +72,7 @@ const ARCH = GARCH{0}
 
 Base.@propagate_inbounds @inline function update!(
         ht, lht, zt, at, ::Type{<:TGARCH{o, p, q}}, meanspec::MeanSpec,
-        data, garchcoefs, meancoefs, t
+        data, garchcoefs, meancoefs
         ) where {o, p, q}
     mht = garchcoefs[1]
     for i = 1:o
