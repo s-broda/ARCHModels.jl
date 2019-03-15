@@ -1,4 +1,5 @@
 #TODO: maybe change mean(ARMA) so that it operates at-1 etc? docs, tests, put back fit methods with a type, check correctness, check doctests for this, selectmodel support
+#what's up with omega?
 ################################################################################
 #NoIntercept
 """
@@ -160,6 +161,6 @@ end
 
 Base.@propagate_inbounds @inline function uncond(ms::ARMA{p, q}) where {p, q}
     m = ms.coefs[1]
-    p>0 && (m/=sum(ms.coefs[2:p+1]))
+    p>0 && (m/=(1-sum(ms.coefs[2:p+1])))
     return m
 end
