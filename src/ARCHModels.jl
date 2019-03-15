@@ -39,7 +39,7 @@ import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, co
 
 export ARCHModel, UnivariateARCHModel, VolatilitySpec, StandardizedDistribution, Standardized, MeanSpec,
        simulate, simulate!, selectmodel, StdNormal, StdT, StdGED, Intercept,
-       NoIntercept, ARMA, BG96, volatilities, mean, quantile, VaRs, pvalue, means
+       NoIntercept, ARMA, AR, MA, BG96, volatilities, mean, quantile, VaRs, pvalue, means
 
 
 include("utils.jl")

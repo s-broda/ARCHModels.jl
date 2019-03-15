@@ -1,5 +1,4 @@
-#TODO: maybe change mean(ARMA) so that it operates at-1 etc? docs, tests, put back fit methods with a type, check correctness, check doctests for this, selectmodel support
-#what's up with omega?
+#TODO: maybe change mean(ARMA) so that it operates at-1 etc? docs, tests, put back fit methods with a type, check doctests for this, selectmodel support, regression and arx?
 ################################################################################
 #NoIntercept
 """
@@ -125,6 +124,10 @@ function coefnames(::ARMA{p, q}) where {p, q}
     names[2+p:p+q+1] .= (i -> "θ"*subscript(i)).([1:q...])
     return names
 end
+
+const AR{p} = ARMA{p, 0}
+const MA{q} = ARMA{0, q}
+
 @inline presample(::ARMA{p, q}) where {p, q} = max(p, q)
 
 Base.@propagate_inbounds @inline function mean(
