@@ -186,6 +186,12 @@ end
     e = @test_throws ErrorException predict(UnivariateARCHModel(GARCH{0, 0}([1.]), zeros(10)), :blah)
     str = sprint(showerror, e.value)
     @test startswith(str, "Prediction target blah unknown")
+    @test_throws ARCHModels.NumParamError ARMA{1, 1}([1.])
+    @test_throws ARCHModels.NumParamError Intercept([1., 2.])
+    @test_throws ARCHModels.NumParamError NoIntercept([1.])
+    @test_throws ARCHModels.NumParamError StdNormal([1.])
+    @test_throws ARCHModels.NumParamError StdT([1., 2.])
+    @test_throws ARCHModels.NumParamError StdGED([1., 2.])
 
 end
 

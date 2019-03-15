@@ -79,7 +79,7 @@ loglikelihood(am::UnivariateARCHModel) = loglik(typeof(am.spec), typeof(am.dist)
                                            )
                                       )
 
-dof(am::UnivariateARCHModel) = nparams(typeof(am.spec)) + nparams(typeof(am.dist)) + nparams(am.meanspec)
+dof(am::UnivariateARCHModel) = nparams(typeof(am.spec)) + nparams(typeof(am.dist)) + nparams(typeof(am.meanspec))
 coef(am::UnivariateARCHModel)=vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs)
 coefnames(am::UnivariateARCHModel) = vcat(coefnames(typeof(am.spec)),
                                 coefnames(typeof(am.dist)),
@@ -164,7 +164,7 @@ end
 @inline function splitcoefs(coefs, VS, SD, meanspec)
     ng = nparams(VS)
     nd = nparams(SD)
-    nm = nparams(meanspec)
+    nm = nparams(typeof(meanspec))
     length(coefs) == ng+nd+nm || throw(NumParamError(ng+nd+nm, length(coefs)))
     garchcoefs = coefs[1:ng]
     distcoefs = coefs[ng+1:ng+nd]
@@ -284,8 +284,9 @@ end
             end
             ht[end] < 0 && return T2(NaN)
 			push!(at, data[t]-themean)
-            push!(zt, at[end]/sqrt(ht[end]))
-            LL += -lht[end]/2 + logkernel(SD, zt[end], distcoefs, ki...)
+			push!(zt, at[end]/sqrt(ht[end]))
+			LL += -lht[end]/2 + logkernel(SD, zt[end], distcoefs, ki...)
+
         end#for
     end#inbounds
     LL += T*logconst(SD, distcoefs)
@@ -347,7 +348,7 @@ function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
     coefs .= Optim.minimizer(res)
     ng = nparams(VS)
     ns = nparams(SD)
-    nm = nparams(meanspec)
+    nm = nparams(typeof(meanspec))
     garchcoefs .= coefs[1:ng]
     distcoefs .= coefs[ng+1:ng+ns]
     meancoefs .= coefs[ng+ns+1:ng+ns+nm]

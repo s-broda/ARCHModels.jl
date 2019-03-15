@@ -11,7 +11,6 @@
 #implement lrtest
 #allow uninititalized constructors for VolatilitySpec, MeanSpec and StandardizedDistribution? If so, then be consistent with how they are defined
 #  (change for meanspec and dist ), document, and test. Also, NaN is prob. safer than undef.
-#constructors for meanspec, distributions should check length of coef vector
 #logconst needs to return the correct type
 """
 The ARCHModels package for Julia. For documentation, see https://s-broda.github.io/ARCHModels.jl/dev.
