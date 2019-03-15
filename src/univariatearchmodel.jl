@@ -545,7 +545,7 @@ function show(io::IO, am::UnivariateARCHModel)
    else
 	   println(io, "\n", modname(typeof(am.spec)), " model with ",
 			   distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n\n")
-	   length(am.meanspec.coefs) > 0 && println(io, CoefTable(am.meanspec.coefs, coefnames(typeof(am.meanspec)), ["Mean equation parameters:"]))
+	   length(am.meanspec.coefs) > 0 && println(io, CoefTable(am.meanspec.coefs, coefnames(am.meanspec), ["Mean equation parameters:"]))
 	   println(io, CoefTable(am.spec.coefs, coefnames(typeof(am.spec)), ["Volatility parameters:   "]))
 	   length(am.dist.coefs) > 0 && println(io, CoefTable(am.dist.coefs, coefnames(typeof(am.dist)), ["Distribution parameters: "]))
    end
