@@ -183,4 +183,4 @@ julia> nobs(am)
 1974
 ```
 
-Other useful methods include [`volatilities`](@ref) and [`residuals`](@ref).
+Other useful methods include [`means`](@ref), [`volatilities`](@ref) and [`residuals`](@ref).

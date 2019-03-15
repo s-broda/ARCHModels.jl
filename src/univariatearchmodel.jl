@@ -128,26 +128,34 @@ function _simulate!(data::Vector{T2}, spec::VolatilitySpec{T2};
 	@assert warmup>0
 	append!(data, zeros(T2, warmup))
     T = length(data)
-    r = max(presample(typeof(spec)), presample(meanspec))
+	r1 = presample(typeof(spec))
+	r2 = presample(meanspec)
+	r = max(r1, r2)
     ht = CircularBuffer{T2}(r)
     lht = CircularBuffer{T2}(r)
     zt = CircularBuffer{T2}(r)
 	at = CircularBuffer{T2}(r)
     @inbounds begin
         h0 = uncond(typeof(spec), spec.coefs)
+		m0 = uncond(meanspec)
         h0 > 0 || error("Model is nonstationary.")
         for t = 1:T
-			if t>r
+			if t>r2
+				themean = mean(at, ht, lht, data, meanspec, meanspec.coefs, t)
+			else
+				themean = m0
+			end
+			if t>r1
                 update!(ht, lht, zt, at, typeof(spec), meanspec,
                         data, spec.coefs, meanspec.coefs
                         )
             else
-                push!(ht, h0)
+				push!(ht, h0)
                 push!(lht, log(h0))
             end
-            push!(zt, rand(dist))
+			push!(zt, rand(dist))
 			push!(at, sqrt(ht[end])*zt[end])
-            data[t] = mean(meanspec) + at[end]
+			data[t] = themean + at[end]
         end
     end
     deleteat!(data, 1:warmup)
@@ -188,17 +196,26 @@ function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility; level=0.0
 	zt = residuals(am)
 	at = residuals(am, standardized=false)
 	t = length(am.data)
+	themean = mean(at, ht, lht, data, am.meanspec, meancoefs, t)
 	update!(ht, lht, zt, at, VS, am.meanspec, am.data, am.spec.coefs, am.meanspec.coefs)
 	if what == :return
-		return mean(am.meanspec)
+		return themean
 	elseif what == :volatility
 		return sqrt(ht[end])
 	elseif what == :variance
 		return ht[end]
 	elseif what == :VaR
-		return -mean(am.meanspec) - sqrt(ht[end]) * quantile(am.dist, level)
+		return -themean - sqrt(ht[end]) * quantile(am.dist, level)
 	else error("Prediction target $what unknown.")
 	end
+end
+
+"""
+    means(am::UnivariateARCHModel)
+Return the conditional means of the model.
+"""
+function means(am::UnivariateARCHModel)
+	return am.data-residuals(am; standardized=false)
 end
 
 """
@@ -219,7 +236,7 @@ end
 Return the in-sample Value at Risk implied by `am`.
 """
 function VaRs(am::UnivariateARCHModel, level=0.01)
-    return -mean(am.meanspec) .- volatilities(am) .* quantile(am.dist, level)
+    return -means(am) .- volatilities(am) .* quantile(am.dist, level)
 end
 
 #this works on CircularBuffers. The idea is that ht/lht/zt need to be allocated
@@ -242,23 +259,31 @@ end
     upper = vcat(uppergarch, upperdist, uppermean)
     all(lower.<coefs.<upper) || return T2(-Inf)
     T = length(data)
-    r = max(presample(VS), presample(meanspec))
+	r1 = presample(VS)
+	r2 = presample(meanspec)
+    r = max(r1, r2)
     T > r || error("Sample too small.")
 	ki = kernelinvariants(SD, distcoefs)
     @inbounds begin
         h0 = var(data) # could be moved outside
+		m0 = mean(data)
         #h0 = uncond(VS, garchcoefs)
         #h0 > 0 || return T2(NaN)
         LL = zero(T2)
         for t = 1:T
-			if t > r
+			if t>r2
+				themean = mean(at, ht, lht, data, meanspec, meancoefs, t)
+			else
+				themean = m0
+			end
+			if t > r1
                 update!(ht, lht, zt, at, VS, meanspec, data, garchcoefs, meancoefs)
             else
-                push!(ht, h0)
+				push!(ht, h0)
                 push!(lht, log(h0))
             end
             ht[end] < 0 && return T2(NaN)
-			push!(at, data[t]-mean(meanspec, meancoefs))
+			push!(at, data[t]-themean)
             push!(zt, at[end]/sqrt(ht[end]))
             LL += -lht[end]/2 + logkernel(SD, zt[end], distcoefs, ki...)
         end#for
@@ -452,7 +477,7 @@ function selectmodel(::Type{VS}, data::Vector{T};
     ndims = my_unwrap_unionall(VS)-1#e.g., two (p and q) for GARCH{p, q, T}
     res = Array{UnivariateARCHModel, ndims}(undef, ntuple(i->maxlags, ndims))
     Threads.@threads for ind in collect(CartesianIndices(size(res)))
-        res[ind] = fit(VS{ind.I...}, data; dist=dist, meanspec=meanspec,
+        res[ind] = fit(VS{ind.I...}, data; dist=dist, meanspec=deepcopy(meanspec),
                        algorithm=algorithm, autodiff=autodiff, kwargs...)
         if show_trace
             lock(mylock)

@@ -1,11 +1,4 @@
 ################################################################################
-#general functions
-"""
-    mean(spec::MeanSpec)
-Return the mean implied by MeanSpec
-"""
-mean(spec::MeanSpec) = mean(spec, spec.coefs)
-################################################################################
 #NoIntercept
 """
     NoIntercept{T} <: MeanSpec{T}
@@ -37,11 +30,19 @@ function startingvals(::NoIntercept{T}, data)  where {T<:AbstractFloat}
     return T[]
 end
 
-@inline function mean(::NoIntercept, meancoefs::Vector{T}) where {T}
+Base.@propagate_inbounds @inline function mean(
+    at, ht, lht, data, meanspec::NoIntercept{T}, meancoefs, t
+    ) where {T}
     return zero(T)
 end
 
+
 @inline presample(::NoIntercept) = 0
+
+Base.@propagate_inbounds @inline function uncond(::NoIntercept{T}) where {T}
+    return zero(T)
+end
+
 ################################################################################
 #Intercept
 """
@@ -74,12 +75,17 @@ function startingvals(::Intercept, data::Vector{T})  where {T<:AbstractFloat}
     return T[mean(data)]
 end
 
-@inline function mean(::Intercept, meancoefs::Vector{T}) where {T}
-    return @inbounds meancoefs[1]
+Base.@propagate_inbounds @inline function mean(
+    at, ht, lht, data, meanspec::Intercept{T}, meancoefs, t
+    ) where {T}
+    return meancoefs[1]
 end
 
 @inline presample(::Intercept) = 0
 
+Base.@propagate_inbounds @inline function uncond(m::Intercept)
+    return m.coefs[1]
+end
 ################################################################################
 #ARMA
 struct ARMA{p, q, T} <: MeanSpec{T}
@@ -95,3 +101,9 @@ function coefnames(::ARMA{p, q}) where {p, q}
     return names
 end
 @inline presample(::ARMA{p, q}) where {p, q} = max(p, q)
+
+Base.@propagate_inbounds @inline function mean(
+    at, ht, lht, data, meanspec::ARMA{p, q, T}, meancoefs, t
+    ) where {p, q, T}
+    return T[0]
+end
