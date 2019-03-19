@@ -1,4 +1,4 @@
-#TODO: maybe change mean(ARMA) so that it operates at-1 etc? docs, tests, selectmodel support, regression and arx?
+#TODO: maybe change mean(ARMA) so that it operates at-1 etc? tests, selectmodel support, regression and arx?
 ################################################################################
 #NoIntercept
 """
@@ -119,7 +119,7 @@ ARMA{p, q}(coefs::Vector{T}) where {p, q, T} = ARMA{p, q, T}(coefs)
 nparams(::Type{<:ARMA{p, q}}) where {p, q} = p+q+1
 function coefnames(::ARMA{p, q}) where {p, q}
     names = Array{String, 1}(undef, p+q+1)
-    names[1] = "μ"
+    names[1] = "c"
     names[2:p+1] .= (i -> "φ"*subscript(i)).([1:p...])
     names[2+p:p+q+1] .= (i -> "θ"*subscript(i)).([1:q...])
     return names
