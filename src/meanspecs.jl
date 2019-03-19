@@ -1,4 +1,4 @@
-#TODO: maybe change mean(ARMA) so that it operates at-1 etc? docs, tests, put back fit methods with a type, check doctests for this, selectmodel support, regression and arx?
+#TODO: maybe change mean(ARMA) so that it operates at-1 etc? docs, tests, selectmodel support, regression and arx?
 ################################################################################
 #NoIntercept
 """

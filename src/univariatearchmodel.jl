@@ -363,7 +363,7 @@ Fit the ARCH model specified by `VS` to data.
 
 # Keyword arguments:
 - `dist=StdNormal`: the error distribution.
-- `meanspec=Intercept`: the mean specification.
+- `meanspec=Intercept`: the mean specification, either as a type or instance of that type.
 - `algorithm=BFGS(), autodiff=:forward, kwargs...`: passed on to the optimizer.
 
 # Example: EGARCH{1, 1, 1} model without intercept, Student's t errors.
@@ -388,11 +388,12 @@ Distribution parameters:
 ```
 """
 function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
-             meanspec::MS=Intercept{T}(T[0]), algorithm=BFGS(),
+             meanspec::Union{MS, Type{MS}}=Intercept{T}, algorithm=BFGS(),
              autodiff=:forward, kwargs...
              ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
                       MS<:MeanSpec, T<:AbstractFloat
                       }
+	meanspec isa Type && (meanspec = MS(zeros(T, nparams(MS))))
     coefs = startingvals(VS, data)
     distcoefs = startingvals(SD, data)
     meancoefs = startingvals(meanspec, data)
@@ -438,7 +439,7 @@ minimizes the [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion
 
 # Keyword arguments:
 - `dist=StdNormal`: the error distribution.
-- `meanspec=Intercept`: the mean specification.
+- `meanspec=Intercept`: the mean specification, either as a type or instance of that type.
 - `maxlags=3`: maximum lag length to try in each parameter of `VS`.
 - `criterion=bic`: function that takes a `UnivariateARCHModel` and returns the criterion to minimize.
 - `show_trace=false`: print `criterion` to screen for each estimated model.
@@ -467,14 +468,15 @@ Volatility parameters:
 ```
 """
 function selectmodel(::Type{VS}, data::Vector{T};
-                     dist::Type{SD}=StdNormal{T}, meanspec::MS=Intercept{T}(T[0]),
+                     dist::Type{SD}=StdNormal{T}, meanspec::Union{MS, Type{MS}}=Intercept{T},
                      maxlags=3, criterion=bic, show_trace=false, algorithm=BFGS(),
                      autodiff=:forward, kwargs...
                      ) where {VS<:VolatilitySpec, T<:AbstractFloat,
                               SD<:StandardizedDistribution, MS<:MeanSpec
                               }
 	#threading sometimes segfaults in tests locally. possibly https://github.com/JuliaLang/julia/issues/29934
-    mylock=Threads.SpinLock()
+	meanspec isa Type && (meanspec = MS(zeros(T, nparams(MS))))
+	mylock=Threads.SpinLock()
     ndims = my_unwrap_unionall(VS)-1#e.g., two (p and q) for GARCH{p, q, T}
     res = Array{UnivariateARCHModel, ndims}(undef, ntuple(i->maxlags, ndims))
     Threads.@threads for ind in collect(CartesianIndices(size(res)))

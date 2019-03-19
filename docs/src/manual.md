@@ -82,7 +82,7 @@ fit(::Type{<:VolatilitySpec}, data::Vector; dist=StdNormal, meanspec=Intercept, 
 
 Their meaning is as follows:
 - `dist`: the error distribution. A subtype (*not instance*) of [`StandardizedDistribution`](@ref); see Section [Distributions](@ref).
-- `meanspec=Intercept`: the mean specification. A subtype of [`MeanSpec`](@ref); see the [section on mean specification](@ref meanspec).
+- `meanspec=Intercept`: the mean specification. Either a subtype of [`MeanSpec`](@ref) or an instance thereof (for specifications that require additional data, such as regression models); see the [section on mean specification](@ref meanspec).
 The remaining keyword arguments are passed on to the optimizer.
 
 As an example, an EGARCH(1, 1, 1) model without intercept and with  Student's ``t`` errors is fitted as follows:
