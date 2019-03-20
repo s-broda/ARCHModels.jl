@@ -161,8 +161,24 @@ end
                                   0.9054169985282575,
                                   0.05034724930058784,
                                   0.027707836268720806], rtol=1e-4))
-
+    @test ARCHModels.coefnames(Intercept(0.)) == ["μ"]
     @test typeof(NoIntercept()) == NoIntercept{Float64}
+    @test ARCHModels.coefnames(NoIntercept()) == []
+    ms = ARMA{2, 2}([1., .5, .2, -.1, .3])
+    @test ARCHModels.coefnames(ms) == ["c", "φ₁", "φ₂", "θ₁", "θ₂"]
+    Random.seed!(1)
+    spec = GARCH{1, 1}([1., .9, .05])
+    am = simulate(spec, T; meanspec=ms)
+    fit!(am)
+    @test all(isapprox(coef(am), [0.9063506916409171,
+                                  0.905682443482137,
+                                  0.05021834228447521,
+                                  1.079454022288992,
+                                  0.45097800554911116,
+                                  0.2357782619617334,
+                                  -0.05909354030019596,
+                                  0.2878312346045116], rtol=1e-4))
+    @test predict(am, :return) ≈ -1.6610785718124492
 end
 
 @testset "VaR" begin

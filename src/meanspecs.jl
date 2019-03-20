@@ -1,4 +1,4 @@
-#TODO: maybe change mean(ARMA) so that it operates at-1 etc? tests, selectmodel support, regression and arx?
+#TODO: maybe change mean(ARMA) so that it operates at-1 etc? selectmodel support, regression and arx?
 ################################################################################
 #NoIntercept
 """

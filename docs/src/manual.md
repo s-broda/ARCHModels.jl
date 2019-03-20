@@ -111,7 +111,9 @@ An alternative approach to fitting a [`VolatilitySpec`](@ref) to `BG96` is to fi
 a [`UnivariateARCHModel`](@ref) containing the data, and then using [`fit!`](@ref) to modify it in place:
 
 ```jldoctest MANUAL
-julia> am = UnivariateARCHModel(GARCH{1, 1}([1., 0., 0.]), BG96)
+julia> spec = GARCH{1, 1}([1., 0., 0.]);
+
+julia> am = UnivariateARCHModel(spec, BG96)
 
 TGARCH{0, 1,1} model with Gaussian errors, T=1974.
 
@@ -132,6 +134,15 @@ Volatility parameters:
 ω    0.0108661 0.00657449 1.65277   0.0984
 β₁    0.804431  0.0730395 11.0136   <1e-27
 α₁    0.154597  0.0539319 2.86651   0.0042
+```
+Note that `fit!` will also modify the volatility (and mean and distribution) specifications:
+
+```jldoctest MANUAL
+julia> spec
+TGARCH{0,1,1} specification.
+
+                     ω       β₁       α₁
+Parameters:  0.0108661 0.804431 0.154597
 ```
 
 Calling `fit(am)` will return a new instance of `UnivariateARCHModel` instead:
