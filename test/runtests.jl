@@ -7,7 +7,7 @@ T = 10^4;
     Random.seed!(1)
     spec = TGARCH{1,1,1}([1., .05, .9, .01]);
     am = simulate(spec, T);
-    am = selectmodel(TGARCH, am.data; meanspec=NoIntercept, show_trace=true, maxlags=2)
+    am = selectmodel(TGARCH, am.data; meanspec=NoIntercept(), show_trace=true, maxlags=2)
     @test all(isapprox.(coef(am), [0.9439667311150648
                                    0.04573706835008625
                                    0.9043902283152758
@@ -27,7 +27,7 @@ T = 10^4;
     Random.seed!(1)
     am000 = simulate(am0, nobs(am0))
     @test all(am000.data .== am0.data)
-    am = selectmodel(GARCH, am0.data; meanspec=NoIntercept, show_trace=true)
+    am = selectmodel(GARCH, am0.data; meanspec=NoIntercept(), show_trace=true)
     @test isfitted(am) == true
     #with unconditional as presample:
     #@test all(isapprox.(coef(am), [0.9086632896184081,
@@ -95,9 +95,10 @@ end
     @test loglikelihood(am) ==  ARCHModels.loglik!(Float64[],
                                                                 Float64[],
                                                                 Float64[],
+                                                                Float64[],
                                                                 typeof(spec),
                                                                 StdNormal{Float64},
-                                                                NoIntercept{Float64},
+                                                                NoIntercept{Float64}(),
                                                                 am.data,
                                                                 spec.coefs
                                                                 )
@@ -147,8 +148,6 @@ end
 end
 
 @testset "MeanSpecs" begin
-    mean(NoIntercept()) == 0.0
-    mean(Intercept(3)) == 3.0
     Random.seed!(1);
     spec = GARCH{1, 1}([1., .9, .05])
     am = simulate(spec, T; meanspec=Intercept(0.))
@@ -162,8 +161,25 @@ end
                                   0.9054169985282575,
                                   0.05034724930058784,
                                   0.027707836268720806], rtol=1e-4))
-
+    @test ARCHModels.coefnames(Intercept(0.)) == ["μ"]
     @test typeof(NoIntercept()) == NoIntercept{Float64}
+    @test ARCHModels.coefnames(NoIntercept()) == []
+    ms = ARMA{2, 2}([1., .5, .2, -.1, .3])
+    @test ARCHModels.coefnames(ms) == ["c", "φ₁", "φ₂", "θ₁", "θ₂"]
+    Random.seed!(1)
+    spec = GARCH{1, 1}([1., .9, .05])
+    am = simulate(spec, T; meanspec=ms)
+    fit!(am)
+    println(am)
+    @test all(isapprox(coef(am), [0.9063506916409171,
+                                  0.905682443482137,
+                                  0.05021834228447521,
+                                  1.079454022288992,
+                                  0.45097800554911116,
+                                  0.2357782619617334,
+                                  -0.05909354030019596,
+                                  0.2878312346045116], rtol=1e-4))
+    @test predict(am, :return) ≈ -1.6610785718124492 rtol = 1e-6
 end
 
 @testset "VaR" begin
@@ -177,8 +193,8 @@ end
     #with unconditional as presample:
     #@test_warn "non-positive" stderror(UnivariateARCHModel(GARCH{3, 0}([1., .1, .2, .3]), -5*[.1, .2, .3, .4, .5, .6, .7]))
     @test_logs (:warn, "non-positive variance encountered; vcov matrix is inaccurate.") stderror(UnivariateARCHModel(GARCH{1, 0}( [1.0, .1]), [1., 1.]))
-    e = @test_throws ARCHModels.NumParamError ARCHModels.loglik!(Float64[], Float64[], Float64[], GARCH{1, 1}, StdNormal{Float64},
-                                                     NoIntercept{Float64}, zeros(T),
+    e = @test_throws ARCHModels.NumParamError ARCHModels.loglik!(Float64[], Float64[], Float64[], Float64[], GARCH{1, 1}, StdNormal{Float64},
+                                                     NoIntercept{Float64}(), zeros(T),
                                                      [0., 0., 0., 0.]
                                                      )
     str = sprint(showerror, e.value)
@@ -187,6 +203,12 @@ end
     e = @test_throws ErrorException predict(UnivariateARCHModel(GARCH{0, 0}([1.]), zeros(10)), :blah)
     str = sprint(showerror, e.value)
     @test startswith(str, "Prediction target blah unknown")
+    @test_throws ARCHModels.NumParamError ARMA{1, 1}([1.])
+    @test_throws ARCHModels.NumParamError Intercept([1., 2.])
+    @test_throws ARCHModels.NumParamError NoIntercept([1.])
+    @test_throws ARCHModels.NumParamError StdNormal([1.])
+    @test_throws ARCHModels.NumParamError StdT([1., 2.])
+    @test_throws ARCHModels.NumParamError StdGED([1., 2.])
 
 end
 
@@ -212,7 +234,7 @@ end
         datat = simulate(spec, T; dist=StdT(4)).data
         Random.seed!(1);
         datam = simulate(spec, T; dist=StdT(4), meanspec=Intercept(3)).data
-        am4 = selectmodel(GARCH, datat; dist=StdT, meanspec=NoIntercept, show_trace=true)
+        am4 = selectmodel(GARCH, datat; dist=StdT, meanspec=NoIntercept{Float64}(), show_trace=true)
         am5 = selectmodel(GARCH, datam; dist=StdT, show_trace=true)
         @test coefnames(am5) == ["ω", "β₁", "α₁", "ν", "μ"]
         @test all(coeftable(am4).cols[2] .== stderror(am4))

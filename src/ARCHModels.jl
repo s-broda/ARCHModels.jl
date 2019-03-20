@@ -4,7 +4,6 @@
 #HAC s.e.s from CovariancesMatrices.jl?
 #how to export arch?
 #Forecasting
-#actually pass instances everywhere, at least for mean
 #Float16/32 don't seem to work anymore. Problem in Optim?
 #support missing data? timeseries?
 #a simulated AM should probably contain a (zero) intercept, so that fit! is consistent with fit.
@@ -12,7 +11,6 @@
 #implement lrtest
 #allow uninititalized constructors for VolatilitySpec, MeanSpec and StandardizedDistribution? If so, then be consistent with how they are defined
 #  (change for meanspec and dist ), document, and test. Also, NaN is prob. safer than undef.
-#constructors for meanspec, distributions should check length of coef vector
 #logconst needs to return the correct type
 """
 The ARCHModels package for Julia. For documentation, see https://s-broda.github.io/ARCHModels.jl/dev.
@@ -41,7 +39,7 @@ import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, co
 
 export ARCHModel, UnivariateARCHModel, VolatilitySpec, StandardizedDistribution, Standardized, MeanSpec,
        simulate, simulate!, selectmodel, StdNormal, StdT, StdGED, Intercept,
-       NoIntercept, BG96, volatilities, mean, quantile, VaRs, pvalue
+       NoIntercept, ARMA, AR, MA, BG96, volatilities, mean, quantile, VaRs, pvalue, means
 
 
 include("utils.jl")

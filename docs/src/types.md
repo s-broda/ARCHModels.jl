@@ -10,9 +10,9 @@ This package represents a univariate (G)ARCH model as an instance of [`Univariat
 ## [Volatility specifications](@id volaspec)
 Volatility specifications describe the evolution of ``\sigma_t``. They are modelled as subtypes of [`VolatilitySpec`](@ref). There is one type for each class of (G)ARCH model, parameterized by the number(s) of lags (e.g., ``p``, ``q`` for a GARCH(p, q) model). For each volatility specification, the order of the parameters in the coefficient vector is such that all parameters pertaining to the first type parameter (``p``) appear before those pertaining to the second (``q``).
 ### ARCH
-The ARCH(q) volatility specification, due to [Engle (1982)](https://doi.org/10.2307/1912773 ), is
+With ``a_t\equiv r_t-\mu_t``, the ARCH(q) volatility specification, due to [Engle (1982)](https://doi.org/10.2307/1912773 ), is
 ```math
-\sigma_t^2=\omega+\sum_{i=1}^q\alpha_i r_{t-i}^2, \quad \omega, \alpha_i>0,\quad \sum_{i=1}^{q} \alpha_i<1.
+\sigma_t^2=\omega+\sum_{i=1}^q\alpha_i a_{t-i}^2, \quad \omega, \alpha_i>0,\quad \sum_{i=1}^{q} \alpha_i<1.
 ```
 The corresponding type is [`ARCH{q}`](@ref). For example, an ARCH(2) model with ``ω=1``, ``α₁=.5``, and ``α₂=.4`` is obtained with
 ```jldoctest TYPES
@@ -28,7 +28,7 @@ Parameters:  1.0 0.5 0.4
 ### GARCH
 The GARCH(p, q) model, due to [Bollerslev (1986)](https://doi.org/10.1016/0304-4076(86)90063-1), specifies the volatility as
 ```math
-\sigma_t^2=\omega+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i r_{t-i}^2, \quad \omega, \alpha_i, \beta_i>0,\quad \sum_{i=1}^{\max p,q} \alpha_i+\beta_i<1.
+\sigma_t^2=\omega+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i a_{t-i}^2, \quad \omega, \alpha_i, \beta_i>0,\quad \sum_{i=1}^{\max p,q} \alpha_i+\beta_i<1.
 ```
 It is available as [`GARCH{p, q}`](@ref):
 ```jldoctest TYPES
@@ -46,7 +46,7 @@ This creates a GARCH(1, 1) specification with ``ω=1``, ``β=.9``, and ``α=.05`
 As may have been guessed from the output above, the ARCH and GARCH models are actually special cases of a more general class of models, known as TGARCH (Threshold GARCH), due to [Glosten, Jagannathan, and Runkle](https://doi.org/10.1111/j.1540-6261.1993.tb05128.x). The TGARCH{o, p, q} model takes the form
 
 ```math
-\sigma_t^2=\omega+\sum_{i=1}^o\gamma_i  r_{t-i}^2 1_{r_{t-i}<0}+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i r_{t-i}^2, \quad \omega, \alpha_i, \beta_i, \gamma_i>0, \sum_{i=1}^{\max o,p,q} \alpha_i+\beta_i+\gamma_i/2<1.
+\sigma_t^2=\omega+\sum_{i=1}^o\gamma_i  a_{t-i}^2 1_{a_{t-i}<0}+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i a_{t-i}^2, \quad \omega, \alpha_i, \beta_i, \gamma_i>0, \sum_{i=1}^{\max o,p,q} \alpha_i+\beta_i+\gamma_i/2<1.
 ```
 
 The TGARCH model allows the volatility to react differently (typically more strongly) to negative shocks, a feature known as the (statistical) leverage effect. Is available as [`TGARCH{o, p, q}`](@ref):
@@ -76,16 +76,51 @@ EGARCH{1,1,1} specification.
 Parameters:  -0.1 0.1 0.9 0.04
 ```
 ## [Mean specifications](@id meanspec)
-Mean specifications serve to specify ``\mu_t``. They are modelled as subtypes of [`MeanSpec`](@ref). They contain their parameters as (possibly empty) vectors, but convenience constructors are provided where appropriate. Currently, two specifications are available:
-* ``\mu_t=0``, available as [`NoIntercept`](@ref):
+Mean specifications serve to specify ``\mu_t``. They are modelled as subtypes of [`MeanSpec`](@ref). They contain their parameters as (possibly empty) vectors, but convenience constructors are provided where appropriate. Currently, three specifications are available:
+* A zero mean: ``\mu_t=0``. Available as [`NoIntercept`](@ref):
 ```jldoctest TYPES
 julia> NoIntercept() # convenience constructor, eltype defaults to Float64
 NoIntercept{Float64}(Float64[])
 ```
-* ``\mu_t=\mu``, available as [`Intercept`](@ref):
+* An intercept: ``\mu_t=\mu``. Available as [`Intercept`](@ref):
 ```jldoctest TYPES
 julia> Intercept(3) # convenience constructor
 Intercept{Float64}([3.0])
+```
+* An ARMA(p, q) model: ``\mu_t=c+\sum_{i=1}^p \varphi_i r_{t-i}+\sum_{i=1}^q \theta_i a_{t-i}``. Available as [`ARMA{p, q}`](@ref):
+```jldoctest TYPES
+julia> ARMA{1, 1}([1., .9, -.1])
+ARMA{1,1,Float64}([1.0, 0.9, -0.1])
+```
+Pure AR(p) and MA(q) models are obtained as follows:
+```jldoctest TYPES
+julia> AR{1}([1., .9])
+ARMA{1,0,Float64}([1.0, 0.9])
+julia> MA{1}([1., -.1])
+ARMA{0,1,Float64}([1.0, -0.1])
+```
+
+As an example, an ARMA(1, 1)-EGARCH(1, 1, 1) model is fitted as follows:
+```jldoctest TYPES
+julia> fit(EGARCH{1, 1, 1}, BG96; meanspec=ARMA{1, 1})
+
+EGARCH{1,1,1} model with Gaussian errors, T=1974.
+
+
+Mean equation parameters:
+
+       Estimate Std.Error  z value Pr(>|z|)
+c    -0.0215594 0.0136142 -1.58359   0.1133
+φ₁    -0.525702   0.20819  -2.5251   0.0116
+θ₁     0.574669  0.198072  2.90131   0.0037
+
+Volatility parameters:
+
+       Estimate Std.Error  z value Pr(>|z|)
+ω     -0.132921 0.0496466 -2.67735   0.0074
+γ₁   -0.0399304 0.0258478 -1.54483   0.1224
+β₁     0.908516 0.0319702  28.4175   <1e-99
+α₁     0.343967 0.0680369  5.05559    <1e-6
 ```
 ## Distributions
 ### Built-in distributions
@@ -183,4 +218,4 @@ julia> nobs(am)
 1974
 ```
 
-Other useful methods include [`volatilities`](@ref) and [`residuals`](@ref).
+Other useful methods include [`means`](@ref), [`volatilities`](@ref) and [`residuals`](@ref).

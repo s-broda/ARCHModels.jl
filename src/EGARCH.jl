@@ -31,9 +31,10 @@ EGARCH{o, p, q}(coefs::Vector{T}) where {o, p, q, T}  = EGARCH{o, p, q, T}(coefs
 
 @inline presample(::Type{<:EGARCH{o, p, q}}) where {o, p, q} = max(o, p, q)
 
-@inline function update!(ht, lht, zt, ::Type{<:EGARCH{o, p ,q}}, MS::Type{<:MeanSpec},
-                         data, garchcoefs, meancoefs, t
-                         ) where {o, p, q}
+Base.@propagate_inbounds @inline function update!(
+            ht, lht, zt, at, ::Type{<:EGARCH{o, p ,q}}, meanspec::MeanSpec,
+            data, garchcoefs, meancoefs
+            ) where {o, p, q}
     mlht = garchcoefs[1]
     for i = 1:o
         mlht += garchcoefs[i+1]*zt[end-i+1]

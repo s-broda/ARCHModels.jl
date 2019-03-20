@@ -82,7 +82,7 @@ fit(::Type{<:VolatilitySpec}, data::Vector; dist=StdNormal, meanspec=Intercept, 
 
 Their meaning is as follows:
 - `dist`: the error distribution. A subtype (*not instance*) of [`StandardizedDistribution`](@ref); see Section [Distributions](@ref).
-- `meanspec=Intercept`: the mean specification. A subtype of [`MeanSpec`](@ref); see the [section on mean specification](@ref meanspec).
+- `meanspec=Intercept`: the mean specification. Either a subtype of [`MeanSpec`](@ref) or an instance thereof (for specifications that require additional data, such as regression models); see the [section on mean specification](@ref meanspec).
 The remaining keyword arguments are passed on to the optimizer.
 
 As an example, an EGARCH(1, 1, 1) model without intercept and with  Student's ``t`` errors is fitted as follows:
@@ -111,7 +111,9 @@ An alternative approach to fitting a [`VolatilitySpec`](@ref) to `BG96` is to fi
 a [`UnivariateARCHModel`](@ref) containing the data, and then using [`fit!`](@ref) to modify it in place:
 
 ```jldoctest MANUAL
-julia> am = UnivariateARCHModel(GARCH{1, 1}([1., 0., 0.]), BG96)
+julia> spec = GARCH{1, 1}([1., 0., 0.]);
+
+julia> am = UnivariateARCHModel(spec, BG96)
 
 TGARCH{0, 1,1} model with Gaussian errors, T=1974.
 
@@ -132,6 +134,15 @@ Volatility parameters:
 ω    0.0108661 0.00657449 1.65277   0.0984
 β₁    0.804431  0.0730395 11.0136   <1e-27
 α₁    0.154597  0.0539319 2.86651   0.0042
+```
+Note that `fit!` will also modify the volatility (and mean and distribution) specifications:
+
+```jldoctest MANUAL
+julia> spec
+TGARCH{0,1,1} specification.
+
+                     ω       β₁       α₁
+Parameters:  0.0108661 0.804431 0.154597
 ```
 
 Calling `fit(am)` will return a new instance of `UnivariateARCHModel` instead:

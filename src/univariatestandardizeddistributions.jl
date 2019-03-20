@@ -85,6 +85,10 @@ The standard Normal distribution.
 """
 struct StdNormal{T} <: StandardizedDistribution{T}
     coefs::Vector{T}
+    function StdNormal{T}(coefs::Vector) where {T}
+        length(coefs) == 0 || throw(NumParamError(0, length(coefs)))
+        new{T}(coefs)
+    end
 end
 """
     StdNormal(T::Type=Float64)
@@ -93,8 +97,9 @@ end
 
 Construct an instance of StdNormal.
 """
-StdNormal(T::Type=Float64) = StdNormal(T[])
-StdNormal{T}() where {T} = StdNormal(T[])
+StdNormal(T::Type{<:AbstractFloat}=Float64) = StdNormal(T[])
+StdNormal{T}() where {T<:AbstractFloat} = StdNormal(T[])
+StdNormal(v::Vector{T}) where {T} = StdNormal{T}(v)
 rand(::StdNormal{T}) where {T} = randn(T)
 @inline logkernel(::Type{<:StdNormal}, x, coefs) = -abs2(x)/2
 @inline logconst(::Type{<:StdNormal}, coefs::Vector{T}) where {T} =  -T(log2π)/2
@@ -126,6 +131,10 @@ The standardized (mean zero, variance one) Student's t distribution.
 """
 struct StdT{T} <: StandardizedDistribution{T}
     coefs::Vector{T}
+    function StdT{T}(coefs::Vector) where {T}
+        length(coefs) == 1 || throw(NumParamError(1, length(coefs)))
+        new{T}(coefs)
+    end
 end
 
 """
@@ -136,6 +145,7 @@ as a scalar or vector.
 """
 StdT(ν) = StdT([ν])
 StdT(ν::Integer) = StdT(float(ν))
+StdT(v::Vector{T}) where {T} = StdT{T}(v)
 (rand(d::StdT{T})::T) where {T}  =  (ν=d.coefs[1]; tdistrand(ν)*sqrt((ν-2)/ν))
 @inline kernelinvariants(::Type{<:StdT}, coefs) = (1/ (coefs[1]-2),)
 @inline logkernel(::Type{<:StdT}, x, coefs, iv) = (-(coefs[1] + 1) / 2) * log1p(abs2(x) *iv)
@@ -161,7 +171,8 @@ function startingvals(::Type{<:StdT}, data::Array{T}) where {T}
     ht = T[]
     lht = T[]
     zt = T[]
-    loglik!(ht, lht, zt, GARCH{1, 1}, StdNormal, Intercept, data, vcat(startingvals(GARCH{1, 1}, data), startingvals(Intercept, data)))
+    at = T[]
+    loglik!(ht, lht, zt, at,  GARCH{1, 1}, StdNormal, Intercept(0.), data, vcat(startingvals(GARCH{1, 1}, data), startingvals(Intercept(0.), data)))
     lower = convert(T, 2)
     upper = convert(T, 30)
     z = mean(abs.(data.-mean(data))./sqrt.(ht))
@@ -182,6 +193,10 @@ The standardized (mean zero, variance one) generalized error distribution.
 """
 struct StdGED{T} <: StandardizedDistribution{T}
     coefs::Vector{T}
+    function StdGED{T}(coefs::Vector) where {T}
+        length(coefs) == 1 || throw(NumParamError(1, length(coefs)))
+        new{T}(coefs)
+    end
 end
 
 """
@@ -192,6 +207,7 @@ as a scalar or vector.
 """
 StdGED(p) = StdGED([p])
 StdGED(p::Integer) = StdGED(float(p))
+StdGED(v::Vector{T}) where {T} = StdGED{T}(v)
 
 (rand(d::StdGED{T})::T) where {T} = (p = d.coefs[1]; ip=1/p;  (2*rand()-1)*gammarand(1+ip, 1)^ip * sqrt(gamma(ip) / gamma(3*ip)) )
 
@@ -214,7 +230,8 @@ function startingvals(::Type{<:StdGED}, data::Array{T}) where {T}
     ht = T[]
     lht = T[]
     zt = T[]
-    loglik!(ht, lht, zt, GARCH{1, 1}, StdNormal, Intercept, data, vcat(startingvals(GARCH{1, 1}, data), startingvals(Intercept, data)))
+    at = T[]
+    loglik!(ht, lht, zt, at, GARCH{1, 1}, StdNormal, Intercept(0.), data, vcat(startingvals(GARCH{1, 1}, data), startingvals(Intercept(0.), data)))
     z = mean((abs.(data.-mean(data))./sqrt.(ht)).^4)
     lower = T(0.05)
     upper = T(25.)
