@@ -170,6 +170,7 @@ end
     spec = GARCH{1, 1}([1., .9, .05])
     am = simulate(spec, T; meanspec=ms)
     fit!(am)
+    println(am)
     @test all(isapprox(coef(am), [0.9063506916409171,
                                   0.905682443482137,
                                   0.05021834228447521,
@@ -178,7 +179,7 @@ end
                                   0.2357782619617334,
                                   -0.05909354030019596,
                                   0.2878312346045116], rtol=1e-4))
-    @test predict(am, :return) ≈ -1.6610785718124492
+    @test predict(am, :return) ≈ -1.6610785718124492 rtol = 1e-6
 end
 
 @testset "VaR" begin
