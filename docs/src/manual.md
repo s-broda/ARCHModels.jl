@@ -190,8 +190,55 @@ Distribution parameters:
 ν     4.18795  0.418697 10.0023   <1e-22
 ```
 
-Passing the keyword argument `show_trace=false` will show the criterion for each model after it is estimated.
+Passing the keyword argument `show_trace=true` will show the criterion for each model after it is estimated.
 
+Any unspecified lag length parameters in the mean specification (e.g., ``p`` and ``q`` for [`ARMA`](@ref)) will be optimized over as well:
+
+```jldoctest MANUAL
+julia> am = selectmodel(ARCH, BG96;  meanspec=AR, maxlags=2)
+
+TGARCH{0,0,2} model with Gaussian errors, T=1974.
+
+
+Mean equation parameters:
+
+        Estimate  Std.Error  z value Pr(>|z|)
+c    -0.00685701 0.00966961 -0.70913   0.4782
+φ₁     0.0358363  0.0334292    1.072   0.2837
+
+Volatility parameters:
+
+     Estimate  Std.Error z value Pr(>|z|)
+ω    0.119163 0.00995107 11.9749   <1e-32
+α₁   0.315686  0.0576413 5.47674    <1e-7
+α₂   0.183318  0.0444875 4.12067    <1e-4
+```
+
+Here, an ARCH(2)-AR(1) model was selected. Note that this can result in an explosion of the number of models that must be estimated;
+e.g., selecting the best model from the class of [`TGARCH{o, p, q}`](@ref)-[`ARMA{p, q}`](@ref) models results in ``5^\mathbf{maxlags}`` models being estimated.
+It may be preferable to fix the lag length of the mean specification: `am = selectmodel(ARCH, BG96;  meanspec=AR{1})` considers only ARCH(q)-AR(1) models.
+Similarly, one may restrict the lag length of the volatility specification and select only among different mean specifications.
+E.g., the following will select the best [`ARMA{p, q}`](@ref) specification with constant variance:
+
+```jldoctest MANUAL
+julia> am = selectmodel(ARCH{0}, BG96;  meanspec=ARMA)
+
+TGARCH{0,0,0} model with Gaussian errors, T=1974.
+
+
+Mean equation parameters:
+
+       Estimate Std.Error  z value Pr(>|z|)
+c    -0.0266446 0.0174716 -1.52502   0.1273
+φ₁    -0.621837  0.160738 -3.86864   0.0001
+θ₁     0.643588    0.1543  4.17103    <1e-4
+
+Volatility parameters:
+
+     Estimate Std.Error z value Pr(>|z|)
+ω    0.220848 0.0118061 18.7063   <1e-77
+```
+In this case, an ARMA(1, 1) specification was selected.
 ## Risk measures
 One of the primary uses of ARCH models is for estimating and forecasting risk measures, such as [Value at Risk](https://en.wikipedia.org/wiki/Value_at_risk) and [Expected Shortfall](https://en.wikipedia.org/wiki/Expected_shortfall).
 This section details the relevant functionality provided in this package.
