@@ -13,7 +13,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "The ARCHModels Package",
     "category": "section",
-    "text": "ARCH (Autoregressive Conditional Heteroskedasticity) models are a class of models designed to capture a feature of financial returns data known as volatility clustering, i.e., the fact that large (in absolute value) returns tend to cluster together, such as during periods of financial turmoil, which then alternate with relatively calmer periods.The basic ARCH model was introduced by Engle (1982, Econometrica, pp. 987–1008), who in 2003 was awarded a Nobel Memorial Prize in Economic Sciences for its development. Today, the most popular variant is the generalized ARCH, or GARCH, model and its various extensions, due to Bollerslev (1986, Journal of Econometrics, pp. 307 - 327). The basic GARCH(1,1) model for a sample of daily asset returns r_t_tin1ldotsT isr_t=sigma_tz_tquad z_tsimmathrmN(01)quad\nsigma_t^2=omega+alpha r_t-1^2+beta sigma_t-1^2quad omega alpha beta0quad alpha+beta1This can be extended by including additional lags of past squared returns and volatilities: the GARCH(p, q) model  has q of the former and p of the latter. Another generalization is to allow  z_t to follow other, non-Gaussian distributions.This package implements simulation, estimation, and model selection for the following models:ARCH(q)\nGARCH(p, q)\nTGARCH(o, p, q)\nEGARCH(o, p q)As for error distributions, the user may choose among the following:Standard Normal\nStandardized Student\'s t\nStandardized Generalized Error Distribution"
+    "text": "ARCH (Autoregressive Conditional Heteroskedasticity) models are a class of models designed to capture a feature of financial returns data known as volatility clustering, i.e., the fact that large (in absolute value) returns tend to cluster together, such as during periods of financial turmoil, which then alternate with relatively calmer periods.The basic ARCH model was introduced by Engle (1982, Econometrica, pp. 987–1008), who in 2003 was awarded a Nobel Memorial Prize in Economic Sciences for its development. Today, the most popular variant is the generalized ARCH, or GARCH, model and its various extensions, due to Bollerslev (1986, Journal of Econometrics, pp. 307 - 327). The basic GARCH(1,1) model for a sample of daily asset returns r_t_tin1ldotsT isr_t=sigma_tz_tquad z_tsimmathrmN(01)quad\nsigma_t^2=omega+alpha r_t-1^2+beta sigma_t-1^2quad omega alpha beta0quad alpha+beta1This can be extended by including additional lags of past squared returns and volatilities: the GARCH(p, q) model  has q of the former and p of the latter. Another generalization is to allow  z_t to follow other, non-Gaussian distributions.This package implements simulation, estimation, and model selection for the following models:ARCH(q)\nGARCH(p, q)\nTGARCH(o, p, q)\nEGARCH(o, p q)The conditional mean can be specified as either zero, an intercept, or an ARMA(p, q) model. As for error distributions, the user may choose among the following:Standard Normal\nStandardized Student\'s t\nStandardized Generalized Error Distribution"
 },
 
 {
@@ -69,7 +69,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Introduction and type hierarchy",
     "title": "ARCH",
     "category": "section",
-    "text": "The ARCH(q) volatility specification, due to Engle (1982), issigma_t^2=omega+sum_i=1^qalpha_i r_t-i^2 quad omega alpha_i0quad sum_i=1^q alpha_i1The corresponding type is ARCH{q}. For example, an ARCH(2) model with ω=1, α₁=5, and α₂=4 is obtained withjulia> using ARCHModels\n\njulia> ARCH{2}([1., .5, .4])\nTGARCH{0,0,2} specification.\n\n               ω  α₁  α₂\nParameters:  1.0 0.5 0.4"
+    "text": "With a_tequiv r_t-mu_t, the ARCH(q) volatility specification, due to Engle (1982), issigma_t^2=omega+sum_i=1^qalpha_i a_t-i^2 quad omega alpha_i0quad sum_i=1^q alpha_i1The corresponding type is ARCH{q}. For example, an ARCH(2) model with ω=1, α₁=5, and α₂=4 is obtained withjulia> using ARCHModels\n\njulia> ARCH{2}([1., .5, .4])\nTGARCH{0,0,2} specification.\n\n               ω  α₁  α₂\nParameters:  1.0 0.5 0.4"
 },
 
 {
@@ -77,7 +77,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Introduction and type hierarchy",
     "title": "GARCH",
     "category": "section",
-    "text": "The GARCH(p, q) model, due to Bollerslev (1986), specifies the volatility assigma_t^2=omega+sum_i=1^pbeta_i sigma_t-i^2+sum_i=1^qalpha_i r_t-i^2 quad omega alpha_i beta_i0quad sum_i=1^max pq alpha_i+beta_i1It is available as GARCH{p, q}:julia> using ARCHModels\n\njulia> GARCH{1, 1}([1., .9, .05])\nTGARCH{0,1,1} specification.\n\n               ω  β₁   α₁\nParameters:  1.0 0.9 0.05This creates a GARCH(1, 1) specification with ω=1, β=9, and α=05."
+    "text": "The GARCH(p, q) model, due to Bollerslev (1986), specifies the volatility assigma_t^2=omega+sum_i=1^pbeta_i sigma_t-i^2+sum_i=1^qalpha_i a_t-i^2 quad omega alpha_i beta_i0quad sum_i=1^max pq alpha_i+beta_i1It is available as GARCH{p, q}:julia> using ARCHModels\n\njulia> GARCH{1, 1}([1., .9, .05])\nTGARCH{0,1,1} specification.\n\n               ω  β₁   α₁\nParameters:  1.0 0.9 0.05This creates a GARCH(1, 1) specification with ω=1, β=9, and α=05."
 },
 
 {
@@ -85,7 +85,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Introduction and type hierarchy",
     "title": "TGARCH",
     "category": "section",
-    "text": "As may have been guessed from the output above, the ARCH and GARCH models are actually special cases of a more general class of models, known as TGARCH (Threshold GARCH), due to Glosten, Jagannathan, and Runkle. The TGARCH{o, p, q} model takes the formsigma_t^2=omega+sum_i=1^ogamma_i  r_t-i^2 1_r_t-i0+sum_i=1^pbeta_i sigma_t-i^2+sum_i=1^qalpha_i r_t-i^2 quad omega alpha_i beta_i gamma_i0 sum_i=1^max opq alpha_i+beta_i+gamma_i21The TGARCH model allows the volatility to react differently (typically more strongly) to negative shocks, a feature known as the (statistical) leverage effect. Is available as TGARCH{o, p, q}:julia> using ARCHModels\n\njulia> TGARCH{1, 1, 1}([1., .04, .9, .01])\nTGARCH{1,1,1} specification.\n\n               ω   γ₁  β₁   α₁\nParameters:  1.0 0.04 0.9 0.01"
+    "text": "As may have been guessed from the output above, the ARCH and GARCH models are actually special cases of a more general class of models, known as TGARCH (Threshold GARCH), due to Glosten, Jagannathan, and Runkle. The TGARCH{o, p, q} model takes the formsigma_t^2=omega+sum_i=1^ogamma_i  a_t-i^2 1_a_t-i0+sum_i=1^pbeta_i sigma_t-i^2+sum_i=1^qalpha_i a_t-i^2 quad omega alpha_i beta_i gamma_i0 sum_i=1^max opq alpha_i+beta_i+gamma_i21The TGARCH model allows the volatility to react differently (typically more strongly) to negative shocks, a feature known as the (statistical) leverage effect. Is available as TGARCH{o, p, q}:julia> using ARCHModels\n\njulia> TGARCH{1, 1, 1}([1., .04, .9, .01])\nTGARCH{1,1,1} specification.\n\n               ω   γ₁  β₁   α₁\nParameters:  1.0 0.04 0.9 0.01"
 },
 
 {
@@ -101,7 +101,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Introduction and type hierarchy",
     "title": "Mean specifications",
     "category": "section",
-    "text": "Mean specifications serve to specify mu_t. They are modelled as subtypes of MeanSpec. They contain their parameters as (possibly empty) vectors, but convenience constructors are provided where appropriate. Currently, two specifications are available:mu_t=0, available as NoIntercept:julia> NoIntercept() # convenience constructor, eltype defaults to Float64\nNoIntercept{Float64}(Float64[])mu_t=mu, available as Intercept:julia> Intercept(3) # convenience constructor\nIntercept{Float64}([3.0])"
+    "text": "Mean specifications serve to specify mu_t. They are modelled as subtypes of MeanSpec. They contain their parameters as (possibly empty) vectors, but convenience constructors are provided where appropriate. Currently, three specifications are available:A zero mean: mu_t=0. Available as NoIntercept:julia> NoIntercept() # convenience constructor, eltype defaults to Float64\nNoIntercept{Float64}(Float64[])An intercept: mu_t=mu. Available as Intercept:julia> Intercept(3) # convenience constructor\nIntercept{Float64}([3.0])An ARMA(p, q) model: mu_t=c+sum_i=1^p varphi_i r_t-i+sum_i=1^q theta_i a_t-i. Available as ARMA{p, q}:julia> ARMA{1, 1}([1., .9, -.1])\nARMA{1,1,Float64}([1.0, 0.9, -0.1])Pure AR(p) and MA(q) models are obtained as follows:julia> AR{1}([1., .9])\nARMA{1,0,Float64}([1.0, 0.9])\njulia> MA{1}([1., -.1])\nARMA{0,1,Float64}([1.0, -0.1])As an example, an ARMA(1, 1)-EGARCH(1, 1, 1) model is fitted as follows:julia> fit(EGARCH{1, 1, 1}, BG96; meanspec=ARMA{1, 1})\n\nEGARCH{1,1,1} model with Gaussian errors, T=1974.\n\n\nMean equation parameters:\n\n       Estimate Std.Error  z value Pr(>|z|)\nc    -0.0215594 0.0136142 -1.58359   0.1133\nφ₁    -0.525702   0.20819  -2.5251   0.0116\nθ₁     0.574669  0.198072  2.90131   0.0037\n\nVolatility parameters:\n\n       Estimate Std.Error  z value Pr(>|z|)\nω     -0.132921 0.0496466 -2.67735   0.0074\nγ₁   -0.0399304 0.0258478 -1.54483   0.1224\nβ₁     0.908516 0.0319702  28.4175   <1e-99\nα₁     0.343967 0.0680369  5.05559    <1e-6"
 },
 
 {
@@ -133,7 +133,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Introduction and type hierarchy",
     "title": "Working with UnivariateARCHModels",
     "category": "section",
-    "text": "The constructor for UnivariateARCHModel takes two mandatory arguments: an instance of a subtype of VolatilitySpec, and a vector of returns. The mean specification and error distribution can be changed via the keyword arguments meanspec and dist, which respectively default to NoIntercept and StdNormal.For example, to construct a GARCH(1, 1) model with an intercept and t-distributed errors, one would dojulia> spec = GARCH{1, 1}([1., .9, .05]);\n\njulia> data = BG96;\n\njulia> am = UnivariateARCHModel(spec, data; dist=StdT(3.), meanspec=Intercept(1.))\n\nTGARCH{0,1,1} model with Student\'s t errors, T=1974.\n\n\n                             μ\nMean equation parameters:  1.0\n\n                             ω  β₁   α₁\nVolatility parameters:     1.0 0.9 0.05\n\n                             ν\nDistribution parameters:   3.0The model can then be fitted as follows:julia> fit!(am)\n\nTGARCH{0,1,1} model with Student\'s t errors, T=1974.\n\n\nMean equation parameters:\n\n       Estimate  Std.Error  z value Pr(>|z|)\nμ    0.00227251 0.00686802 0.330882   0.7407\n\nVolatility parameters:\n\n       Estimate  Std.Error z value Pr(>|z|)\nω    0.00232225 0.00163909 1.41679   0.1565\nβ₁     0.884488   0.036963  23.929   <1e-99\nα₁     0.124866  0.0405471 3.07952   0.0021\n\nDistribution parameters:\n\n     Estimate Std.Error z value Pr(>|z|)\nν     4.11211  0.400384 10.2704   <1e-24It should, however, rarely be necessary to construct an UnivariateARCHModel manually via its constructor; typically, instances of it are created by calling fit, selectmodel, or simulate.As discussed earlier, UnivariateARCHModel implements the interface of StatisticalModel from StatsBase, so you can call coef, coefnames, confint, dof, informationmatrix, isfitted, loglikelihood, nobs,  score, stderror, vcov, etc. on its instances:julia> nobs(am)\n1974Other useful methods include volatilities and residuals."
+    "text": "The constructor for UnivariateARCHModel takes two mandatory arguments: an instance of a subtype of VolatilitySpec, and a vector of returns. The mean specification and error distribution can be changed via the keyword arguments meanspec and dist, which respectively default to NoIntercept and StdNormal.For example, to construct a GARCH(1, 1) model with an intercept and t-distributed errors, one would dojulia> spec = GARCH{1, 1}([1., .9, .05]);\n\njulia> data = BG96;\n\njulia> am = UnivariateARCHModel(spec, data; dist=StdT(3.), meanspec=Intercept(1.))\n\nTGARCH{0,1,1} model with Student\'s t errors, T=1974.\n\n\n                             μ\nMean equation parameters:  1.0\n\n                             ω  β₁   α₁\nVolatility parameters:     1.0 0.9 0.05\n\n                             ν\nDistribution parameters:   3.0The model can then be fitted as follows:julia> fit!(am)\n\nTGARCH{0,1,1} model with Student\'s t errors, T=1974.\n\n\nMean equation parameters:\n\n       Estimate  Std.Error  z value Pr(>|z|)\nμ    0.00227251 0.00686802 0.330882   0.7407\n\nVolatility parameters:\n\n       Estimate  Std.Error z value Pr(>|z|)\nω    0.00232225 0.00163909 1.41679   0.1565\nβ₁     0.884488   0.036963  23.929   <1e-99\nα₁     0.124866  0.0405471 3.07952   0.0021\n\nDistribution parameters:\n\n     Estimate Std.Error z value Pr(>|z|)\nν     4.11211  0.400384 10.2704   <1e-24It should, however, rarely be necessary to construct an UnivariateARCHModel manually via its constructor; typically, instances of it are created by calling fit, selectmodel, or simulate.As discussed earlier, UnivariateARCHModel implements the interface of StatisticalModel from StatsBase, so you can call coef, coefnames, confint, dof, informationmatrix, isfitted, loglikelihood, nobs,  score, stderror, vcov, etc. on its instances:julia> nobs(am)\n1974Other useful methods include means, volatilities and residuals."
 },
 
 {
@@ -157,7 +157,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Usage",
     "title": "Estimation",
     "category": "section",
-    "text": "Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a GARCH(1, 1) with standard normal errors;  for other model classes such as EGARCH, see the section on volatility specifications.julia> fit(GARCH{1, 1}, BG96)\n\nTGARCH{0,1,1} model with Gaussian errors, T=1974.\n\n\nMean equation parameters:\n\n        Estimate  Std.Error   z value Pr(>|z|)\nμ    -0.00616637 0.00920163 -0.670139   0.5028\n\nVolatility parameters:\n\n      Estimate  Std.Error z value Pr(>|z|)\nω    0.0107606 0.00649493 1.65677   0.0976\nβ₁    0.805875  0.0725003 11.1155   <1e-27\nα₁    0.153411  0.0536586 2.85903   0.0042This returns an instance of UnivariateARCHModel, as described in the section Working with UnivariateARCHModels. The parameters alpha_1 and beta_1 in the volatility equation are highly significant, again confirming the presence of volatility clustering. Note also that the fitted values are the same as those found by Bollerslev and Ghysels (1986) and Brooks et.al. (2001) for the same dataset.The fit method supports a number of keyword arguments; the full signature isfit(::Type{<:VolatilitySpec}, data::Vector; dist=StdNormal, meanspec=Intercept, algorithm=BFGS(), autodiff=:forward, kwargs...)Their meaning is as follows:dist: the error distribution. A subtype (not instance) of StandardizedDistribution; see Section Distributions.\nmeanspec=Intercept: the mean specification. A subtype of MeanSpec; see the section on mean specification.The remaining keyword arguments are passed on to the optimizer.As an example, an EGARCH(1, 1, 1) model without intercept and with  Student\'s t errors is fitted as follows:julia> fit(EGARCH{1, 1, 1}, BG96; meanspec=NoIntercept, dist=StdT)\n\nEGARCH{1,1,1} model with Student\'s t errors, T=1974.\n\n\nVolatility parameters:\n\n       Estimate Std.Error   z value Pr(>|z|)\nω    -0.0162014 0.0186806 -0.867286   0.3858\nγ₁   -0.0378454  0.018024  -2.09972   0.0358\nβ₁     0.977687  0.012558   77.8538   <1e-99\nα₁     0.255804 0.0625497   4.08961    <1e-4\n\nDistribution parameters:\n\n     Estimate Std.Error z value Pr(>|z|)\nν     4.12423   0.40059 10.2954   <1e-24An alternative approach to fitting a VolatilitySpec to BG96 is to first construct a UnivariateARCHModel containing the data, and then using fit! to modify it in place:julia> am = UnivariateARCHModel(GARCH{1, 1}([1., 0., 0.]), BG96)\n\nTGARCH{0, 1,1} model with Gaussian errors, T=1974.\n\n\n                             ω  β₁  α₁\nVolatility parameters:     1.0 0.0 0.0\n\n\n\njulia> fit!(am)\n\nTGARCH{0, 1,1} model with Gaussian errors, T=1974.\n\n\nVolatility parameters:\n\n      Estimate  Std.Error z value Pr(>|z|)\nω    0.0108661 0.00657449 1.65277   0.0984\nβ₁    0.804431  0.0730395 11.0136   <1e-27\nα₁    0.154597  0.0539319 2.86651   0.0042Calling fit(am) will return a new instance of UnivariateARCHModel instead:julia> am2 = fit(am);\n\njulia> am2 === am\nfalse\n\njulia> am2.spec.coefs == am.spec.coefs\ntrue"
+    "text": "Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a GARCH(1, 1) with standard normal errors;  for other model classes such as EGARCH, see the section on volatility specifications.julia> fit(GARCH{1, 1}, BG96)\n\nTGARCH{0,1,1} model with Gaussian errors, T=1974.\n\n\nMean equation parameters:\n\n        Estimate  Std.Error   z value Pr(>|z|)\nμ    -0.00616637 0.00920163 -0.670139   0.5028\n\nVolatility parameters:\n\n      Estimate  Std.Error z value Pr(>|z|)\nω    0.0107606 0.00649493 1.65677   0.0976\nβ₁    0.805875  0.0725003 11.1155   <1e-27\nα₁    0.153411  0.0536586 2.85903   0.0042This returns an instance of UnivariateARCHModel, as described in the section Working with UnivariateARCHModels. The parameters alpha_1 and beta_1 in the volatility equation are highly significant, again confirming the presence of volatility clustering. Note also that the fitted values are the same as those found by Bollerslev and Ghysels (1986) and Brooks et.al. (2001) for the same dataset.The fit method supports a number of keyword arguments; the full signature isfit(::Type{<:VolatilitySpec}, data::Vector; dist=StdNormal, meanspec=Intercept, algorithm=BFGS(), autodiff=:forward, kwargs...)Their meaning is as follows:dist: the error distribution. A subtype (not instance) of StandardizedDistribution; see Section Distributions.\nmeanspec=Intercept: the mean specification. Either a subtype of MeanSpec or an instance thereof (for specifications that require additional data, such as regression models); see the section on mean specification.The remaining keyword arguments are passed on to the optimizer.As an example, an EGARCH(1, 1, 1) model without intercept and with  Student\'s t errors is fitted as follows:julia> fit(EGARCH{1, 1, 1}, BG96; meanspec=NoIntercept, dist=StdT)\n\nEGARCH{1,1,1} model with Student\'s t errors, T=1974.\n\n\nVolatility parameters:\n\n       Estimate Std.Error   z value Pr(>|z|)\nω    -0.0162014 0.0186806 -0.867286   0.3858\nγ₁   -0.0378454  0.018024  -2.09972   0.0358\nβ₁     0.977687  0.012558   77.8538   <1e-99\nα₁     0.255804 0.0625497   4.08961    <1e-4\n\nDistribution parameters:\n\n     Estimate Std.Error z value Pr(>|z|)\nν     4.12423   0.40059 10.2954   <1e-24An alternative approach to fitting a VolatilitySpec to BG96 is to first construct a UnivariateARCHModel containing the data, and then using fit! to modify it in place:julia> spec = GARCH{1, 1}([1., 0., 0.]);\n\njulia> am = UnivariateARCHModel(spec, BG96)\n\nTGARCH{0, 1,1} model with Gaussian errors, T=1974.\n\n\n                             ω  β₁  α₁\nVolatility parameters:     1.0 0.0 0.0\n\n\n\njulia> fit!(am)\n\nTGARCH{0, 1,1} model with Gaussian errors, T=1974.\n\n\nVolatility parameters:\n\n      Estimate  Std.Error z value Pr(>|z|)\nω    0.0108661 0.00657449 1.65277   0.0984\nβ₁    0.804431  0.0730395 11.0136   <1e-27\nα₁    0.154597  0.0539319 2.86651   0.0042Note that fit! will also modify the volatility (and mean and distribution) specifications:julia> spec\nTGARCH{0,1,1} specification.\n\n                     ω       β₁       α₁\nParameters:  0.0108661 0.804431 0.154597Calling fit(am) will return a new instance of UnivariateARCHModel instead:julia> am2 = fit(am);\n\njulia> am2 === am\nfalse\n\njulia> am2.spec.coefs == am.spec.coefs\ntrue"
 },
 
 {
@@ -281,6 +281,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "reference/#ARCHModels.ARMA-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}} where T where q where p",
+    "page": "Reference guide",
+    "title": "ARCHModels.ARMA",
+    "category": "method",
+    "text": "ARMA{p, q}(coefs::Vector)\n\nCreate an ARMA(p, q) model.\n\n\n\n\n\n"
+},
+
+{
     "location": "reference/#ARCHModels.DQTest",
     "page": "Reference guide",
     "title": "ARCHModels.DQTest",
@@ -329,7 +337,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference/#ARCHModels.Intercept-Tuple{Any}",
+    "location": "reference/#ARCHModels.Intercept-Union{Tuple{Array{T,1}}, Tuple{T}} where T",
     "page": "Reference guide",
     "title": "ARCHModels.Intercept",
     "category": "method",
@@ -353,10 +361,10 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference/#ARCHModels.NoIntercept",
+    "location": "reference/#ARCHModels.NoIntercept-Union{Tuple{Array{T,1}}, Tuple{T}} where T",
     "page": "Reference guide",
     "title": "ARCHModels.NoIntercept",
-    "category": "type",
+    "category": "method",
     "text": "NoIntercept(T::Type=Float64)\nNoIntercept{T}()\nNoIntercept(v::Vector)\n\nCreate an instance of NoIntercept.\n\n\n\n\n\n"
 },
 
@@ -473,11 +481,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "reference/#ARCHModels.means-Tuple{UnivariateARCHModel}",
+    "page": "Reference guide",
+    "title": "ARCHModels.means",
+    "category": "method",
+    "text": "means(am::UnivariateARCHModel)\n\nReturn the conditional means of the model.\n\n\n\n\n\n"
+},
+
+{
     "location": "reference/#ARCHModels.selectmodel-Union{Tuple{MS}, Tuple{SD}, Tuple{T}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where MS<:MeanSpec where SD<:StandardizedDistribution where T<:AbstractFloat where VS<:VolatilitySpec",
     "page": "Reference guide",
     "title": "ARCHModels.selectmodel",
     "category": "method",
-    "text": "selectmodel(::Type{VS}, data; kwargs...) -> UnivariateARCHModel\n\nFit the volatility specification VS with varying lag lengths and return that which minimizes the BIC.\n\nKeyword arguments:\n\ndist=StdNormal: the error distribution.\nmeanspec=Intercept: the mean specification.\nmaxlags=3: maximum lag length to try in each parameter of VS.\ncriterion=bic: function that takes a UnivariateARCHModel and returns the criterion to minimize.\nshow_trace=false: print criterion to screen for each estimated model.\nalgorithm=BFGS(), autodiff=:forward, kwargs...: passed on to the optimizer.\n\nExample\n\njulia> selectmodel(EGARCH, BG96)\n\nEGARCH{1,1,2} model with Gaussian errors, T=1974.\n\n\nMean equation parameters:\n\n        Estimate  Std.Error   z value Pr(>|z|)\nμ    -0.00900018 0.00943948 -0.953461   0.3404\n\nVolatility parameters:\n\n       Estimate Std.Error   z value Pr(>|z|)\nω    -0.0544398 0.0592073 -0.919478   0.3578\nγ₁   -0.0243368 0.0270414 -0.899985   0.3681\nβ₁     0.960301 0.0388183   24.7384   <1e-99\nα₁     0.405788  0.067466    6.0147    <1e-8\nα₂    -0.207357  0.114161  -1.81636   0.0693\n\n\n\n\n\n"
+    "text": "selectmodel(::Type{VS}, data; kwargs...) -> UnivariateARCHModel\n\nFit the volatility specification VS with varying lag lengths and return that which minimizes the BIC.\n\nKeyword arguments:\n\ndist=StdNormal: the error distribution.\nmeanspec=Intercept: the mean specification, either as a type or instance of that type.\nmaxlags=3: maximum lag length to try in each parameter of VS.\ncriterion=bic: function that takes a UnivariateARCHModel and returns the criterion to minimize.\nshow_trace=false: print criterion to screen for each estimated model.\nalgorithm=BFGS(), autodiff=:forward, kwargs...: passed on to the optimizer.\n\nExample\n\njulia> selectmodel(EGARCH, BG96)\n\nEGARCH{1,1,2} model with Gaussian errors, T=1974.\n\n\nMean equation parameters:\n\n        Estimate  Std.Error   z value Pr(>|z|)\nμ    -0.00900018 0.00943948 -0.953461   0.3404\n\nVolatility parameters:\n\n       Estimate Std.Error   z value Pr(>|z|)\nω    -0.0544398 0.0592073 -0.919478   0.3578\nγ₁   -0.0243368 0.0270414 -0.899985   0.3681\nβ₁     0.960301 0.0388183   24.7384   <1e-99\nα₁     0.405788  0.067466    6.0147    <1e-8\nα₂    -0.207357  0.114161  -1.81636   0.0693\n\n\n\n\n\n"
 },
 
 {
@@ -497,19 +513,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference/#ARCHModels.volatilities-Union{Tuple{UnivariateARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T",
+    "location": "reference/#ARCHModels.volatilities-Union{Tuple{UnivariateARCHModel{T,VS,SD,MS} where MS<:MeanSpec{T}}, Tuple{SD}, Tuple{VS}, Tuple{T}} where SD where VS where T",
     "page": "Reference guide",
     "title": "ARCHModels.volatilities",
     "category": "method",
     "text": "volatilities(am::UnivariateARCHModel)\n\nReturn the conditional volatilities.\n\n\n\n\n\n"
-},
-
-{
-    "location": "reference/#Statistics.mean-Tuple{MeanSpec}",
-    "page": "Reference guide",
-    "title": "Statistics.mean",
-    "category": "method",
-    "text": "mean(spec::MeanSpec)\n\nReturn the mean implied by MeanSpec\n\n\n\n\n\n"
 },
 
 {
@@ -533,7 +541,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference guide",
     "title": "StatsBase.fit",
     "category": "method",
-    "text": "fit(VS::Type{<:VolatilitySpec}, data; dist=StdNormal, meanspec=Intercept,\n    algorithm=BFGS(), autodiff=:forward, kwargs...)\n\nFit the ARCH model specified by VS to data.\n\nKeyword arguments:\n\ndist=StdNormal: the error distribution.\nmeanspec=Intercept: the mean specification.\nalgorithm=BFGS(), autodiff=:forward, kwargs...: passed on to the optimizer.\n\nExample: EGARCH{1, 1, 1} model without intercept, Student\'s t errors.\n\njulia> fit(EGARCH{1, 1, 1}, BG96; meanspec=NoIntercept, dist=StdT)\n\nEGARCH{1,1,1} model with Student\'s t errors, T=1974.\n\n\nVolatility parameters:\n\n       Estimate Std.Error   z value Pr(>|z|)\nω    -0.0162014 0.0186806 -0.867286   0.3858\nγ₁   -0.0378454  0.018024  -2.09972   0.0358\nβ₁     0.977687  0.012558   77.8538   <1e-99\nα₁     0.255804 0.0625497   4.08961    <1e-4\n\nDistribution parameters:\n\n     Estimate Std.Error z value Pr(>|z|)\nν     4.12423   0.40059 10.2954   <1e-24\n\n\n\n\n\n"
+    "text": "fit(VS::Type{<:VolatilitySpec}, data; dist=StdNormal, meanspec=Intercept,\n    algorithm=BFGS(), autodiff=:forward, kwargs...)\n\nFit the ARCH model specified by VS to data.\n\nKeyword arguments:\n\ndist=StdNormal: the error distribution.\nmeanspec=Intercept: the mean specification, either as a type or instance of that type.\nalgorithm=BFGS(), autodiff=:forward, kwargs...: passed on to the optimizer.\n\nExample: EGARCH{1, 1, 1} model without intercept, Student\'s t errors.\n\njulia> fit(EGARCH{1, 1, 1}, BG96; meanspec=NoIntercept, dist=StdT)\n\nEGARCH{1,1,1} model with Student\'s t errors, T=1974.\n\n\nVolatility parameters:\n\n       Estimate Std.Error   z value Pr(>|z|)\nω    -0.0162014 0.0186806 -0.867286   0.3858\nγ₁   -0.0378454  0.018024  -2.09972   0.0358\nβ₁     0.977687  0.012558   77.8538   <1e-99\nα₁     0.255804 0.0625497   4.08961    <1e-4\n\nDistribution parameters:\n\n     Estimate Std.Error z value Pr(>|z|)\nν     4.12423   0.40059 10.2954   <1e-24\n\n\n\n\n\n"
 },
 
 {
@@ -545,7 +553,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference/#StatsBase.predict-Union{Tuple{UnivariateARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}, Tuple{UnivariateARCHModel{T,VS,SD,MS},Any}} where MS where SD where VS where T",
+    "location": "reference/#StatsBase.predict-Union{Tuple{UnivariateARCHModel{T,VS,SD,MS} where MS<:MeanSpec{T}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}, Tuple{UnivariateARCHModel{T,VS,SD,MS} where MS<:MeanSpec{T},Any}} where MS where SD where VS where T",
     "page": "Reference guide",
     "title": "StatsBase.predict",
     "category": "method",
@@ -553,7 +561,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "reference/#StatsBase.residuals-Union{Tuple{UnivariateARCHModel{T,VS,SD,MS}}, Tuple{MS}, Tuple{SD}, Tuple{VS}, Tuple{T}} where MS where SD where VS where T",
+    "location": "reference/#StatsBase.residuals-Union{Tuple{UnivariateARCHModel{T,VS,SD,MS} where MS<:MeanSpec{T}}, Tuple{SD}, Tuple{VS}, Tuple{T}} where SD where VS where T",
     "page": "Reference guide",
     "title": "StatsBase.residuals",
     "category": "method",
