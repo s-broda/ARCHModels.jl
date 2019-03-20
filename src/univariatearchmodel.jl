@@ -485,7 +485,7 @@ function selectmodel(::Type{VS}, data::Vector{T};
         if show_trace
             lock(mylock)
             Core.println(modname(VS{ind.I...}), " model has ",
-                              uppercase(split("$criterion", ".")[2]), " ",
+                              uppercase(split("$criterion", ".")[end]), " ",
                               criterion(res[ind]), "."
                               )
             unlock(mylock)
