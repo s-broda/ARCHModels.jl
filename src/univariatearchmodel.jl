@@ -352,6 +352,7 @@ function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
     garchcoefs .= coefs[1:ng]
     distcoefs .= coefs[ng+1:ng+ns]
     meancoefs .= coefs[ng+ns+1:ng+ns+nm]
+	meanspec.coefs .= meancoefs
     return nothing
 end
 
@@ -388,17 +389,18 @@ Distribution parameters:
 ```
 """
 function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
-             meanspec::Union{MS, Type{MS}}=Intercept{T}, algorithm=BFGS(),
+             meanspec::Union{MS, Type{MS}}=Intercept{T}(T[0]), algorithm=BFGS(),
              autodiff=:forward, kwargs...
              ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
                       MS<:MeanSpec, T<:AbstractFloat
                       }
-	meanspec isa Type && (meanspec = MS(zeros(T, nparams(MS))))
+	#can't use dispatch for this b/c meanspec is a kwarg
+	meanspec isa Type ? ms = meanspec(zeros(T, nparams(meanspec))) : ms = deepcopy(meanspec)
     coefs = startingvals(VS, data)
     distcoefs = startingvals(SD, data)
-    meancoefs = startingvals(meanspec, data)
-	_fit!(coefs, distcoefs, meancoefs, VS, SD, meanspec, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
-	return UnivariateARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=MS(meancoefs), fitted=true)
+    meancoefs = startingvals(ms, data)
+	_fit!(coefs, distcoefs, meancoefs, VS, SD, ms, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
+	return UnivariateARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=ms, fitted=true)
 end
 
 """
@@ -475,16 +477,20 @@ function selectmodel(::Type{VS}, data::Vector{T};
                               SD<:StandardizedDistribution, MS<:MeanSpec
                               }
 	#threading sometimes segfaults in tests locally. possibly https://github.com/JuliaLang/julia/issues/29934
-	meanspec isa Type && (meanspec = MS(zeros(T, nparams(MS))))
 	mylock=Threads.SpinLock()
-    ndims = my_unwrap_unionall(VS)-1#e.g., two (p and q) for GARCH{p, q, T}
-    res = Array{UnivariateARCHModel, ndims}(undef, ntuple(i->maxlags, ndims))
+    ndims = max(my_unwrap_unionall(VS)-1, 0)#e.g., two (p and q) for GARCH{p, q, T}
+	ndims2 = max(my_unwrap_unionall(MS)-1, 0)#e.g., two (p and q) for ARMA{p, q, T}
+    res = Array{UnivariateARCHModel, ndims+ndims2}(undef, ntuple(i->maxlags, ndims+ndims2))
     Threads.@threads for ind in collect(CartesianIndices(size(res)))
-        res[ind] = fit(VS{ind.I...}, data; dist=dist, meanspec=deepcopy(meanspec),
+		VSi = VS{ind.I[1:ndims]...}
+		MSi = (ndims2==0 ? meanspec : meanspec{ind.I[ndims+1:end]...})
+		res[ind] = fit(VSi, data; dist=dist, meanspec=MSi,
                        algorithm=algorithm, autodiff=autodiff, kwargs...)
         if show_trace
             lock(mylock)
-            Core.println(modname(VS{ind.I...}), " model has ",
+            Core.print(modname(VSi))
+			ndims2>0 && Core.print("-", modname(MSi))
+			Core.println(" model has ",
                               uppercase(split("$criterion", ".")[end]), " ",
                               criterion(res[ind]), "."
                               )
@@ -553,9 +559,11 @@ function show(io::IO, am::UnivariateARCHModel)
    end
 end
 
-function modname(::Type{VS}) where VS<:VolatilitySpec
-    s = "$(VS)"
-    s = s[1:findlast(isequal(','), s)-1] * '}'
+function modname(::Type{S}) where S<:Union{VolatilitySpec, MeanSpec}
+    s = "$(S)"
+	lastcomma = findlast(isequal(','), s)
+    lastcomma == nothing || (s = s[1:lastcomma-1] * '}')
+	s
 end
 
 ## some speed experiments
