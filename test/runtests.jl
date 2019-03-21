@@ -162,9 +162,18 @@ end
                                   0.05034724930058784,
                                   0.027707836268720806], rtol=1e-4))
     @test ARCHModels.coefnames(Intercept(0.)) == ["μ"]
+    @test ARCHModels.nparams(Intercept) == 1
+    @test ARCHModels.presample(Intercept(0.)) == 0
+
     @test typeof(NoIntercept()) == NoIntercept{Float64}
     @test ARCHModels.coefnames(NoIntercept()) == []
+    @test ARCHModels.nparams(NoIntercept) == 0
+    @test ARCHModels.presample(NoIntercept()) == 0
+    @test ARCHModels.uncond(NoIntercept()) == 0
+    @test mean(zeros(5), zeros(5), zeros(5), zeros(5), NoIntercept(), zeros(5), 4) == 0.
     ms = ARMA{2, 2}([1., .5, .2, -.1, .3])
+    @test ARCHModels.nparams(typeof(ms)) == length(ms.coefs)
+    @test ARCHModels.presample(ms) == 2
     @test ARCHModels.coefnames(ms) == ["c", "φ₁", "φ₂", "θ₁", "θ₂"]
     Random.seed!(1)
     spec = GARCH{1, 1}([1., .9, .05])
