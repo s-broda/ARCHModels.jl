@@ -4,8 +4,12 @@ using ARCHModels
 using Random
 T = 10^4;
 @testset "TGARCH" begin
+    @test ARCHModels.nparams(TGARCH{1, 2, 3}) == 7
+    @test ARCHModels.presample(TGARCH{1, 2, 3}) == 3
     Random.seed!(1)
     spec = TGARCH{1,1,1}([1., .05, .9, .01]);
+    str = sprint(show, spec)
+    @test startswith(str, "TGARCH{1,1,1} specification.\n\n               ω   γ₁  β₁   α₁\nParameters:  1.0 0.05 0.9 0.01\n\n")
     am = simulate(spec, T);
     am = selectmodel(TGARCH, am.data; meanspec=NoIntercept(), show_trace=true, maxlags=2)
     @test all(isapprox.(coef(am), [0.9439667311150648
@@ -70,6 +74,8 @@ end
 
 @testset "EGARCH" begin
     Random.seed!(1)
+    @test ARCHModels.nparams(EGARCH{1, 2, 3}) == 7
+    @test ARCHModels.presample(EGARCH{1, 2, 3}) == 3
     am = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), T; meanspec=Intercept(3))
     am7 = selectmodel(EGARCH, am.data; maxlags=2, show_trace=true)
     #with unconditional as presample:
@@ -311,9 +317,13 @@ end
     @test pvalue(LM) ≈ 0.1139758664282619
     str = sprint(show, LM)
     @test startswith(str, "ARCH LM test for conditional heteroskedasticity")
+    @test ARCHModels.testname(LM) == "ARCH LM test for conditional heteroskedasticity"
+
+
     vars = VaRs(am, 0.01)
     DQ = DQTest(BG96, VaRs(am), 0.01)
     @test pvalue(DQ) ≈ 2.3891461144184955e-11
     str = sprint(show, DQ)
     @test startswith(str, "Engle and Manganelli's (2004) DQ test (out of sample)")
+    @test ARCHModels.testname(DQ) == "Engle and Manganelli's (2004) DQ test (out of sample)"
 end
