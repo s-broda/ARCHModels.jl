@@ -31,7 +31,7 @@ using DelimitedFiles
 import Distributions: quantile
 import Base: show, showerror, eltype
 import Statistics: mean
-import Random: rand
+import Random: rand, AbstractRNG
 import HypothesisTests: HypothesisTest, testname, population_param_of_interest, default_tail, show_params, pvalue
 import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, confint, aic,
                   bic, aicc, dof, coef, coefnames, coeftable, CoefTable,

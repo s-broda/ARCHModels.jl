@@ -1,9 +1,12 @@
 ################################################################################
 #general functions
+# work around https://github.com/JuliaStats/Distributions.jl/issues/846
+rand(::AbstractRNG, sd::StandardizedDistribution) where {T} = rand(sd)
 
 #loop invariant part of the kernel
 @inline kernelinvariants(::Type{<:StandardizedDistribution}, coefs) = ()
-
+################################################################################
+#standardized
 """
     Standardized{D<:ContinuousUnivariateDistribution, T}  <: StandardizedDistribution{T}
 A wrapper type for standardizing a distribution from Distributions.jl.
@@ -101,6 +104,7 @@ StdNormal(T::Type{<:AbstractFloat}=Float64) = StdNormal(T[])
 StdNormal{T}() where {T<:AbstractFloat} = StdNormal(T[])
 StdNormal(v::Vector{T}) where {T} = StdNormal{T}(v)
 rand(::StdNormal{T}) where {T} = randn(T)
+
 @inline logkernel(::Type{<:StdNormal}, x, coefs) = -abs2(x)/2
 @inline logconst(::Type{<:StdNormal}, coefs::Vector{T}) where {T} =  -T(log2π)/2
 nparams(::Type{<:StdNormal}) = 0
