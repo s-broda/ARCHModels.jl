@@ -300,6 +300,7 @@ end
         using Distributions
         @test eltype(StdNormal{Float64}()) == Float64
         MyStdT=Standardized{TDist}
+        @test typeof(MyStdT([1.])) == typeof(MyStdT(1.))
         @test ARCHModels.logconst(MyStdT, [0]) == 0.
         @test coefnames(MyStdT{Float64}) == ["ν"]
         @test ARCHModels.distname(MyStdT{Float64}) == "TDist"
