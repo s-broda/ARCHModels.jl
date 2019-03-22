@@ -184,7 +184,7 @@ end
 
 function quantile(dist::StdT, q::Real)
     v = dist.coefs[1]
-    tdistinvcdf(v, q)
+    tdistinvcdf(v, q)*sqrt((v-2)/v)
 end
 
 ################################################################################

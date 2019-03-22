@@ -250,7 +250,7 @@ end
         @test fit(StdT, data).coefs[1] ≈ 3.972437329588246 rtol=1e-4
         @test coefnames(StdT) == ["ν"]
         @test ARCHModels.distname(StdT) == "Student's t"
-        @test quantile(StdT(3), .05) ≈ -2.3533634348018255
+        @test quantile(StdT(3), .05) ≈ -1.3587150125838563
         Random.seed!(1);
         datat = simulate(spec, T; dist=StdT(4)).data
         Random.seed!(1);
@@ -297,8 +297,8 @@ end
         @test ARCHModels.logconst(MyStdT, [0]) == 0.
         @test coefnames(MyStdT{Float64}) == ["ν"]
         @test ARCHModels.distname(MyStdT{Float64}) == "TDist"
-        @test ARCHModels.startingvals(MyStdT, [0.]) ≈ eps()
-        @test quantile(MyStdT(3.), .1) == quantile(StdT(3.), .1)
+        @test all(isapprox.(ARCHModels.startingvals(MyStdT, [0.]), eps()))
+        @test quantile(MyStdT(3.), .1) ≈ quantile(StdT(3.), .1)
         ARCHModels.startingvals(::Type{<:MyStdT}, data::Vector{T}) where T = T[3.]
         Random.seed!(1)
         am = simulate(GARCH{1, 1}([1, 0.9, .05]), 1000, dist=MyStdT(3.))
