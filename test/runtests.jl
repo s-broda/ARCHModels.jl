@@ -227,6 +227,13 @@ end
 end
 
 @testset "Distributions" begin
+    Random.seed!(1)
+    a=rand(StdT(3))
+    Random.seed!(1)
+    b=rand(StdT(3), 1)[1]
+    @test a==b # https://github.com/JuliaStats/Distributions.jl/issues/846
+    Random.seed!(1)
+    @test rand(MersenneTwister(), StdNormal()) ≈ 0.2972879845354616
     @testset "Gaussian" begin
         Random.seed!(1)
         data = rand(T)
@@ -279,12 +286,19 @@ end
         data = rand(StdGED(1), T)
         @test fit(StdGED, data).coefs[1] ≈ 1.0193004687300224 rtol=1e-4
         @test coefnames(StdGED) == ["p"]
+        @test ARCHModels.nparams(StdGED) == 1
         @test ARCHModels.distname(StdGED) == "GED"
         @test quantile(StdGED(1), .05) ≈ -1.6281735335151468
     end
     @testset "Standardized" begin
         using Distributions
+        @test eltype(StdNormal{Float64}()) == Float64
         MyStdT=Standardized{TDist}
+        @test ARCHModels.logconst(MyStdT, [0]) == 0.
+        @test coefnames(MyStdT{Float64}) == ["ν"]
+        @test ARCHModels.distname(MyStdT{Float64}) == "TDist"
+        @test ARCHModels.startingvals(MyStdT, [0.]) ≈ eps()
+        @test quantile(MyStdT(3.), .1) == quantile(StdT(3.), .1)
         ARCHModels.startingvals(::Type{<:MyStdT}, data::Vector{T}) where T = T[3.]
         Random.seed!(1)
         am = simulate(GARCH{1, 1}([1, 0.9, .05]), 1000, dist=MyStdT(3.))

@@ -11,18 +11,17 @@ rand(::AbstractRNG, sd::StandardizedDistribution) where {T} = rand(sd)
     Standardized{D<:ContinuousUnivariateDistribution, T}  <: StandardizedDistribution{T}
 A wrapper type for standardizing a distribution from Distributions.jl.
 """
-struct Standardized{D<:ContinuousUnivariateDistribution, T}  <: StandardizedDistribution{T}
+struct Standardized{D<:ContinuousUnivariateDistribution, T<:AbstractFloat}  <: StandardizedDistribution{T}
     coefs::Vector{T}
 end
-Standardized{D, T}(coefs::AbstractFloat...) where {D, T} = Standardized{D, T}([coefs...])
-(::Type{Standardized{D, T1} where T1})(coefs::Array{T}) where {D, T} = Standardized{D, T}(coefs)
-(::Type{Standardized{D, T1} where T1})(coefs::T...) where {D, T} = Standardized{D, T}([coefs...])
+Standardized{D}(coefs::T...) where {D, T} = Standardized{D, T}([coefs...])
+Standardized{D}(coefs::Vector{T}) where {D, T} = Standardized{D, T}([coefs...])
 rand(s::Standardized{D, T}) where {D, T} = (rand(D(s.coefs...))-mean(D(s.coefs...)))./std(D(s.coefs...))
 @inline logkernel(S::Type{<:Standardized{D, T1} where T1}, x, coefs::Vector{T}) where {D, T} = (try sig=std(D(coefs...)); logpdf(D(coefs...), mean(D(coefs...)) + sig*x)+log(sig); catch; T(-Inf); end)
 @inline logconst(S::Type{<:Standardized{D, T1} where T1}, coefs::Vector{T}) where {D, T} = zero(T)
 nparams(S::Type{<:Standardized{D, T} where T}) where {D} = length(fieldnames(D))
 coefnames(S::Type{<:Standardized{D, T}}) where {D, T} = [string.(fieldnames(D))...]
-distname(S::Type{<:Standardized{D, T}}) where {D, T} = D{T}.name
+distname(S::Type{<:Standardized{D, T}}) where {D, T} = string(D{T}.name)
 function quantile(s::Standardized{D, T}, q::Real) where {D, T}
     (quantile(D(s.coefs...), q)-mean(D(s.coefs...)))./std(D(s.coefs...))
 end
@@ -184,7 +183,8 @@ function startingvals(::Type{<:StdT}, data::Array{T}) where {T}
 end
 
 function quantile(dist::StdT, q::Real)
-    tdistinvcdf(dist.coefs..., q)
+    v = dist.coefs[1]
+    tdistinvcdf(v, q)
 end
 
 ################################################################################
