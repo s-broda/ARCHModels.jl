@@ -6,8 +6,6 @@ using Random
 T = 10^4;
 Random.seed!(1)
 data = rand(StdT(4), T)
-@show sum(abs.(data))
-@show ARCHModels.loglik(StdT, data, [3.])
 spec = GARCH{1, 1}([1., .9, .05])
 @test fit(StdT, data).coefs[1] ≈ 3.972437329588246 rtol=1e-4
 Random.seed!(1)
