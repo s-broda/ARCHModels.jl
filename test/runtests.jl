@@ -206,6 +206,37 @@ end
                                   0.18331803992622006,
                                   -0.00685700871019875,
                                   0.0358362785070197], rtol=1e-4))
+    @test typeof(Regression([1 2; 3 4])) == Regression{2, Float64}
+    @test typeof(Regression([1. 2.; 3. 4.])) == Regression{2, Float64}
+    @test typeof(Regression{Float32}([1 2; 3 4])) == Regression{2, Float32}
+    @test typeof(Regression([1 2; 3 4])) == Regression{2, Float64}
+    @test typeof(Regression([1, 2], [1 2; 3 4.0f0])) ==  Regression{2, Float32}
+    @test typeof(Regression([1, 2.], [1 2; 3 4.0f0])) ==  Regression{2, Float64}
+    @test typeof(Regression([1], [1, 2, 3, 4.0f0])) ==  Regression{1, Float32}
+    @test typeof(Regression([1, 2, 3, 4.0f0])) ==  Regression{1, Float32}
+    @test ARCHModels.nparams(Regression{2, Float64}) == 2
+
+    Random.seed!(1)
+    beta = [1, 2]
+    reg = Regression(beta, rand(2000, 2))
+    u = randn(2000)*.1
+    y = reg.X*reg.coefs+u
+    @test ARCHModels.coefnames(reg) == ["β₀", "β₁"]
+    @test ARCHModels.presample(reg) == 0
+    @test ARCHModels.constraints(typeof(reg), Float64) == ([-Inf, -Inf], [Inf, Inf])
+    @test all(isapprox(ARCHModels.startingvals(reg, y),
+        [1.0129824114578263, 1.9885835817762578], rtol=1e-4))
+    @test ARCHModels.uncond(reg) === 0.
+    Random.seed!(1)
+
+    am = simulate(GARCH{1, 1}([1., .9, .05]), 2000; meanspec=reg, warmup=0)
+    fit!(am)
+    @test all(isapprox(coef(am), [1.5240432453558923,
+                                 0.869016093356202,
+                                 0.06125683693937313,
+                                 1.1773425168044198,
+                                 1.7290964605805756], rtol=1e-4))
+
 end
 
 @testset "VaR" begin
@@ -235,7 +266,11 @@ end
     @test_throws ARCHModels.NumParamError StdNormal([1.])
     @test_throws ARCHModels.NumParamError StdT([1., 2.])
     @test_throws ARCHModels.NumParamError StdGED([1., 2.])
-
+    @test_throws ARCHModels.NumParamError Regression([1], [1 2; 3 4])
+    at = zeros(10)
+    data = rand(10)
+    reg = Regression(data[1:5])
+    @test_throws ErrorException mean(at, at, at, data, reg, [0.], 5)
 end
 
 @testset "Distributions" begin

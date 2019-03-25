@@ -1,4 +1,4 @@
-#TODO: maybe change mean(ARMA, Regression) so that it operates on at-1 etc? docs, tests, doctests, check if inlining push! gives extra speedup
+#TODO: maybe change mean(ARMA, Regression) so that it operates on at-1 etc? fix bug in startingvals(ARMA), docs, doctests, check if inlining push! gives extra speedup
 ################################################################################
 #NoIntercept
 """
@@ -170,19 +170,30 @@ end
 
 ################################################################################
 #regression
-
+"""
+    Regression{k, T} <: MeanSpec{T}
+A linear regression as mean specification.
+"""
 struct Regression{k, T} <: MeanSpec{T}
     coefs::Vector{T}
     X::Matrix{T}
     function Regression{k, T}(coefs, X) where {k, T}
+        X = X[:, :]
         nparams(Regression{k, T}) == size(X, 2) == k || throw(NumParamError(size(X, 2), length(coefs)))
         return new{k, T}(coefs, X)
     end
 end
-Regression(coefs::Vector, X::Matrix{T}) where {T} = Regression{length(coefs), T}(convert.(T, coefs), X)
-Regression{T}(X::Matrix) where T = Regression(Vector{T}(undef, size(X, 2)), convert.(T, X))
-Regression(X::Matrix{T}) where T<:AbstractFloat = Regression{T}(X)
-Regression(X::Matrix) = Regression(float.(X))
+"""
+    Regression(coefs::Vector, X::Matrix)
+    Regression(X::Matrix)
+    Regression{T}(X::Matrix)
+Create a regression model.
+"""
+Regression(coefs::Vector{T}, X::MatOrVec{T}) where {T} = Regression{length(coefs), T}(coefs, X)
+Regression(coefs::Vector, X::MatOrVec) = (T = float(promote_type(eltype(coefs), eltype(X))); Regression{length(coefs), T}(convert.(T, coefs), convert.(T, X)))
+Regression{T}(X::MatOrVec) where T = Regression(Vector{T}(undef, size(X, 2)), convert.(T, X))
+Regression(X::MatOrVec{T}) where T<:AbstractFloat = Regression{T}(X)
+Regression(X::MatOrVec) = Regression(float.(X))
 nparams(::Type{Regression{k, T}}) where {k, T} = k
 function coefnames(::Regression{k, T}) where {k, T}
     names= (i -> "β"*subscript(i)).([0:(k-1)...])
@@ -212,9 +223,7 @@ function constraints(::Type{<:Regression{k}}, ::Type{T})  where {k, T}
 end
 
 function startingvals(reg::Regression{k, T}, data::Vector{T})  where {k, T<:AbstractFloat}
-    N = length(data)
-    X = reg.X
-    beta = Vector{T}((data \ X)')
+    beta = reg.X \ data
 end
 
 
