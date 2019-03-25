@@ -1,4 +1,4 @@
-#TODO: maybe change mean(ARMA) so that it operates on at-1 etc? regressions need to somehow check the length of X, allow Int constructor, docs, tests, doctests, check if inlining push! gives extra speedup
+#TODO: maybe change mean(ARMA, Regression) so that it operates on at-1 etc? docs, tests, doctests, check if inlining push! gives extra speedup
 ################################################################################
 #NoIntercept
 """
@@ -175,14 +175,14 @@ struct Regression{k, T} <: MeanSpec{T}
     coefs::Vector{T}
     X::Matrix{T}
     function Regression{k, T}(coefs, X) where {k, T}
-        kk = nparams(Regression{k, T})
-        length(coefs) == kk || throw(NumParamError(kk, length(coefs)))
-        return new{kk, T}(coefs, X)
+        nparams(Regression{k, T}) == size(X, 2) == k || throw(NumParamError(size(X, 2), length(coefs)))
+        return new{k, T}(coefs, X)
     end
 end
-Regression(coefs::Vector{T}, X::Matrix) where {T} = Regression{length(coefs), T}(coefs, X)
-Regression{T}(X::Matrix) where T = Regression(Vector{T}(undef, size(X, 2)), X)
-Regression(X::Matrix) = Regression{Float64}(X)
+Regression(coefs::Vector, X::Matrix{T}) where {T} = Regression{length(coefs), T}(convert.(T, coefs), X)
+Regression{T}(X::Matrix) where T = Regression(Vector{T}(undef, size(X, 2)), convert.(T, X))
+Regression(X::Matrix{T}) where T<:AbstractFloat = Regression{T}(X)
+Regression(X::Matrix) = Regression(float.(X))
 nparams(::Type{Regression{k, T}}) where {k, T} = k
 function coefnames(::Regression{k, T}) where {k, T}
     names= (i -> "β"*subscript(i)).([0:(k-1)...])
@@ -194,6 +194,7 @@ end
 Base.@propagate_inbounds @inline function mean(
     at, ht, lht, data, meanspec::Regression{k}, meancoefs::Vector{T}, t
     ) where {k, T}
+    size(meanspec.X, 1) == length(data) || error("number of observations in X (N=$(size(meanspec.X, 1))) does not match the data (N=$(length(data))). If you are simulating, consider passing `warmup=0`.")
     mean = T(0)
     for i = 1:k
         mean += meancoefs[i] * meanspec.X[t, i]
