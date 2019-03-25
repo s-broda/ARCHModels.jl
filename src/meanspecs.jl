@@ -1,4 +1,4 @@
-#TODO: maybe change mean(ARMA) so that it operates on at-1 etc? regression?
+#TODO: maybe change mean(ARMA) so that it operates on at-1 etc? regressions need to somehow check the length of X, allow Int constructor, docs, tests, doctests, check if inlining push! gives extra speedup
 ################################################################################
 #NoIntercept
 """
