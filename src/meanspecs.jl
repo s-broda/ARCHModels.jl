@@ -167,3 +167,56 @@ Base.@propagate_inbounds @inline function uncond(ms::ARMA{p, q}) where {p, q}
     p>0 && (m/=(1-sum(ms.coefs[2:p+1])))
     return m
 end
+
+################################################################################
+#regression
+
+struct Regression{k, T} <: MeanSpec{T}
+    coefs::Vector{T}
+    X::Matrix{T}
+    function Regression{k, T}(coefs, X) where {k, T}
+        kk = nparams(Regression{k, T})
+        length(coefs) == kk || throw(NumParamError(kk, length(coefs)))
+        return new{kk, T}(coefs, X)
+    end
+end
+Regression(coefs::Vector{T}, X::Matrix) where {T} = Regression{length(coefs), T}(coefs, X)
+Regression{T}(X::Matrix) where T = Regression(Vector{T}(undef, size(X, 2)), X)
+Regression(X::Matrix) = Regression{Float64}(X)
+nparams(::Type{Regression{k, T}}) where {k, T} = k
+function coefnames(::Regression{k, T}) where {k, T}
+    names= (i -> "β"*subscript(i)).([0:(k-1)...])
+    return names
+end
+
+@inline presample(::Regression) = 0
+
+Base.@propagate_inbounds @inline function mean(
+    at, ht, lht, data, meanspec::Regression{k}, meancoefs::Vector{T}, t
+    ) where {k, T}
+    mean = T(0)
+    for i = 1:k
+        mean += meancoefs[i] * meanspec.X[t, i]
+    end
+    return mean
+end
+
+function constraints(::Type{<:Regression{k}}, ::Type{T})  where {k, T}
+    lower = Vector{T}(undef, k)
+    upper = Vector{T}(undef, k)
+    fill!(lower, -T(Inf))
+    fill!(upper, T(Inf))
+
+    return lower, upper
+end
+
+function startingvals(reg::Regression{k, T}, data::Vector{T})  where {k, T<:AbstractFloat}
+    N = length(data)
+    X = reg.X
+    beta = Vector{T}((data \ X)')
+end
+
+
+Base.@propagate_inbounds @inline function uncond(::Regression{k, T}) where {k, T}
+    return T(0)
+end
