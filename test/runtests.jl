@@ -70,6 +70,12 @@ end
     spec = ARCH{2}([1., .3, .4]);
     am = simulate(spec, T);
     @test selectmodel(ARCH, am.data).spec.coefs == fit(ARCH{2}, am.data).spec.coefs
+    Random.seed!(1);
+    spec = ARCH{0}([1.]);
+    am = simulate(spec, T);
+    fit!(am)
+    @test all(isapprox.(coef(am), 1.013031276122647, rtol=1e-4))
+
 end
 
 @testset "EGARCH" begin

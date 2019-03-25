@@ -131,6 +131,7 @@ function _simulate!(data::Vector{T2}, spec::VolatilitySpec{T2};
 	r1 = presample(typeof(spec))
 	r2 = presample(meanspec)
 	r = max(r1, r2)
+	r = max(r, 1) # make sure this works for, e.g., ARCH{0}; CircularBuffer requires at least a length of 1
     ht = CircularBuffer{T2}(r)
     lht = CircularBuffer{T2}(r)
     zt = CircularBuffer{T2}(r)
@@ -298,6 +299,7 @@ function loglik(spec::Type{VS}, dist::Type{SD}, meanspec::MS,
                             MS<:MeanSpec, T2
                             }
     r = max(presample(VS), presample(meanspec))
+	r = max(r, 1) # make sure this works for, e.g., ARCH{0}; CircularBuffer requires at least a length of 1
     ht = CircularBuffer{T2}(r)
     lht = CircularBuffer{T2}(r)
     zt = CircularBuffer{T2}(r)
