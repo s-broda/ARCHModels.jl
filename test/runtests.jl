@@ -176,9 +176,10 @@ end
     @test ARCHModels.coefnames(Intercept(0.)) == ["μ"]
     @test ARCHModels.nparams(Intercept) == 1
     @test ARCHModels.presample(Intercept(0.)) == 0
-
+    @test ARCHModels.constraints(Intercept{Float64}, Float64) == (-Float64[Inf], Float64[Inf])
     @test typeof(NoIntercept()) == NoIntercept{Float64}
     @test ARCHModels.coefnames(NoIntercept()) == []
+    @test ARCHModels.constraints(NoIntercept{Float64}, Float64) == (Float64[], Float64[])
     @test ARCHModels.nparams(NoIntercept) == 0
     @test ARCHModels.presample(NoIntercept()) == 0
     @test ARCHModels.uncond(NoIntercept()) == 0
@@ -289,6 +290,7 @@ end
         @test coefnames(StdNormal) == String[]
         @test ARCHModels.distname(StdNormal) == "Gaussian"
         @test quantile(StdNormal(), .05) ≈ -1.6448536269514724
+        @test ARCHModels.constraints(StdNormal{Float64}, Float64) == (Float64[], Float64[])
     end
     @testset "Student" begin
         Random.seed!(1)
