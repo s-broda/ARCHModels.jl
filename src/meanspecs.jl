@@ -1,4 +1,4 @@
-#TODO: maybe change mean(ARMA) so that it operates on at-1 etc? regression?
+#TODO: maybe change mean(ARMA, Regression) so that it operates on at-1 etc? fix bug in startingvals(ARMA), what to do about predict? allow X to be longer than data? check if inlining push! gives extra speedup
 ################################################################################
 #NoIntercept
 """
@@ -166,4 +166,67 @@ Base.@propagate_inbounds @inline function uncond(ms::ARMA{p, q}) where {p, q}
     m = ms.coefs[1]
     p>0 && (m/=(1-sum(ms.coefs[2:p+1])))
     return m
+end
+
+################################################################################
+#regression
+"""
+    Regression{k, T} <: MeanSpec{T}
+A linear regression as mean specification.
+"""
+struct Regression{k, T} <: MeanSpec{T}
+    coefs::Vector{T}
+    X::Matrix{T}
+    function Regression{k, T}(coefs, X) where {k, T}
+        X = X[:, :]
+        nparams(Regression{k, T}) == size(X, 2) == k || throw(NumParamError(size(X, 2), length(coefs)))
+        return new{k, T}(coefs, X)
+    end
+end
+"""
+    Regression(coefs::Vector, X::Matrix)
+    Regression(X::Matrix)
+    Regression{T}(X::Matrix)
+Create a regression model.
+"""
+Regression(coefs::Vector{T}, X::MatOrVec{T}) where {T} = Regression{length(coefs), T}(coefs, X)
+Regression(coefs::Vector, X::MatOrVec) = (T = float(promote_type(eltype(coefs), eltype(X))); Regression{length(coefs), T}(convert.(T, coefs), convert.(T, X)))
+Regression{T}(X::MatOrVec) where T = Regression(Vector{T}(undef, size(X, 2)), convert.(T, X))
+Regression(X::MatOrVec{T}) where T<:AbstractFloat = Regression{T}(X)
+Regression(X::MatOrVec) = Regression(float.(X))
+nparams(::Type{Regression{k, T}}) where {k, T} = k
+function coefnames(::Regression{k, T}) where {k, T}
+    names= (i -> "β"*subscript(i)).([0:(k-1)...])
+    return names
+end
+
+@inline presample(::Regression) = 0
+
+Base.@propagate_inbounds @inline function mean(
+    at, ht, lht, data, meanspec::Regression{k}, meancoefs::Vector{T}, t
+    ) where {k, T}
+    size(meanspec.X, 1) == length(data) || error("number of observations in X (N=$(size(meanspec.X, 1))) does not match the data (N=$(length(data))). If you are simulating, consider passing `warmup=0`.")
+    mean = T(0)
+    for i = 1:k
+        mean += meancoefs[i] * meanspec.X[t, i]
+    end
+    return mean
+end
+
+function constraints(::Type{<:Regression{k}}, ::Type{T})  where {k, T}
+    lower = Vector{T}(undef, k)
+    upper = Vector{T}(undef, k)
+    fill!(lower, -T(Inf))
+    fill!(upper, T(Inf))
+
+    return lower, upper
+end
+
+function startingvals(reg::Regression{k, T}, data::Vector{T})  where {k, T<:AbstractFloat}
+    beta = reg.X \ data
+end
+
+
+Base.@propagate_inbounds @inline function uncond(::Regression{k, T}) where {k, T}
+    return T(0)
 end

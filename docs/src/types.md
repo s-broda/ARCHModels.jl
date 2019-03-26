@@ -87,6 +87,15 @@ NoIntercept{Float64}(Float64[])
 julia> Intercept(3) # convenience constructor
 Intercept{Float64}([3.0])
 ```
+
+* A linear regression model: ``\mu_t=\mathbf{x}_t^{\mathrm{\scriptscriptstyle T}}\boldsymbol{\beta}``. Available as [`Regression`](@ref):
+```jldoctest TYPES
+julia> X = ones(100, 1);
+
+julia> reg = Regression(X);
+```
+In this example, we created a regression model containing one regressor, given by a column of ones; this is equivalent to including an intercept in the model (see [`Intercept`](@ref) above). In general, the constructor should be passed a design matrix ``\mathbf{X}`` containing ``\{\mathbf{x}_t^{\mathrm{\scriptscriptstyle T}}\}_{t=1\ldots T}`` as its rows; that is, for a model with ``T`` observations and ``k`` regressors, ``X`` would have dimensions ``T\times k``.
+
 * An ARMA(p, q) model: ``\mu_t=c+\sum_{i=1}^p \varphi_i r_{t-i}+\sum_{i=1}^q \theta_i a_{t-i}``. Available as [`ARMA{p, q}`](@ref):
 ```jldoctest TYPES
 julia> ARMA{1, 1}([1., .9, -.1])

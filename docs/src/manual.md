@@ -82,9 +82,32 @@ fit(::Type{<:VolatilitySpec}, data::Vector; dist=StdNormal, meanspec=Intercept, 
 
 Their meaning is as follows:
 - `dist`: the error distribution. A subtype (*not instance*) of [`StandardizedDistribution`](@ref); see Section [Distributions](@ref).
-- `meanspec=Intercept`: the mean specification. Either a subtype of [`MeanSpec`](@ref) or an instance thereof (for specifications that require additional data, such as regression models); see the [section on mean specification](@ref meanspec).
-The remaining keyword arguments are passed on to the optimizer.
+- `meanspec=Intercept`: the mean specification. Either a subtype of [`MeanSpec`](@ref) or an instance thereof (for specifications that require additional data, such as [`Regression`](@ref); see the [section on mean specification](@ref meanspec)). If the mean specification in question has a notion of sample size (like [`Regression`](@ref)), then the sample size should match that of the data, or an error will be thrown. As an example,
+```jldoctest MANUAL
+julia> X = ones(length(BG96), 1);
 
+julia> reg = Regression(X);
+
+julia> fit(GARCH{1, 1}, BG96; meanspec=reg)
+
+TGARCH{0,1,1} model with Gaussian errors, T=1974.
+
+
+Mean equation parameters:
+
+        Estimate  Std.Error   z value Pr(>|z|)
+β₀   -0.00616637 0.00920163 -0.670139   0.5028
+
+Volatility parameters:
+
+      Estimate  Std.Error z value Pr(>|z|)
+ω    0.0107606 0.00649493 1.65677   0.0976
+β₁    0.805875  0.0725003 11.1155   <1e-27
+α₁    0.153411  0.0536586 2.85903   0.0042
+```
+Here, both `reg` and `BG86` contain 1974 observations. Notice that because in this case `X` contains only a column of ones, the estimation results are equivalent to those obtained with `fit(GARCH{1, 1}, BG96; meanspec=Intercept)` above; the latter is however more memory efficient, as no design matrix needs to be stored.
+
+- The remaining keyword arguments are passed on to the optimizer.
 As an example, an EGARCH(1, 1, 1) model without intercept and with  Student's ``t`` errors is fitted as follows:
 
 ```jldoctest MANUAL
@@ -327,8 +350,7 @@ Details:
 ```
 By default, the number of lags is chosen as the maximum order of the volatility specification (e.g., ``\max(p, q)`` for a GARCH(p, q) model). Here, the test does not reject, indicating that a GARCH(1, 1) specification is sufficient for modelling the volatility clustering (a common finding).
 ## Simulation
-To simulate from a [`UnivariateARCHModel`](@ref), use [`simulate`](@ref). You can either specify the [`VolatilitySpec`](@ref) (and optionally the distribution and mean specification) and desired number of observations, or pass an existing [`UnivariateARCHModel`](@ref). Use [`simulate!`](@ref) to modify the data in place.
-
+To simulate from a [`UnivariateARCHModel`](@ref), use [`simulate`](@ref). You can either specify the [`VolatilitySpec`](@ref) (and optionally the distribution and mean specification) and desired number of observations, or pass an existing [`UnivariateARCHModel`](@ref). Use [`simulate!`](@ref) to modify the data in place. Example:
 ```jldoctest MANUAL
 julia> am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=500, meanspec=Intercept(5.), dist=StdT(3.))
 
@@ -345,6 +367,25 @@ Volatility parameters:     1.0 0.9 0.05
 Distribution parameters:   3.0
 
 julia> am4 = simulate(am3, 1000); # passing the number of observations is optional, the default being nobs(am3)
+```
+Care must be taken if the mean specification has a notion of sample size, as in the case of [`Regression`](@ref): because the sample size must match that of the data to be simulated, one must pass `warmup=0`, or an error will be thrown. For example, `am3` above could also have been simulated from as follows:
+```jldoctest MANUAL
+julia> reg = Regression([5], ones(1000, 1))
+Regression{1,Float64}([5.0], [1.0; 1.0; … ; 1.0; 1.0])
+
+julia> am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=0, meanspec=reg, dist=StdT(3.))
+
+TGARCH{0,1,1} model with Student's t errors, T=1000.
+
+
+                            β₀
+Mean equation parameters:  5.0
+
+                             ω  β₁   α₁
+Volatility parameters:     1.0 0.9 0.05
+
+                             ν
+Distribution parameters:   3.0
 ```
 ```@meta
 DocTestSetup = nothing

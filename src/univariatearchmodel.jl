@@ -125,7 +125,7 @@ function _simulate!(data::Vector{T2}, spec::VolatilitySpec{T2};
                   dist::StandardizedDistribution{T2}=StdNormal{T2}(),
                   meanspec::MeanSpec{T2}=NoIntercept{T2}()
                   ) where {T2<:AbstractFloat}
-	@assert warmup>0
+	@assert warmup>=0
 	append!(data, zeros(T2, warmup))
     T = length(data)
 	r1 = presample(typeof(spec))
@@ -415,7 +415,7 @@ function fit!(am::UnivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwar
     am.spec.coefs.=startingvals(typeof(am.spec), am.data)
     am.dist.coefs.=startingvals(typeof(am.dist), am.data)
     am.meanspec.coefs.=startingvals(am.meanspec, am.data)
-    _fit!(am.spec.coefs, am.dist.coefs, am.meanspec.coefs, typeof(am.spec),
+	_fit!(am.spec.coefs, am.dist.coefs, am.meanspec.coefs, typeof(am.spec),
          typeof(am.dist), am.meanspec, am.data; algorithm=algorithm,
          autodiff=autodiff, kwargs...
          )

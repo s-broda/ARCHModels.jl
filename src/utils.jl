@@ -1,3 +1,5 @@
+const MatOrVec{T} = Union{Matrix{T}, Vector{T}} where T
+
 struct NumParamError <: Exception
     expected::Int
     got::Int
