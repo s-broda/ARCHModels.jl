@@ -1,4 +1,4 @@
-#TODO: maybe change mean(ARMA, Regression) so that it operates on at-1 etc? fix bug in startingvals(ARMA), what to do about predict? allow X to be longer than data? check if inlining push! gives extra speedup
+#TODO: maybe change mean(ARMA, Regression) so that it operates on at-1 etc? what to do about predict? allow X to be longer than data? check if inlining push! gives extra speedup
 ################################################################################
 #NoIntercept
 """
@@ -157,7 +157,7 @@ function startingvals(::ARMA{p, q, T}, data::Vector{T})  where {p, q, T<:Abstrac
     for i = 1:p
         X[:, i+1] .= data[p-i+1:N-i]
     end
-    phi = Vector{T}((data[p+1:end] \ X)')
+    phi = X \ data[p+1:end]
     return T[phi..., zeros(T, q)...]
 end
 
