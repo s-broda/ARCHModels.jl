@@ -13,6 +13,9 @@ add ARCHModels
 ```
 
 in the Pkg REPL mode (which is entered by pressing `]` at the prompt).
+# Documentation
+
+The extensive documentation is available [here](https://s-broda.github.io/ARCHModels.jl/stable/).
 
 # Acknowledgements
 
