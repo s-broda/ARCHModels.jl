@@ -1,4 +1,4 @@
-#TODO: maybe change mean(ARMA, Regression) so that it operates on at-1 etc? what to do about predict? allow X to be longer than data? check if inlining push! gives extra speedup
+#TODO: maybe change mean(ARMA, Regression) so that it operates on at-1 etc? what to do about predict? cf linearmodel! allow X to be longer than data? integrate with linear models? check if inlining push! gives extra speedup
 ################################################################################
 #NoIntercept
 """

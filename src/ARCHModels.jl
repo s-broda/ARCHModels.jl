@@ -36,6 +36,8 @@ import HypothesisTests: HypothesisTest, testname, population_param_of_interest, 
 import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, confint, aic,
                   bic, aicc, dof, coef, coefnames, coeftable, CoefTable,
 				  informationmatrix, islinear, score, vcov, residuals, predict
+import StatsModels: DataFrameRegressionModel
+import GLM: LinearModel
 
 export ARCHModel, UnivariateARCHModel, VolatilitySpec, StandardizedDistribution, Standardized, MeanSpec,
        simulate, simulate!, selectmodel, StdNormal, StdT, StdGED, Intercept, Regression,
