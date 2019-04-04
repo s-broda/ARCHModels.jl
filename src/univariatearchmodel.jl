@@ -405,9 +405,6 @@ function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
 	return UnivariateARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=ms, fitted=true)
 end
 
-function fit(vs::Type{VS}, lm::DataFrameRegressionModel{<:LinearModel}; kwargs...) where VS<:VolatilitySpec
-	fit(vs, lm.model.rr.y; meanspec=Regression(lm.mm.m), kwargs...)
-end
 """
     fit!(am::UnivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
 

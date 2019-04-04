@@ -5,6 +5,7 @@ ForwardDiff
 HypothesisTests
 Optim
 Reexport
+Requires
 Roots
 SpecialFunctions
 StatsBase
