@@ -2,6 +2,9 @@ using Test
 
 using ARCHModels
 using Random
+using GLM
+using DataFrames
+
 T = 10^4;
 @testset "TGARCH" begin
     @test ARCHModels.nparams(TGARCH{1, 2, 3}) == 7
@@ -237,7 +240,9 @@ end
                                  0.06125683693937313,
                                  1.1773425168044198,
                                  1.7290964605805756], rtol=1e-4))
-
+    data = DataFrame(X=ones(1974), Y=BG96)
+    model = lm(@formula(Y ~ X-1), data)
+    @test all(isapprox(coef(fit(GARCH{1, 1}, model)), coef(fit(GARCH{1, 1}, BG96, meanspec=Intercept)), rtol=1e-4))
 end
 
 @testset "VaR" begin
