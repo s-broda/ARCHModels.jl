@@ -59,5 +59,6 @@ function __init__()
 			fit(vs, lm.model.rr.y; meanspec=Regression(lm.mm.m), kwargs...)
 		end
 	end
+	fit(GARCH{1, 1}, BG96)
 end
 end#module
