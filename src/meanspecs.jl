@@ -177,10 +177,11 @@ A linear regression as mean specification.
 struct Regression{k, T} <: MeanSpec{T}
     coefs::Vector{T}
     X::Matrix{T}
-    function Regression{k, T}(coefs, X) where {k, T}
+    coefnames::Vector{String}
+    function Regression{k, T}(coefs, X; coefnames=(i -> "β"*subscript(i)).([0:(k-1)...])) where {k, T}
         X = X[:, :]
-        nparams(Regression{k, T}) == size(X, 2) == k || throw(NumParamError(size(X, 2), length(coefs)))
-        return new{k, T}(coefs, X)
+        nparams(Regression{k, T}) == size(X, 2) == length(coefnames) == k || throw(NumParamError(size(X, 2), length(coefs)))
+        return new{k, T}(coefs, X, coefnames)
     end
 end
 """
@@ -195,9 +196,8 @@ Regression{T}(X::MatOrVec) where T = Regression(Vector{T}(undef, size(X, 2)), co
 Regression(X::MatOrVec{T}) where T<:AbstractFloat = Regression{T}(X)
 Regression(X::MatOrVec) = Regression(float.(X))
 nparams(::Type{Regression{k, T}}) where {k, T} = k
-function coefnames(::Regression{k, T}) where {k, T}
-    names= (i -> "β"*subscript(i)).([0:(k-1)...])
-    return names
+function coefnames(R::Regression{k, T}) where {k, T}
+    return R.coefnames
 end
 
 @inline presample(::Regression) = 0
