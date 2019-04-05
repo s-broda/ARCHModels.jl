@@ -43,4 +43,4 @@ Depth = 2
 
 This project has received funding from the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (grant agreement No. 750559).
 
-![EU LOGO](assets/LOGO.jpg)
+![EU LOGO](assets/EULOGO.jpg)

@@ -362,7 +362,8 @@ end
     fit(VS::Type{<:VolatilitySpec}, data; dist=StdNormal, meanspec=Intercept,
         algorithm=BFGS(), autodiff=:forward, kwargs...)
 
-Fit the ARCH model specified by `VS` to data.
+Fit the ARCH model specified by `VS` to `data`. `data` can be a vector or a
+GLM.LinearModel (or GLM.DataFrameRegressionModel).
 
 # Keyword arguments:
 - `dist=StdNormal`: the error distribution.
@@ -390,6 +391,8 @@ Distribution parameters:
 ν     4.12423   0.40059 10.2954   <1e-24
 ```
 """
+function fit end
+
 function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
              meanspec::Union{MS, Type{MS}}=Intercept{T}(T[0]), algorithm=BFGS(),
              autodiff=:forward, kwargs...
