@@ -27,7 +27,7 @@ Test summary:
 Details:
     sample size:                    1974
     number of lags:                 1
-    LM statistic:                   98.12107516935244</code></pre><p>The null is strongly rejected, again providing evidence for the presence of volatility clustering.</p><h2><a class="nav-anchor" id="Estimation-1" href="#Estimation-1">Estimation</a></h2><p>Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a GARCH(1, 1) with standard normal errors;  for other model classes such as <a href="../reference/#ARCHModels.EGARCH"><code>EGARCH</code></a>, see the <a href="../types/#volaspec-1">section on volatility specifications</a>.</p><pre><code class="language-none">julia&gt; fit(GARCH{1, 1}, BG96)
+    LM statistic:                   98.12107516935244</code></pre><p>The null is strongly rejected, again providing evidence for the presence of volatility clustering.</p><h2><a class="nav-anchor" id="Estimation-1" href="#Estimation-1">Estimation</a></h2><h3><a class="nav-anchor" id="Standalone-Models-1" href="#Standalone-Models-1">Standalone Models</a></h3><p>Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a GARCH(1, 1) with standard normal errors;  for other model classes such as <a href="../reference/#ARCHModels.EGARCH"><code>EGARCH</code></a>, see the <a href="../types/#volaspec-1">section on volatility specifications</a>.</p><pre><code class="language-none">julia&gt; fit(GARCH{1, 1}, BG96)
 
 TGARCH{0,1,1} model with Gaussian errors, T=1974.
 
@@ -42,7 +42,7 @@ Volatility parameters:
       Estimate  Std.Error z value Pr(&gt;|z|)
 ω    0.0107606 0.00649493 1.65677   0.0976
 β₁    0.805875  0.0725003 11.1155   &lt;1e-27
-α₁    0.153411  0.0536586 2.85903   0.0042</code></pre><p>This returns an instance of <a href="../reference/#ARCHModels.UnivariateARCHModel"><code>UnivariateARCHModel</code></a>, as described in the section <a href="../types/#Working-with-UnivariateARCHModels-1">Working with UnivariateARCHModels</a>. The parameters <span>$\alpha_1$</span> and <span>$\beta_1$</span> in the volatility equation are highly significant, again confirming the presence of volatility clustering. Note also that the fitted values are the same as those found by <a href="https://doi.org/10.2307/1392425">Bollerslev and Ghysels (1986)</a> and <a href="https://doi.org/10.1016/S0169-2070(00)00070-4">Brooks et.al. (2001)</a> for the same dataset.</p><p>The <a href="../reference/#StatsBase.fit-Tuple{UnivariateARCHModel}"><code>fit</code></a> method supports a number of keyword arguments; the full signature is</p><pre><code class="language-julia">fit(::Type{&lt;:VolatilitySpec}, data::Vector; dist=StdNormal, meanspec=Intercept, algorithm=BFGS(), autodiff=:forward, kwargs...)</code></pre><p>Their meaning is as follows:</p><ul><li><code>dist</code>: the error distribution. A subtype (<em>not instance</em>) of <a href="../reference/#ARCHModels.StandardizedDistribution"><code>StandardizedDistribution</code></a>; see Section <a href="../types/#Distributions-1">Distributions</a>.</li><li><code>meanspec=Intercept</code>: the mean specification. Either a subtype of <a href="../reference/#ARCHModels.MeanSpec"><code>MeanSpec</code></a> or an instance thereof (for specifications that require additional data, such as <a href="../reference/#ARCHModels.Regression"><code>Regression</code></a>; see the <a href="../types/#meanspec-1">section on mean specification</a>). If the mean specification in question has a notion of sample size (like <a href="../reference/#ARCHModels.Regression"><code>Regression</code></a>), then the sample size should match that of the data, or an error will be thrown. As an example,</li></ul><pre><code class="language-julia-repl">julia&gt; X = ones(length(BG96), 1);
+α₁    0.153411  0.0536586 2.85903   0.0042</code></pre><p>This returns an instance of <a href="../reference/#ARCHModels.UnivariateARCHModel"><code>UnivariateARCHModel</code></a>, as described in the section <a href="../types/#Working-with-UnivariateARCHModels-1">Working with UnivariateARCHModels</a>. The parameters <span>$\alpha_1$</span> and <span>$\beta_1$</span> in the volatility equation are highly significant, again confirming the presence of volatility clustering. Note also that the fitted values are the same as those found by <a href="https://doi.org/10.2307/1392425">Bollerslev and Ghysels (1986)</a> and <a href="https://doi.org/10.1016/S0169-2070(00)00070-4">Brooks et.al. (2001)</a> for the same dataset.</p><p>The <a href="../reference/#StatsBase.fit"><code>fit</code></a> method supports a number of keyword arguments; the full signature is</p><pre><code class="language-julia">fit(::Type{&lt;:VolatilitySpec}, data::Vector; dist=StdNormal, meanspec=Intercept, algorithm=BFGS(), autodiff=:forward, kwargs...)</code></pre><p>Their meaning is as follows:</p><ul><li><code>dist</code>: the error distribution. A subtype (<em>not instance</em>) of <a href="../reference/#ARCHModels.StandardizedDistribution"><code>StandardizedDistribution</code></a>; see Section <a href="../types/#Distributions-1">Distributions</a>.</li><li><code>meanspec=Intercept</code>: the mean specification. Either a subtype of <a href="../reference/#ARCHModels.MeanSpec"><code>MeanSpec</code></a> or an instance thereof (for specifications that require additional data, such as <a href="../reference/#ARCHModels.Regression"><code>Regression</code></a>; see the <a href="../types/#meanspec-1">section on mean specification</a>). If the mean specification in question has a notion of sample size (like <a href="../reference/#ARCHModels.Regression"><code>Regression</code></a>), then the sample size should match that of the data, or an error will be thrown. As an example,</li></ul><pre><code class="language-julia-repl">julia&gt; X = ones(length(BG96), 1);
 
 julia&gt; reg = Regression(X);
 
@@ -109,7 +109,31 @@ julia&gt; am2 === am
 false
 
 julia&gt; am2.spec.coefs == am.spec.coefs
-true</code></pre><h2><a class="nav-anchor" id="Model-selection-1" href="#Model-selection-1">Model selection</a></h2><p>The function <a href="../reference/#ARCHModels.selectmodel-Union{Tuple{MS}, Tuple{SD}, Tuple{T}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where MS&lt;:MeanSpec where SD&lt;:StandardizedDistribution where T&lt;:AbstractFloat where VS&lt;:VolatilitySpec"><code>selectmodel</code></a> can be used for automatic model selection, based on an information crititerion. Given a class of model (i.e., a subtype of <a href="../reference/#ARCHModels.VolatilitySpec"><code>VolatilitySpec</code></a>), it will return a fitted <a href="../reference/#ARCHModels.UnivariateARCHModel"><code>UnivariateARCHModel</code></a>, with the lag length parameters (i.e., <span>$p$</span> and <span>$q$</span> in the case of <a href="../reference/#ARCHModels.GARCH"><code>GARCH</code></a>) chosen to minimize the desired criterion. The <a href="https://en.wikipedia.org/wiki/Bayesian_information_criterion">BIC</a> is used by default.</p><p>Eg., the following selects the optimal (minimum AIC) EGARCH(o, p, q) model, where o, p, q &lt; 2,  assuming <span>$t$</span> distributed errors.</p><pre><code class="language-julia-repl">julia&gt; selectmodel(EGARCH, BG96; criterion=aic, maxlags=2, dist=StdT)
+true</code></pre><h3><a class="nav-anchor" id="Integration-with-GLM.jl-1" href="#Integration-with-GLM.jl-1">Integration with GLM.jl</a></h3><p>Assuming the <a href="https://github.com/JuliaStats/GLM.jl">GLM</a> (and possibly <a href="https://github.com/JuliaData/DataFrames.jl">DataFrames</a>) packages are installed, it is also possible to pass a <code>LinearModel</code> (or <code>DataFrameRegressionModel</code>) to <a href="../reference/#StatsBase.fit"><code>fit</code></a> instead of a data vector. This is equivalent to using a <a href="../reference/#ARCHModels.Regression"><code>Regression</code></a> as a mean specification. In the following example, we fit a linear model with <a href="../reference/#ARCHModels.GARCH"><code>GARCH{1, 1}</code></a> errors, where the design matrix consists of a breaking intercept and time trend:</p><pre><code class="language-julia-repl">julia&gt; using GLM, DataFrames
+
+julia&gt; data = DataFrame(B=[ones(1000); zeros(974)], T=1:1974, Y=BG96);
+
+julia&gt; model = lm(@formula(Y ~ B*T), data);
+
+julia&gt; fit(GARCH{1, 1}, model)
+
+TGARCH{0,1,1} model with Gaussian errors, T=1974.
+
+
+Mean equation parameters:
+
+                Estimate  Std.Error  z value Pr(&gt;|z|)
+(Intercept)     0.061008  0.0598973  1.01854   0.3084
+B              -0.104142  0.0660947 -1.57565   0.1151
+T            -3.79532e-5 3.61469e-5 -1.04997   0.2937
+B &amp; T         8.11722e-5 4.95122e-5  1.63944   0.1011
+
+Volatility parameters:
+
+      Estimate  Std.Error z value Pr(&gt;|z|)
+ω    0.0103294 0.00591883 1.74518   0.0810
+β₁    0.808781   0.066084 12.2387   &lt;1e-33
+α₁    0.152648  0.0499813  3.0541   0.0023</code></pre><h2><a class="nav-anchor" id="Model-selection-1" href="#Model-selection-1">Model selection</a></h2><p>The function <a href="../reference/#ARCHModels.selectmodel-Union{Tuple{MS}, Tuple{SD}, Tuple{T}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where MS&lt;:MeanSpec where SD&lt;:StandardizedDistribution where T&lt;:AbstractFloat where VS&lt;:VolatilitySpec"><code>selectmodel</code></a> can be used for automatic model selection, based on an information crititerion. Given a class of model (i.e., a subtype of <a href="../reference/#ARCHModels.VolatilitySpec"><code>VolatilitySpec</code></a>), it will return a fitted <a href="../reference/#ARCHModels.UnivariateARCHModel"><code>UnivariateARCHModel</code></a>, with the lag length parameters (i.e., <span>$p$</span> and <span>$q$</span> in the case of <a href="../reference/#ARCHModels.GARCH"><code>GARCH</code></a>) chosen to minimize the desired criterion. The <a href="https://en.wikipedia.org/wiki/Bayesian_information_criterion">BIC</a> is used by default.</p><p>Eg., the following selects the optimal (minimum AIC) EGARCH(o, p, q) model, where o, p, q &lt; 2,  assuming <span>$t$</span> distributed errors.</p><pre><code class="language-julia-repl">julia&gt; selectmodel(EGARCH, BG96; criterion=aic, maxlags=2, dist=StdT)
 
 EGARCH{1,1,2} model with Student&#39;s t errors, T=1974.
 
@@ -226,8 +250,7 @@ Volatility parameters:     1.0 0.9 0.05
                              ν
 Distribution parameters:   3.0
 
-julia&gt; am4 = simulate(am3, 1000); # passing the number of observations is optional, the default being nobs(am3)</code></pre><p>Care must be taken if the mean specification has a notion of sample size, as in the case of <a href="../reference/#ARCHModels.Regression"><code>Regression</code></a>: because the sample size must match that of the data to be simulated, one must pass <code>warmup=0</code>, or an error will be thrown. For example, <code>am3</code> above could also have been simulated from as follows:</p><pre><code class="language-julia-repl">julia&gt; reg = Regression([5], ones(1000, 1))
-Regression{1,Float64}([5.0], [1.0; 1.0; … ; 1.0; 1.0])
+julia&gt; am4 = simulate(am3, 1000); # passing the number of observations is optional, the default being nobs(am3)</code></pre><p>Care must be taken if the mean specification has a notion of sample size, as in the case of <a href="../reference/#ARCHModels.Regression"><code>Regression</code></a>: because the sample size must match that of the data to be simulated, one must pass <code>warmup=0</code>, or an error will be thrown. For example, <code>am3</code> above could also have been simulated from as follows:</p><pre><code class="language-julia-repl">julia&gt; reg = Regression([5], ones(1000, 1));
 
 julia&gt; am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=0, meanspec=reg, dist=StdT(3.))
 
