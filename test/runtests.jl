@@ -245,6 +245,7 @@ end
     am = fit(GARCH{1, 1}, model)
     @test all(isapprox(coef(am), coef(fit(GARCH{1, 1}, BG96, meanspec=Intercept)), rtol=1e-4))
     @test coefnames(am)[end] == "X"
+    @test all(isapprox(coef(am), coef(fit(GARCH{1, 1}, model.model)), rtol=1e-4))
 end
 
 @testset "VaR" begin
