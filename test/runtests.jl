@@ -232,15 +232,18 @@ end
         [1.0129824114578263, 1.9885835817762578], rtol=1e-4))
     @test ARCHModels.uncond(reg) === 0.
     Random.seed!(1)
-
     am = simulate(GARCH{1, 1}([1., .9, .05]), 2000; meanspec=reg, warmup=0)
     fit!(am)
-    @test_throws Base.BoundsError predict(am)
+    @test_throws Base.ErrorException predict(am, :return)
+
     @test all(isapprox(coef(am), [1.5240432453558923,
                                  0.869016093356202,
                                  0.06125683693937313,
                                  1.1773425168044198,
                                  1.7290964605805756], rtol=1e-4))
+    Random.seed!(1)
+    am = simulate(GARCH{1, 1}([1., .9, .05]), 1999; meanspec=reg, warmup=0)
+    @test predict(am, :return) ≈ 1.2174653422550268
     data = DataFrame(X=ones(1974), Y=BG96)
     model = lm(@formula(Y ~ X-1), data)
     am = fit(GARCH{1, 1}, model)
@@ -280,7 +283,7 @@ end
     at = zeros(10)
     data = rand(10)
     reg = Regression(data[1:5])
-    @test_throws ErrorException mean(at, at, at, data, reg, [0.], 5)
+    @test_throws ErrorException mean(at, at, at, data, reg, [0.], 6)
 end
 
 @testset "Distributions" begin

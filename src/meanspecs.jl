@@ -1,4 +1,3 @@
-#TODO: what to do about predict? cf linearmodel! allow X to be longer than data?
 ################################################################################
 #NoIntercept
 """
@@ -205,7 +204,7 @@ end
 Base.@propagate_inbounds @inline function mean(
     at, ht, lht, data, meanspec::Regression{k}, meancoefs::Vector{T}, t
     ) where {k, T}
-    size(meanspec.X, 1) == length(data) || error("number of observations in X (N=$(size(meanspec.X, 1))) does not match the data (N=$(length(data))). If you are simulating, consider passing `warmup=0`.")
+    t > size(meanspec.X, 1) && error("insufficient number of observations in X (T=$(size(meanspec.X, 1))) to evaluate conditional mean at $t. Consider padding the design matrix. If you are simulating, consider passing `warmup=0`.")
     mean = T(0)
     for i = 1:k
         mean += meancoefs[i] * meanspec.X[t, i]
@@ -223,7 +222,8 @@ function constraints(::Type{<:Regression{k}}, ::Type{T})  where {k, T}
 end
 
 function startingvals(reg::Regression{k, T}, data::Vector{T})  where {k, T<:AbstractFloat}
-    beta = reg.X \ data
+    N = length(data)
+    beta = reg.X[1:N, :] \ data # allow extra entries in X for prediction
 end
 
 
