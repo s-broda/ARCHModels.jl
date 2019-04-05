@@ -55,8 +55,12 @@ function __init__()
 	@require GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a" begin
 		using .GLM
 		import .StatsModels: DataFrameRegressionModel
+
 		function fit(vs::Type{VS}, lm::DataFrameRegressionModel{<:LinearModel}; kwargs...) where VS<:VolatilitySpec
-			fit(vs, lm.model.rr.y; meanspec=Regression(lm.mm.m; coefnames=coefnames(lm)), kwargs...)
+			fit(vs, response(lm.model); meanspec=Regression(modelmatrix(lm.model); coefnames=coefnames(lm)), kwargs...)
+		end
+		function fit(vs::Type{VS}, lm::LinearModel; kwargs...) where VS<:VolatilitySpec
+			fit(vs, response(lm); meanspec=Regression(modelmatrix(lm)), kwargs...)
 		end
 	end
 end
