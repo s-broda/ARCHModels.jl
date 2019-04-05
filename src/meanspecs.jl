@@ -1,4 +1,3 @@
-#TODO: maybe change mean(ARMA, Regression) so that it operates on at-1 etc? what to do about predict? allow X to be longer than data? check if inlining push! gives extra speedup
 ################################################################################
 #NoIntercept
 """
@@ -177,27 +176,27 @@ A linear regression as mean specification.
 struct Regression{k, T} <: MeanSpec{T}
     coefs::Vector{T}
     X::Matrix{T}
-    function Regression{k, T}(coefs, X) where {k, T}
+    coefnames::Vector{String}
+    function Regression{k, T}(coefs, X; coefnames=(i -> "β"*subscript(i)).([0:(k-1)...])) where {k, T}
         X = X[:, :]
-        nparams(Regression{k, T}) == size(X, 2) == k || throw(NumParamError(size(X, 2), length(coefs)))
-        return new{k, T}(coefs, X)
+        nparams(Regression{k, T}) == size(X, 2) == length(coefnames) == k || throw(NumParamError(size(X, 2), length(coefs)))
+        return new{k, T}(coefs, X, coefnames)
     end
 end
 """
-    Regression(coefs::Vector, X::Matrix)
-    Regression(X::Matrix)
-    Regression{T}(X::Matrix)
+    Regression(coefs::Vector, X::Matrix; coefnames=[β₀, β₁, …])
+    Regression(X::Matrix; coefnames=[β₀, β₁, …])
+    Regression{T}(X::Matrix; coefnames=[β₀, β₁, …])
 Create a regression model.
 """
-Regression(coefs::Vector{T}, X::MatOrVec{T}) where {T} = Regression{length(coefs), T}(coefs, X)
-Regression(coefs::Vector, X::MatOrVec) = (T = float(promote_type(eltype(coefs), eltype(X))); Regression{length(coefs), T}(convert.(T, coefs), convert.(T, X)))
-Regression{T}(X::MatOrVec) where T = Regression(Vector{T}(undef, size(X, 2)), convert.(T, X))
-Regression(X::MatOrVec{T}) where T<:AbstractFloat = Regression{T}(X)
-Regression(X::MatOrVec) = Regression(float.(X))
+Regression(coefs::Vector{T}, X::MatOrVec{T}; kwargs...) where {T} = Regression{length(coefs), T}(coefs, X; kwargs...)
+Regression(coefs::Vector, X::MatOrVec; kwargs...) = (T = float(promote_type(eltype(coefs), eltype(X))); Regression{length(coefs), T}(convert.(T, coefs), convert.(T, X); kwargs...))
+Regression{T}(X::MatOrVec; kwargs...) where T = Regression(Vector{T}(undef, size(X, 2)), convert.(T, X); kwargs...)
+Regression(X::MatOrVec{T}; kwargs...) where T<:AbstractFloat = Regression{T}(X; kwargs...)
+Regression(X::MatOrVec; kwargs...) = Regression(float.(X); kwargs...)
 nparams(::Type{Regression{k, T}}) where {k, T} = k
-function coefnames(::Regression{k, T}) where {k, T}
-    names= (i -> "β"*subscript(i)).([0:(k-1)...])
-    return names
+function coefnames(R::Regression{k, T}) where {k, T}
+    return R.coefnames
 end
 
 @inline presample(::Regression) = 0
@@ -205,7 +204,7 @@ end
 Base.@propagate_inbounds @inline function mean(
     at, ht, lht, data, meanspec::Regression{k}, meancoefs::Vector{T}, t
     ) where {k, T}
-    size(meanspec.X, 1) == length(data) || error("number of observations in X (N=$(size(meanspec.X, 1))) does not match the data (N=$(length(data))). If you are simulating, consider passing `warmup=0`.")
+    t > size(meanspec.X, 1) && error("insufficient number of observations in X (T=$(size(meanspec.X, 1))) to evaluate conditional mean at $t. Consider padding the design matrix. If you are simulating, consider passing `warmup=0`.")
     mean = T(0)
     for i = 1:k
         mean += meancoefs[i] * meanspec.X[t, i]
@@ -223,7 +222,8 @@ function constraints(::Type{<:Regression{k}}, ::Type{T})  where {k, T}
 end
 
 function startingvals(reg::Regression{k, T}, data::Vector{T})  where {k, T<:AbstractFloat}
-    beta = reg.X \ data
+    N = length(data)
+    beta = reg.X[1:N, :] \ data # allow extra entries in X for prediction
 end
 
 

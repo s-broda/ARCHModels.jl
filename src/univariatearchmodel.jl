@@ -196,8 +196,11 @@ function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility; level=0.0
 	lht = log.(ht)
 	zt = residuals(am)
 	at = residuals(am, standardized=false)
-	t = length(am.data)
-	themean = mean(at, ht, lht, am.data, am.meanspec, am.meanspec.coefs, t)
+	t = length(am.data) + 1
+
+	if what == :return || what == :VaR
+		themean = mean(at, ht, lht, am.data, am.meanspec, am.meanspec.coefs, t)
+	end
 	update!(ht, lht, zt, at, VS, am.meanspec, am.data, am.spec.coefs, am.meanspec.coefs)
 	if what == :return
 		return themean
@@ -362,7 +365,8 @@ end
     fit(VS::Type{<:VolatilitySpec}, data; dist=StdNormal, meanspec=Intercept,
         algorithm=BFGS(), autodiff=:forward, kwargs...)
 
-Fit the ARCH model specified by `VS` to data.
+Fit the ARCH model specified by `VS` to `data`. `data` can be a vector or a
+GLM.LinearModel (or GLM.DataFrameRegressionModel).
 
 # Keyword arguments:
 - `dist=StdNormal`: the error distribution.
@@ -390,6 +394,8 @@ Distribution parameters:
 ν     4.12423   0.40059 10.2954   <1e-24
 ```
 """
+function fit end
+
 function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
              meanspec::Union{MS, Type{MS}}=Intercept{T}(T[0]), algorithm=BFGS(),
              autodiff=:forward, kwargs...

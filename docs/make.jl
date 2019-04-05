@@ -2,7 +2,7 @@ push!(LOAD_PATH,"../src/")
 using Documenter, ARCHModels
 makedocs(modules=[ARCHModels],
         sitename="ARCHModels.jl",
-        assets=["assets/invenia.css"],
+        format = Documenter.HTML(assets=["assets/invenia.css"]),
         doctest=true,
         strict=true,
         pages = ["Home" => "index.md",

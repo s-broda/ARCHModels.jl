@@ -2,6 +2,9 @@ using Test
 
 using ARCHModels
 using Random
+using GLM
+using DataFrames
+
 T = 10^4;
 @testset "TGARCH" begin
     @test ARCHModels.nparams(TGARCH{1, 2, 3}) == 7
@@ -200,7 +203,7 @@ end
                                   0.2357782619617334,
                                   -0.05909354030019596,
                                   0.2878312346045116], rtol=1e-4))
-    @test predict(am, :return) ≈ -1.6610785718124492 rtol = 1e-6
+    @test predict(am, :return) ≈ -1.4572460532296017 rtol = 1e-6
     am = selectmodel(ARCH, BG96;  meanspec=AR, maxlags=2);
     @test all(isapprox(coef(am), [0.11916340875306261,
                                   0.3156862868133263,
@@ -229,15 +232,24 @@ end
         [1.0129824114578263, 1.9885835817762578], rtol=1e-4))
     @test ARCHModels.uncond(reg) === 0.
     Random.seed!(1)
-
     am = simulate(GARCH{1, 1}([1., .9, .05]), 2000; meanspec=reg, warmup=0)
     fit!(am)
+    @test_throws Base.ErrorException predict(am, :return)
+
     @test all(isapprox(coef(am), [1.5240432453558923,
                                  0.869016093356202,
                                  0.06125683693937313,
                                  1.1773425168044198,
                                  1.7290964605805756], rtol=1e-4))
-
+    Random.seed!(1)
+    am = simulate(GARCH{1, 1}([1., .9, .05]), 1999; meanspec=reg, warmup=0)
+    @test predict(am, :return) ≈ 1.2174653422550268
+    data = DataFrame(X=ones(1974), Y=BG96)
+    model = lm(@formula(Y ~ X-1), data)
+    am = fit(GARCH{1, 1}, model)
+    @test all(isapprox(coef(am), coef(fit(GARCH{1, 1}, BG96, meanspec=Intercept)), rtol=1e-4))
+    @test coefnames(am)[end] == "X"
+    @test all(isapprox(coef(am), coef(fit(GARCH{1, 1}, model.model)), rtol=1e-4))
 end
 
 @testset "VaR" begin
@@ -271,7 +283,7 @@ end
     at = zeros(10)
     data = rand(10)
     reg = Regression(data[1:5])
-    @test_throws ErrorException mean(at, at, at, data, reg, [0.], 5)
+    @test_throws ErrorException mean(at, at, at, data, reg, [0.], 6)
 end
 
 @testset "Distributions" begin

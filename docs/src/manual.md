@@ -52,6 +52,7 @@ Details:
 The null is strongly rejected, again providing evidence for the presence of volatility clustering.
 
 ## Estimation
+### Standalone Models
 Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a GARCH(1, 1) with standard normal errors;  for other model classes such as [`EGARCH`](@ref), see the [section on volatility specifications](@ref volaspec).
 
 ```
@@ -179,7 +180,35 @@ false
 julia> am2.spec.coefs == am.spec.coefs
 true
 ```
+### Integration with GLM.jl
+Assuming the [GLM](https://github.com/JuliaStats/GLM.jl) (and possibly [DataFrames](https://github.com/JuliaData/DataFrames.jl)) packages are installed, it is also possible to pass a `LinearModel` (or `DataFrameRegressionModel`) to [`fit`](@ref) instead of a data vector. This is equivalent to using a [`Regression`](@ref) as a mean specification. In the following example, we fit a linear model with [`GARCH{1, 1}`](@ref) errors, where the design matrix consists of a breaking intercept and time trend:
+```jldoctest MANUAL
+julia> using GLM, DataFrames
 
+julia> data = DataFrame(B=[ones(1000); zeros(974)], T=1:1974, Y=BG96);
+
+julia> model = lm(@formula(Y ~ B*T), data);
+
+julia> fit(GARCH{1, 1}, model)
+
+TGARCH{0,1,1} model with Gaussian errors, T=1974.
+
+
+Mean equation parameters:
+
+                Estimate  Std.Error  z value Pr(>|z|)
+(Intercept)     0.061008  0.0598973  1.01854   0.3084
+B              -0.104142  0.0660947 -1.57565   0.1151
+T            -3.79532e-5 3.61469e-5 -1.04997   0.2937
+B & T         8.11722e-5 4.95122e-5  1.63944   0.1011
+
+Volatility parameters:
+
+      Estimate  Std.Error z value Pr(>|z|)
+ω    0.0103294 0.00591883 1.74518   0.0810
+β₁    0.808781   0.066084 12.2387   <1e-33
+α₁    0.152648  0.0499813  3.0541   0.0023
+```
 ## Model selection
 The function [`selectmodel`](@ref) can be used for automatic model selection, based on an information crititerion. Given
 a class of model (i.e., a subtype of [`VolatilitySpec`](@ref)), it will return a fitted [`UnivariateARCHModel`](@ref), with the lag length
@@ -370,8 +399,7 @@ julia> am4 = simulate(am3, 1000); # passing the number of observations is option
 ```
 Care must be taken if the mean specification has a notion of sample size, as in the case of [`Regression`](@ref): because the sample size must match that of the data to be simulated, one must pass `warmup=0`, or an error will be thrown. For example, `am3` above could also have been simulated from as follows:
 ```jldoctest MANUAL
-julia> reg = Regression([5], ones(1000, 1))
-Regression{1,Float64}([5.0], [1.0; 1.0; … ; 1.0; 1.0])
+julia> reg = Regression([5], ones(1000, 1));
 
 julia> am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=0, meanspec=reg, dist=StdT(3.))
 

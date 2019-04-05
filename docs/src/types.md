@@ -96,6 +96,8 @@ julia> reg = Regression(X);
 ```
 In this example, we created a regression model containing one regressor, given by a column of ones; this is equivalent to including an intercept in the model (see [`Intercept`](@ref) above). In general, the constructor should be passed a design matrix ``\mathbf{X}`` containing ``\{\mathbf{x}_t^{\mathrm{\scriptscriptstyle T}}\}_{t=1\ldots T}`` as its rows; that is, for a model with ``T`` observations and ``k`` regressors, ``X`` would have dimensions ``T\times k``.
 
+Another way to create a linear regression with ARCH errors is to pass a `LinearModel` or `DataFrameRegressionModel` from [GLM.jl](https://github.com/JuliaStats/GLM.jl) to [`fit`](@ref), as described under [Integration with GLM.jl](@ref).
+
 * An ARMA(p, q) model: ``\mu_t=c+\sum_{i=1}^p \varphi_i r_{t-i}+\sum_{i=1}^q \theta_i a_{t-i}``. Available as [`ARMA{p, q}`](@ref):
 ```jldoctest TYPES
 julia> ARMA{1, 1}([1., .9, -.1])
@@ -109,28 +111,6 @@ julia> MA{1}([1., -.1])
 ARMA{0,1,Float64}([1.0, -0.1])
 ```
 
-As an example, an ARMA(1, 1)-EGARCH(1, 1, 1) model is fitted as follows:
-```jldoctest TYPES
-julia> fit(EGARCH{1, 1, 1}, BG96; meanspec=ARMA{1, 1})
-
-EGARCH{1,1,1} model with Gaussian errors, T=1974.
-
-
-Mean equation parameters:
-
-       Estimate Std.Error  z value Pr(>|z|)
-c    -0.0215594 0.0136142 -1.58359   0.1133
-φ₁    -0.525702   0.20819  -2.5251   0.0116
-θ₁     0.574669  0.198072  2.90131   0.0037
-
-Volatility parameters:
-
-       Estimate Std.Error  z value Pr(>|z|)
-ω     -0.132921 0.0496466 -2.67735   0.0074
-γ₁   -0.0399304 0.0258478 -1.54483   0.1224
-β₁     0.908516 0.0319702  28.4175   <1e-99
-α₁     0.343967 0.0680369  5.05559    <1e-6
-```
 ## Distributions
 ### Built-in distributions
 Different standardized (mean zero, variance one) distributions for ``z_t`` are available as subtypes of [`StandardizedDistribution`](@ref). `StandardizedDistribution` in turn subtypes `Distribution{Univariate, Continuous}` from [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), though not the entire interface must necessarily be implemented. `StandardizedDistribution`s again hold their parameters as vectors, but convenience constructors are provided. The following are currently available:
