@@ -242,7 +242,9 @@ end
                                  1.7290964605805756], rtol=1e-4))
     data = DataFrame(X=ones(1974), Y=BG96)
     model = lm(@formula(Y ~ X-1), data)
-    @test all(isapprox(coef(fit(GARCH{1, 1}, model)), coef(fit(GARCH{1, 1}, BG96, meanspec=Intercept)), rtol=1e-4))
+    am = fit(GARCH{1, 1}, model)
+    @test all(isapprox(coef(am), coef(fit(GARCH{1, 1}, BG96, meanspec=Intercept)), rtol=1e-4))
+    @test coefnames(am)[end] == "X"
 end
 
 @testset "VaR" begin
