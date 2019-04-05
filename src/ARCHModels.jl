@@ -56,14 +56,8 @@ function __init__()
 		using .GLM
 		import .StatsModels: DataFrameRegressionModel
 		function fit(vs::Type{VS}, lm::DataFrameRegressionModel{<:LinearModel}; kwargs...) where VS<:VolatilitySpec
-			#need to call the inner constructor because only it takes kwargs
-			X = lm.mm.m
-			k = size(X, 2)
-			T = eltype(X)
-			c = Vector{T}(undef, k)
-			fit(vs, lm.model.rr.y; meanspec=Regression{k, T}(c, X; coefnames=coefnames(lm)), kwargs...)
+			fit(vs, lm.model.rr.y; meanspec=Regression(lm.mm.m; coefnames=coefnames(lm)), kwargs...)
 		end
 	end
-	fit(GARCH{1, 1}, BG96)
 end
 end#module

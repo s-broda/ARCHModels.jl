@@ -1,4 +1,4 @@
-#TODO: maybe change mean(ARMA, Regression) so that it operates on at-1 etc? what to do about predict? cf linearmodel! allow X to be longer than data? integrate with linear models? check if inlining push! gives extra speedup
+#TODO: maybe change mean(ARMA, Regression) so that it operates on at-1 etc? what to do about predict? cf linearmodel! allow X to be longer than data?
 ################################################################################
 #NoIntercept
 """
@@ -185,16 +185,16 @@ struct Regression{k, T} <: MeanSpec{T}
     end
 end
 """
-    Regression(coefs::Vector, X::Matrix)
-    Regression(X::Matrix)
-    Regression{T}(X::Matrix)
+    Regression(coefs::Vector, X::Matrix; coefnames=[β₀, β₁, …])
+    Regression(X::Matrix; coefnames=[β₀, β₁, …])
+    Regression{T}(X::Matrix; coefnames=[β₀, β₁, …])
 Create a regression model.
 """
-Regression(coefs::Vector{T}, X::MatOrVec{T}) where {T} = Regression{length(coefs), T}(coefs, X)
-Regression(coefs::Vector, X::MatOrVec) = (T = float(promote_type(eltype(coefs), eltype(X))); Regression{length(coefs), T}(convert.(T, coefs), convert.(T, X)))
-Regression{T}(X::MatOrVec) where T = Regression(Vector{T}(undef, size(X, 2)), convert.(T, X))
-Regression(X::MatOrVec{T}) where T<:AbstractFloat = Regression{T}(X)
-Regression(X::MatOrVec) = Regression(float.(X))
+Regression(coefs::Vector{T}, X::MatOrVec{T}; kwargs...) where {T} = Regression{length(coefs), T}(coefs, X; kwargs...)
+Regression(coefs::Vector, X::MatOrVec; kwargs...) = (T = float(promote_type(eltype(coefs), eltype(X))); Regression{length(coefs), T}(convert.(T, coefs), convert.(T, X); kwargs...))
+Regression{T}(X::MatOrVec; kwargs...) where T = Regression(Vector{T}(undef, size(X, 2)), convert.(T, X); kwargs...)
+Regression(X::MatOrVec{T}; kwargs...) where T<:AbstractFloat = Regression{T}(X; kwargs...)
+Regression(X::MatOrVec; kwargs...) = Regression(float.(X); kwargs...)
 nparams(::Type{Regression{k, T}}) where {k, T} = k
 function coefnames(R::Regression{k, T}) where {k, T}
     return R.coefnames
