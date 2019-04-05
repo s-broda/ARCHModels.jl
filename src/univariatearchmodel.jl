@@ -196,7 +196,7 @@ function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility; level=0.0
 	lht = log.(ht)
 	zt = residuals(am)
 	at = residuals(am, standardized=false)
-	t = length(am.data)
+	t = length(am.data) + 1
 	themean = mean(at, ht, lht, am.data, am.meanspec, am.meanspec.coefs, t)
 	update!(ht, lht, zt, at, VS, am.meanspec, am.data, am.spec.coefs, am.meanspec.coefs)
 	if what == :return

@@ -1,4 +1,4 @@
-#TODO: maybe change mean(ARMA, Regression) so that it operates on at-1 etc? what to do about predict? cf linearmodel! allow X to be longer than data?
+#TODO: what to do about predict? cf linearmodel! allow X to be longer than data?
 ################################################################################
 #NoIntercept
 """

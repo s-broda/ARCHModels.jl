@@ -203,7 +203,7 @@ end
                                   0.2357782619617334,
                                   -0.05909354030019596,
                                   0.2878312346045116], rtol=1e-4))
-    @test predict(am, :return) ≈ -1.6610785718124492 rtol = 1e-6
+    @test predict(am, :return) ≈ -1.4572460532296017 rtol = 1e-6
     am = selectmodel(ARCH, BG96;  meanspec=AR, maxlags=2);
     @test all(isapprox(coef(am), [0.11916340875306261,
                                   0.3156862868133263,
@@ -235,6 +235,7 @@ end
 
     am = simulate(GARCH{1, 1}([1., .9, .05]), 2000; meanspec=reg, warmup=0)
     fit!(am)
+    @test_throws Base.BoundsError predict(am)
     @test all(isapprox(coef(am), [1.5240432453558923,
                                  0.869016093356202,
                                  0.06125683693937313,
