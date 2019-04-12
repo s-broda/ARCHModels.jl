@@ -41,8 +41,9 @@ import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, co
 export ARCHModel, UnivariateARCHModel, VolatilitySpec, StandardizedDistribution, Standardized, MeanSpec,
        simulate, simulate!, selectmodel, StdNormal, StdT, StdGED, Intercept, Regression,
        NoIntercept, ARMA, AR, MA, BG96, volatilities, mean, quantile, VaRs, pvalue, means,
-	   MultivariateVolatilitySpec, MultivariateStandardizedDistribution, MultivariateARCHModel, MultivariateStdNormal
-	   EGARCH, ARCH, GARCH, TGARCH, ARCHLMTest, DQTest
+	   MultivariateVolatilitySpec, MultivariateStandardizedDistribution, MultivariateARCHModel, MultivariateStdNormal,
+	   EGARCH, ARCH, GARCH, TGARCH, ARCHLMTest, DQTest,
+	   DOW29, DCC
 
 
 include("utils.jl")
@@ -53,6 +54,8 @@ include("univariatestandardizeddistributions.jl")
 include("EGARCH.jl")
 include("TGARCH.jl")
 include("tests.jl")
+include("multivariatearchmodel.jl")
+include("DCC.jl")
 function __init__()
 	@require GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a" begin
 		using .GLM

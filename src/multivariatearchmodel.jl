@@ -1,3 +1,16 @@
+
+const DOW29 = zeros(2785, 29)
+#"DOW" is excluded because it's listed too late
+tickers = ["AAPL", "IBM", "XOM", "KO", "MSFT", "INTC", "MRK", "PG", "VZ", "WBA", "V", "JNJ", "PFE", "CSCO", "TRV", "WMT", "MMM", "UTX", "UNH", "NKE", "HD", "BA", "AXP", "MCD", "CAT", "GS", "JPM", "CVX", "DIS"]
+for (j, ticker) in enumerate(tickers)
+    data = parse.(Float64, readdlm(joinpath(dirname(pathof(ARCHModels)), "data", "$ticker.csv"), ',', String, skipstart=1)[:, 5])
+    if ticker == "CSCO" #wsj misses the quote for June 14th, 2010
+        insert!(data, 2223, 22.76)
+    end
+    DOW29[:, j] = 100 * diff(log.(data))
+end
+
+
 abstract type MultivariateVolatilitySpec{T, d} end
 
 abstract type MultivariateStandardizedDistribution{T, d} <: Distribution{Multivariate, Continuous} end
