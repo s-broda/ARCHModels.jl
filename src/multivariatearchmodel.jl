@@ -36,7 +36,8 @@ end
 """
     analytical_shrinkage(X::Matrix)
 Analytical nonlinear shrinkage estimator of the covariance matrix. Based on the
-Matlab code from [1]
+Matlab code from [1]. Translated to Julia and used here under MIT license by
+permission from the authors.
 
 [1] Ledoit, O., and Wolf, M. (2018), "Analytical Nonlinear Shrinkage of
 Large-Dimensional Covariance Matrices", University of Zurich Econ WP 264.
