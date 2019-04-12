@@ -1,5 +1,3 @@
-export EGARCH
-
 """
     EGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}
 """
