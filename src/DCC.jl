@@ -32,8 +32,8 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}) where {p, q, VS<: 
     iD = inv(D)
     R = iD * Σ * iD
 
-    optimize(x->-LL2step(x, R, resids, p, q), [.05, .9], autodiff=:forward)
-    return DCC{p, q}(Σ, [1., 2.], univariatespecs)
+    res = optimize(x->-LL2step(x, R, resids, p, q), [.05, .9], BFGS(), autodiff=:forward)
+    return DCC{p, q}(Σ, Optim.minimizer(res), univariatespecs)
 end
 
 function LL2step(coef::Array{T}, R, resids, p, q) where {T}
@@ -42,31 +42,20 @@ function LL2step(coef::Array{T}, R, resids, p, q) where {T}
     LL = zero(eltype(coef))
     a = coef[1]
     b = coef[2]
+    abs(a+b)>1 && return T(-Inf)
     e = resids[1, :]
-    Rt = R.* (1-a-b)^0
-    RD5 = inv(sqrt(Diagonal(Rt)))
-    Rt = RD5 * Rt * RD5
-    Rt = (Rt + Rt')/2
-    Ci = inv(cholesky(Rt, check=false).L)
-    u = Ci*e
+    Rt = copy(R)
     for t=1:n
         if t > max(p, q)
-            Rt .= R.* (1-a-b) .+ a .* e*e' .+ b .* Rt
-            RD5 .= inv(sqrt(Diagonal(Rt)))
-            Rt .= RD5 * Rt * RD5
-            Rt .= (Rt + Rt')/2
+            Rt = R.* (1-a-b) .+ a .* e*e' .+ b .* Rt
+            RD5 = inv(sqrt(Diagonal(Rt)))
+            Rt = RD5 * Rt * RD5
+            Rt = (Rt + Rt')/2
         end
         e .= resids[t, :]
-        Ci .= inv(cholesky(Rt, check=false).L)
-        u .= Ci*e
-        LL -= (-2*logdet(Ci)+dot(u, u))/2
-        #=
-        strangely, the above is slower than the naive approach below, unlike comparing
-            f(S, e) = (logdet(S)+e'*inv(S)*e)/2
-        and
-            g(S, e) = (Ci=inv(cholesky(S, check=false).L); u = Ci*e; (-2*logdet(Ci)+dot(u, u))/2)
-        =#
-        #LL -= (logdet(Rt)+e'*inv(Rt)*e)/2
+        Ci = inv(cholesky(Rt, check=false).L)
+        u = Ci*e
+        LL -= dot(u, u)/2-logdet(Ci)
     end
     LL
 end
