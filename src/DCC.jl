@@ -55,7 +55,7 @@ function LL2step(coef::Array{T}, R, resids, p, q) where {T}
         e .= resids[t, :]
         Ci = inv(cholesky(Rt, check=false).L)
         u = Ci*e
-        LL -= dot(u, u)/2-logdet(Ci)
+        LL -= (dot(u, u) - dot(e, e))/2-logdet(Ci)
     end
     LL
 end
