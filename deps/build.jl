@@ -1,4 +1,5 @@
 using Retry
+using DelimitedFiles
 datadir = joinpath(@__DIR__, "..", "src", "data")
 isdir(datadir) || mkdir(datadir)
 @info "Downloading Bollerslev and Ghysels data..."
@@ -10,7 +11,7 @@ tickers = ["AAPL", "IBM", "XOM", "KO", "MSFT", "INTC", "MRK", "PG", "VZ", "WBA",
 for (j, ticker) in enumerate(tickers)
         @repeat 4 try
             isfile(joinpath(datadir, "$ticker.csv")) || download("http://quotes.wsj.com/$ticker/historical-prices/download?num_rows=100000000&range_days=100000000&startDate=03/19/2008&endDate=04/11/2019", joinpath(datadir, "$ticker.csv"))
-            data = parse.(Float64, readdlm(joinpath(dirname(pathof(ARCHModels)), "data", "$ticker.csv"), ',', String, skipstart=1)[:, 5])
+            data = parse.(Float64, readdlm(joinpath(datadir, "$ticker.csv"), ',', String, skipstart=1)[:, 5])
             if ticker == "CSCO" #wsj misses the quote for June 14th, 2010
                 insert!(data, 2223, 22.76)
             end
