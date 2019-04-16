@@ -21,13 +21,15 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}) where {p, q, VS<: 
     resids = similar(data)
     m = fit(VS, data[:, 1])
     resids[:, 1] = residuals(m)
-    univariatespecs = [m]
+    univariatespecs = Vector{typeof(m)}(undef, dim)
+    univariatespecs[1] = m
     Threads.@threads for i = 2:dim
         m = fit(VS, data[:, i])
-        push!(univariatespecs, m)
+        univariatespecs[i] = m
         resids[:, i] = residuals(m)
     end
-    Σ = analytical_shrinkage(resids)
+    #Σ = analytical_shrinkage(resids)
+    Σ = cov(resids)
     D = sqrt(Diagonal(Σ))
     iD = inv(D)
     R = iD * Σ * iD
@@ -53,9 +55,10 @@ function LL2step(coef::Array{T}, R, resids, p, q) where {T}
             Rt = (Rt + Rt')/2
         end
         e .= resids[t, :]
-        Ci = inv(cholesky(Rt, check=false).L)
-        u = Ci*e
-        LL -= (dot(u, u) - dot(e, e))/2-logdet(Ci)
+        C = cholesky(Rt, check=false).L
+        u = inv(C) * e
+        LL -= (dot(u, u) - dot(e, e))/2+logdet(C)
     end
+
     LL
 end

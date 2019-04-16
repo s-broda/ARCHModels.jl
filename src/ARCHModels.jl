@@ -29,6 +29,7 @@ using Roots
 using LinearAlgebra
 using DataStructures: CircularBuffer
 using DelimitedFiles
+using Statistics: cov
 
 import Distributions: quantile
 import Base: show, showerror, eltype
