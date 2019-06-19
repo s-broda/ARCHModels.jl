@@ -51,13 +51,34 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}) where {p, q, VS<: 
         dt[:, w] = scores(univariatespecs[i])
     end
     Hpt = ForwardDiff.hessian(g, coefs)[1:2, 3:end]/n
-    #@show s = sqrt(Diagonal(inv(J)))
+    h = (x, y) -> LL2step_full(x, y, R, data, p, q)
+    hh = y -> ForwardDiff.gradient(x->h(x, y), coefs[1:2])
+    Hpt2 = ForwardDiff.jacobian(hh, coefs[3:end])
+
     dp = ForwardDiff.jacobian(f, x)
     A = dp-(Hpt*inv(Htt)*dt')'
     C = inv(Hpp)*A'*A*inv(Hpp)/n^2
     @show sqrt(Diagonal(C))
-    
+    @show sqrt(Diagonal(inv(Hpp))/n)
     return DCC{p, q}(R, x, univariatespecs)
+end
+
+#LC(Θ, ϕ) in Engle (2002)
+function LL2step_full(dcccoef::Array{T}, garchcoef::Array{T2}, R, data, p, q) where {T, T2}
+    n, dims = size(data)
+    resids = Array{T2}(undef, size(data))
+    for i = 1:dims
+        params = garchcoef[1+(i-1)*nparams(GARCH{1, 1}):1+i*nparams(GARCH{1, 1})-1]
+        ht = T2[]
+        lht = T2[]
+        zt = T2[]
+        at = T2[]
+        loglik!(ht, lht, zt, at, GARCH{1, 1, Float64}, StdNormal{Float64}, NoIntercept(), data[:, i], params)
+        resids[:, i] = zt
+
+    end
+
+    LL2step(dcccoef, R, resids, p, q)
 end
 
 #LC(Θ, ϕ) in Engle (2002)
@@ -84,10 +105,12 @@ function LL2step_full(coef::Array{T}, R, data, p, q) where {T}
 end
 
 #LC(Θ_hat, ϕ) in Engle (2002)
-function LL2step(coef::Array{T}, R, resids, p, q) where {T}
+function LL2step(coef::Array{T}, R, resids::Array{T2}, p, q) where {T, T2}
     all([0, 0] .< coef .< [1, 1]) || return T(-Inf)
     n, dims = size(resids)
-    LL = zeros(T, n)
+    LL = zeros(T2, n)
+    @show T
+    @show T2
     a = coef[1]
     b = coef[2]
     abs(a+b)>1 && return T(-Inf)
@@ -104,7 +127,9 @@ function LL2step(coef::Array{T}, R, resids, p, q) where {T}
         e .= resids[t, :]
         C = cholesky(Rt, check=false).L
         u = inv(C) * e
-        LL[t] = (dot(e, e) - dot(u, u))/2-logdet(C)
+        L = (dot(e, e) - dot(u, u))/2-logdet(C)
+        if t==1 @show L, eltype(LL); end
+        LL[t] = L
     end
     LL
 end

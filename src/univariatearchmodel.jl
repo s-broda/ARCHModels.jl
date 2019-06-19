@@ -250,9 +250,9 @@ end
 #dimensional array of the right type.
 @inline function loglik!(ht::AbstractVector{T2}, lht::AbstractVector{T2},
                          zt::AbstractVector{T2}, at::AbstractVector{T2}, ::Type{VS}, ::Type{SD}, meanspec::MS,
-                         data::Vector{T1}, coefs::AbstractVector{T2}
+                         data::Vector{T1}, coefs::AbstractVector{T3}
                          ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
-                                  MS<:MeanSpec, T1<:AbstractFloat, T2
+                                  MS<:MeanSpec, T1<:AbstractFloat, T2, T3
                                   }
     garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, meanspec)
     #the below 6 lines can be removed when using Fminbox
