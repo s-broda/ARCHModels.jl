@@ -21,8 +21,11 @@ julia> using ARCHModels
 julia> ARCH{2}([1., .5, .4])
 TGARCH{0,0,2} specification.
 
-               ω  α₁  α₂
-Parameters:  1.0 0.5 0.4
+──────────────────────────
+               ω   α₁   α₂
+──────────────────────────
+Parameters:  1.0  0.5  0.4
+──────────────────────────
 ```
 
 ### GARCH
@@ -37,8 +40,11 @@ julia> using ARCHModels
 julia> GARCH{1, 1}([1., .9, .05])
 TGARCH{0,1,1} specification.
 
-               ω  β₁   α₁
-Parameters:  1.0 0.9 0.05
+───────────────────────────
+               ω   β₁    α₁
+───────────────────────────
+Parameters:  1.0  0.9  0.05
+───────────────────────────
 ```
 This creates a GARCH(1, 1) specification with ``ω=1``, ``β=.9``, and ``α=.05``.
 
@@ -57,8 +63,11 @@ julia> using ARCHModels
 julia> TGARCH{1, 1, 1}([1., .04, .9, .01])
 TGARCH{1,1,1} specification.
 
-               ω   γ₁  β₁   α₁
-Parameters:  1.0 0.04 0.9 0.01
+─────────────────────────────────
+               ω    γ₁   β₁    α₁
+─────────────────────────────────
+Parameters:  1.0  0.04  0.9  0.01
+─────────────────────────────────
 ```
 
 ### EGARCH
@@ -72,8 +81,11 @@ Like the TGARCH model, it can account for the leverage effect. The corresponding
 julia> EGARCH{1, 1, 1}([-0.1, .1, .9, .04])
 EGARCH{1,1,1} specification.
 
-                ω  γ₁  β₁   α₁
-Parameters:  -0.1 0.1 0.9 0.04
+─────────────────────────────────
+                ω   γ₁   β₁    α₁
+─────────────────────────────────
+Parameters:  -0.1  0.1  0.9  0.04
+─────────────────────────────────
 ```
 ## [Mean specifications](@id meanspec)
 Mean specifications serve to specify ``\mu_t``. They are modelled as subtypes of [`MeanSpec`](@ref). They contain their parameters as (possibly empty) vectors, but convenience constructors are provided where appropriate. Currently, three specifications are available:
@@ -161,14 +173,21 @@ julia> am = UnivariateARCHModel(spec, data; dist=StdT(3.), meanspec=Intercept(1.
 TGARCH{0,1,1} model with Student's t errors, T=1974.
 
 
+──────────────────────────────
                              μ
+──────────────────────────────
 Mean equation parameters:  1.0
-
-                             ω  β₁   α₁
-Volatility parameters:     1.0 0.9 0.05
-
+──────────────────────────────
+─────────────────────────────────────────
+                             ω   β₁    α₁
+─────────────────────────────────────────
+Volatility parameters:     1.0  0.9  0.05
+─────────────────────────────────────────
+──────────────────────────────
                              ν
+──────────────────────────────
 Distribution parameters:   3.0
+──────────────────────────────
 ```
 
 The model can then be fitted as follows:
@@ -178,23 +197,28 @@ julia> fit!(am)
 
 TGARCH{0,1,1} model with Student's t errors, T=1974.
 
-
 Mean equation parameters:
-
-       Estimate  Std.Error  z value Pr(>|z|)
-μ    0.00227251 0.00686802 0.330882   0.7407
+─────────────────────────────────────────────
+     Estimate   Std.Error   z value  Pr(>|z|)
+─────────────────────────────────────────────
+μ  0.00227251  0.00686802  0.330882    0.7407
+─────────────────────────────────────────────
 
 Volatility parameters:
-
-       Estimate  Std.Error z value Pr(>|z|)
-ω    0.00232225 0.00163909 1.41679   0.1565
-β₁     0.884488   0.036963  23.929   <1e-99
-α₁     0.124866  0.0405471 3.07952   0.0021
+──────────────────────────────────────────────
+      Estimate   Std.Error   z value  Pr(>|z|)
+──────────────────────────────────────────────
+ω   0.00232225  0.00163909   1.41679    0.1565
+β₁  0.884488    0.036963    23.929      <1e-99
+α₁  0.124866    0.0405471    3.07952    0.0021
+──────────────────────────────────────────────
 
 Distribution parameters:
-
-     Estimate Std.Error z value Pr(>|z|)
-ν     4.11211  0.400384 10.2704   <1e-24
+─────────────────────────────────────────
+   Estimate  Std.Error  z value  Pr(>|z|)
+─────────────────────────────────────────
+ν   4.11211   0.400384  10.2704    <1e-24
+─────────────────────────────────────────
 ```
 
 It should, however, rarely be necessary to construct an `UnivariateARCHModel` manually via its constructor; typically, instances of it are created by calling [`fit`](@ref), [`selectmodel`](@ref), or [`simulate`](@ref).

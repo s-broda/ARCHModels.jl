@@ -537,21 +537,21 @@ function show(io::IO, am::UnivariateARCHModel)
 	    zzd = ccd ./ sed
 	    zzm = ccm ./ sem
 	    println(io, "\n", modname(typeof(am.spec)), " model with ",
-	            distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n\n")
+	            distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n")
 
-	    length(sem) > 0 && println(io, "Mean equation parameters:", "\n\n",
+	    length(sem) > 0 && println(io, "Mean equation parameters:", "\n",
 	                               CoefTable(hcat(ccm, sem, zzm, 2.0 * normccdf.(abs.(zzm))),
 	                                         ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
 	                                         coefnames(am.meanspec), 4
 	                                         )
 	                              )
-	    println(io, "Volatility parameters:", "\n\n",
+	    println(io, "\nVolatility parameters:", "\n",
 	            CoefTable(hcat(ccg, seg, zzg, 2.0 * normccdf.(abs.(zzg))),
 	                      ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
 	                      coefnames(typeof(am.spec)), 4
 	                      )
 	            )
-	    length(sed) > 0 && println(io, "Distribution parameters:", "\n\n",
+	    length(sed) > 0 && println(io, "\nDistribution parameters:", "\n",
 	                               CoefTable(hcat(ccd, sed, zzd, 2.0 * normccdf.(abs.(zzd))),
 	                                         ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
 	                                         coefnames(typeof(am.dist)), 4

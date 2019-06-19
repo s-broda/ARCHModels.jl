@@ -60,18 +60,21 @@ julia> fit(GARCH{1, 1}, BG96)
 
 TGARCH{0,1,1} model with Gaussian errors, T=1974.
 
-
 Mean equation parameters:
-
-        Estimate  Std.Error   z value Pr(>|z|)
-μ    -0.00616637 0.00920163 -0.670139   0.5028
+───────────────────────────────────────────────
+      Estimate   Std.Error    z value  Pr(>|z|)
+───────────────────────────────────────────────
+μ  -0.00616637  0.00920163  -0.670139    0.5028
+───────────────────────────────────────────────
 
 Volatility parameters:
-
-      Estimate  Std.Error z value Pr(>|z|)
-ω    0.0107606 0.00649493 1.65677   0.0976
-β₁    0.805875  0.0725003 11.1155   <1e-27
-α₁    0.153411  0.0536586 2.85903   0.0042
+─────────────────────────────────────────────
+     Estimate   Std.Error   z value  Pr(>|z|)
+─────────────────────────────────────────────
+ω   0.0107606  0.00649493   1.65677    0.0976
+β₁  0.805875   0.0725003   11.1155     <1e-27
+α₁  0.153411   0.0536586    2.85903    0.0042
+─────────────────────────────────────────────
 ```
 
 This returns an instance of [`UnivariateARCHModel`](@ref), as described in the section [Working with UnivariateARCHModels](@ref). The parameters ``\alpha_1`` and ``\beta_1`` in the volatility equation are highly significant, again confirming the presence of volatility clustering. Note also that the fitted values are the same as those found by [Bollerslev and Ghysels (1986)](https://doi.org/10.2307/1392425) and [Brooks et.al. (2001)](https://doi.org/10.1016/S0169-2070(00)00070-4) for the same dataset.
@@ -93,18 +96,21 @@ julia> fit(GARCH{1, 1}, BG96; meanspec=reg)
 
 TGARCH{0,1,1} model with Gaussian errors, T=1974.
 
-
 Mean equation parameters:
-
-        Estimate  Std.Error   z value Pr(>|z|)
-β₀   -0.00616637 0.00920163 -0.670139   0.5028
+────────────────────────────────────────────────
+       Estimate   Std.Error    z value  Pr(>|z|)
+────────────────────────────────────────────────
+β₀  -0.00616637  0.00920163  -0.670139    0.5028
+────────────────────────────────────────────────
 
 Volatility parameters:
-
-      Estimate  Std.Error z value Pr(>|z|)
-ω    0.0107606 0.00649493 1.65677   0.0976
-β₁    0.805875  0.0725003 11.1155   <1e-27
-α₁    0.153411  0.0536586 2.85903   0.0042
+─────────────────────────────────────────────
+     Estimate   Std.Error   z value  Pr(>|z|)
+─────────────────────────────────────────────
+ω   0.0107606  0.00649493   1.65677    0.0976
+β₁  0.805875   0.0725003   11.1155     <1e-27
+α₁  0.153411   0.0536586    2.85903    0.0042
+─────────────────────────────────────────────
 ```
 Here, both `reg` and `BG86` contain 1974 observations. Notice that because in this case `X` contains only a column of ones, the estimation results are equivalent to those obtained with `fit(GARCH{1, 1}, BG96; meanspec=Intercept)` above; the latter is however more memory efficient, as no design matrix needs to be stored.
 
@@ -118,17 +124,21 @@ EGARCH{1,1,1} model with Student's t errors, T=1974.
 
 
 Volatility parameters:
-
-       Estimate Std.Error   z value Pr(>|z|)
-ω    -0.0162014 0.0186806 -0.867286   0.3858
-γ₁   -0.0378454  0.018024  -2.09972   0.0358
-β₁     0.977687  0.012558   77.8538   <1e-99
-α₁     0.255804 0.0625497   4.08961    <1e-4
+──────────────────────────────────────────────
+      Estimate  Std.Error    z value  Pr(>|z|)
+──────────────────────────────────────────────
+ω   -0.0162014  0.0186806  -0.867286    0.3858
+γ₁  -0.0378454  0.018024   -2.09972     0.0358
+β₁   0.977687   0.012558   77.8538      <1e-99
+α₁   0.255804   0.0625497   4.08961     <1e-4
+──────────────────────────────────────────────
 
 Distribution parameters:
-
-     Estimate Std.Error z value Pr(>|z|)
-ν     4.12423   0.40059 10.2954   <1e-24
+─────────────────────────────────────────
+   Estimate  Std.Error  z value  Pr(>|z|)
+─────────────────────────────────────────
+ν   4.12423    0.40059  10.2954    <1e-24
+─────────────────────────────────────────
 ```
 
 An alternative approach to fitting a [`VolatilitySpec`](@ref) to `BG96` is to first construct
@@ -137,27 +147,31 @@ a [`UnivariateARCHModel`](@ref) containing the data, and then using [`fit!`](@re
 ```jldoctest MANUAL
 julia> spec = GARCH{1, 1}([1., 0., 0.]);
 
-julia> am = UnivariateARCHModel(spec, BG96)
+julia>  am = UnivariateARCHModel(spec, BG96)
 
-TGARCH{0, 1,1} model with Gaussian errors, T=1974.
+TGARCH{0,1,1} model with Gaussian errors, T=1974.
 
 
-                             ω  β₁  α₁
-Volatility parameters:     1.0 0.0 0.0
-
+────────────────────────────────────────
+                             ω   β₁   α₁
+────────────────────────────────────────
+Volatility parameters:     1.0  0.0  0.0
+────────────────────────────────────────
 
 
 julia> fit!(am)
 
-TGARCH{0, 1,1} model with Gaussian errors, T=1974.
+TGARCH{0,1,1} model with Gaussian errors, T=1974.
 
 
 Volatility parameters:
-
-      Estimate  Std.Error z value Pr(>|z|)
-ω    0.0108661 0.00657449 1.65277   0.0984
-β₁    0.804431  0.0730395 11.0136   <1e-27
-α₁    0.154597  0.0539319 2.86651   0.0042
+─────────────────────────────────────────────
+     Estimate   Std.Error   z value  Pr(>|z|)
+─────────────────────────────────────────────
+ω   0.0108661  0.00657449   1.65277    0.0984
+β₁  0.804431   0.0730395   11.0136     <1e-27
+α₁  0.154597   0.0539319    2.86651    0.0042
+─────────────────────────────────────────────
 ```
 Note that `fit!` will also modify the volatility (and mean and distribution) specifications:
 
@@ -165,8 +179,11 @@ Note that `fit!` will also modify the volatility (and mean and distribution) spe
 julia> spec
 TGARCH{0,1,1} specification.
 
-                     ω       β₁       α₁
-Parameters:  0.0108661 0.804431 0.154597
+──────────────────────────────────────────
+                     ω        β₁        α₁
+──────────────────────────────────────────
+Parameters:  0.0108661  0.804431  0.154597
+──────────────────────────────────────────
 ```
 
 Calling `fit(am)` will return a new instance of `UnivariateARCHModel` instead:
@@ -193,21 +210,24 @@ julia> fit(GARCH{1, 1}, model)
 
 TGARCH{0,1,1} model with Gaussian errors, T=1974.
 
-
 Mean equation parameters:
-
-                Estimate  Std.Error  z value Pr(>|z|)
-(Intercept)     0.061008  0.0598973  1.01854   0.3084
-B              -0.104142  0.0660947 -1.57565   0.1151
-T            -3.79532e-5 3.61469e-5 -1.04997   0.2937
-B & T         8.11722e-5 4.95122e-5  1.63944   0.1011
+────────────────────────────────────────────────────────
+                Estimate   Std.Error   z value  Pr(>|z|)
+────────────────────────────────────────────────────────
+(Intercept)   0.061008    0.0598973    1.01854    0.3084
+B            -0.104142    0.0660947   -1.57565    0.1151
+T            -3.79532e-5  3.61469e-5  -1.04997    0.2937
+B & T         8.11722e-5  4.95122e-5   1.63944    0.1011
+────────────────────────────────────────────────────────
 
 Volatility parameters:
-
-      Estimate  Std.Error z value Pr(>|z|)
-ω    0.0103294 0.00591883 1.74518   0.0810
-β₁    0.808781   0.066084 12.2387   <1e-33
-α₁    0.152648  0.0499813  3.0541   0.0023
+─────────────────────────────────────────────
+     Estimate   Std.Error   z value  Pr(>|z|)
+─────────────────────────────────────────────
+ω   0.0103294  0.00591883   1.74518    0.0810
+β₁  0.808781   0.066084    12.2387     <1e-33
+α₁  0.152648   0.0499813    3.0541     0.0023
+─────────────────────────────────────────────
 ```
 ## Model selection
 The function [`selectmodel`](@ref) can be used for automatic model selection, based on an information crititerion. Given
@@ -221,25 +241,30 @@ julia> selectmodel(EGARCH, BG96; criterion=aic, maxlags=2, dist=StdT)
 
 EGARCH{1,1,2} model with Student's t errors, T=1974.
 
-
 Mean equation parameters:
-
-       Estimate  Std.Error  z value Pr(>|z|)
-μ    0.00196126 0.00695292 0.282077   0.7779
+─────────────────────────────────────────────
+     Estimate   Std.Error   z value  Pr(>|z|)
+─────────────────────────────────────────────
+μ  0.00196126  0.00695292  0.282077    0.7779
+─────────────────────────────────────────────
 
 Volatility parameters:
-
-       Estimate Std.Error   z value Pr(>|z|)
-ω    -0.0031274 0.0112456 -0.278101   0.7809
-γ₁   -0.0307681 0.0160754  -1.91398   0.0556
-β₁     0.989056 0.0073654   134.284   <1e-99
-α₁     0.421644 0.0678139   6.21767    <1e-9
-α₂    -0.229068 0.0755326   -3.0327   0.0024
+───────────────────────────────────────────────
+      Estimate  Std.Error     z value  Pr(>|z|)
+───────────────────────────────────────────────
+ω   -0.0031274  0.0112456   -0.278101    0.7809
+γ₁  -0.0307681  0.0160754   -1.91398     0.0556
+β₁   0.989056   0.0073654  134.284       <1e-99
+α₁   0.421644   0.0678139    6.21767     <1e-9
+α₂  -0.229068   0.0755326   -3.0327      0.0024
+───────────────────────────────────────────────
 
 Distribution parameters:
-
-     Estimate Std.Error z value Pr(>|z|)
-ν     4.18795  0.418697 10.0023   <1e-22
+─────────────────────────────────────────
+   Estimate  Std.Error  z value  Pr(>|z|)
+─────────────────────────────────────────
+ν   4.18795   0.418697  10.0023    <1e-22
+─────────────────────────────────────────
 ```
 
 Passing the keyword argument `show_trace=true` will show the criterion for each model after it is estimated.
@@ -251,19 +276,22 @@ julia> am = selectmodel(ARCH, BG96;  meanspec=AR, maxlags=2)
 
 TGARCH{0,0,2} model with Gaussian errors, T=1974.
 
-
 Mean equation parameters:
-
-        Estimate  Std.Error  z value Pr(>|z|)
-c    -0.00685701 0.00966961 -0.70913   0.4782
-φ₁     0.0358363  0.0334292    1.072   0.2837
+───────────────────────────────────────────────
+       Estimate   Std.Error   z value  Pr(>|z|)
+───────────────────────────────────────────────
+c   -0.00685701  0.00966961  -0.70913    0.4782
+φ₁   0.0358363   0.0334292    1.072      0.2837
+───────────────────────────────────────────────
 
 Volatility parameters:
-
-     Estimate  Std.Error z value Pr(>|z|)
-ω    0.119163 0.00995107 11.9749   <1e-32
-α₁   0.315686  0.0576413 5.47674    <1e-7
-α₂   0.183318  0.0444875 4.12067    <1e-4
+────────────────────────────────────────────
+    Estimate   Std.Error   z value  Pr(>|z|)
+────────────────────────────────────────────
+ω   0.119163  0.00995107  11.9749     <1e-32
+α₁  0.315686  0.0576413    5.47674    <1e-7
+α₂  0.183318  0.0444875    4.12067    <1e-4
+────────────────────────────────────────────
 ```
 
 Here, an ARCH(2)-AR(1) model was selected. Note that this can result in an explosion of the number of models that must be estimated;
@@ -277,18 +305,21 @@ julia> am = selectmodel(ARCH{0}, BG96;  meanspec=ARMA)
 
 TGARCH{0,0,0} model with Gaussian errors, T=1974.
 
-
 Mean equation parameters:
-
-       Estimate Std.Error  z value Pr(>|z|)
-c    -0.0266446 0.0174716 -1.52502   0.1273
-φ₁    -0.621837  0.160738 -3.86864   0.0001
-θ₁     0.643588    0.1543  4.17103    <1e-4
+─────────────────────────────────────────────
+      Estimate  Std.Error   z value  Pr(>|z|)
+─────────────────────────────────────────────
+c   -0.0266446  0.0174716  -1.52502    0.1273
+φ₁  -0.621838   0.160738   -3.86864    0.0001
+θ₁   0.643588   0.1543      4.17103    <1e-4
+─────────────────────────────────────────────
 
 Volatility parameters:
-
-     Estimate Std.Error z value Pr(>|z|)
-ω    0.220848 0.0118061 18.7063   <1e-77
+─────────────────────────────────────────
+   Estimate  Std.Error  z value  Pr(>|z|)
+─────────────────────────────────────────
+ω  0.220848  0.0118061  18.7063    <1e-77
+─────────────────────────────────────────
 ```
 In this case, an ARMA(1, 1) specification was selected.
 ## Risk measures
@@ -386,14 +417,21 @@ julia> am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=500, meanspec=Int
 TGARCH{0,1,1} model with Student's t errors, T=1000.
 
 
+──────────────────────────────
                              μ
+──────────────────────────────
 Mean equation parameters:  5.0
-
-                             ω  β₁   α₁
-Volatility parameters:     1.0 0.9 0.05
-
+──────────────────────────────
+─────────────────────────────────────────
+                             ω   β₁    α₁
+─────────────────────────────────────────
+Volatility parameters:     1.0  0.9  0.05
+─────────────────────────────────────────
+──────────────────────────────
                              ν
+──────────────────────────────
 Distribution parameters:   3.0
+──────────────────────────────
 
 julia> am4 = simulate(am3, 1000); # passing the number of observations is optional, the default being nobs(am3)
 ```
@@ -406,14 +444,21 @@ julia> am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=0, meanspec=reg, 
 TGARCH{0,1,1} model with Student's t errors, T=1000.
 
 
+──────────────────────────────
                             β₀
+──────────────────────────────
 Mean equation parameters:  5.0
-
-                             ω  β₁   α₁
-Volatility parameters:     1.0 0.9 0.05
-
+──────────────────────────────
+─────────────────────────────────────────
+                             ω   β₁    α₁
+─────────────────────────────────────────
+Volatility parameters:     1.0  0.9  0.05
+─────────────────────────────────────────
+──────────────────────────────
                              ν
+──────────────────────────────
 Distribution parameters:   3.0
+──────────────────────────────
 ```
 ```@meta
 DocTestSetup = nothing
