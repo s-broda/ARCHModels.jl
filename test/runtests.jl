@@ -12,7 +12,7 @@ T = 10^4;
     Random.seed!(1)
     spec = TGARCH{1,1,1}([1., .05, .9, .01]);
     str = sprint(show, spec)
-    @test startswith(str, "TGARCH{1,1,1} specification.\n\n               ω   γ₁  β₁   α₁\nParameters:  1.0 0.05 0.9 0.01\n\n")
+    @test startswith(str, "TGARCH{1,1,1} specification.\n\n─────────────────────────────────\n               ω    γ₁   β₁    α₁\n─────────────────────────────────\nParameters:  1.0  0.05  0.9  0.01\n─────────────────────────────────\n")
     am = simulate(spec, T);
     am = selectmodel(TGARCH, am.data; meanspec=NoIntercept(), show_trace=true, maxlags=2)
     @test all(isapprox.(coef(am), [0.9439667311150648
