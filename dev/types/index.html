@@ -4,24 +4,36 @@
 julia&gt; ARCH{2}([1., .5, .4])
 TGARCH{0,0,2} specification.
 
-               ω  α₁  α₂
-Parameters:  1.0 0.5 0.4</code></pre><h3><a class="nav-anchor" id="GARCH-1" href="#GARCH-1">GARCH</a></h3><p>The GARCH(p, q) model, due to <a href="https://doi.org/10.1016/0304-4076(86)90063-1">Bollerslev (1986)</a>, specifies the volatility as</p><div>\[\sigma_t^2=\omega+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i a_{t-i}^2, \quad \omega, \alpha_i, \beta_i&gt;0,\quad \sum_{i=1}^{\max p,q} \alpha_i+\beta_i&lt;1.\]</div><p>It is available as <a href="../reference/#ARCHModels.GARCH"><code>GARCH{p, q}</code></a>:</p><pre><code class="language-julia-repl">julia&gt; using ARCHModels
+──────────────────────────
+               ω   α₁   α₂
+──────────────────────────
+Parameters:  1.0  0.5  0.4
+──────────────────────────</code></pre><h3><a class="nav-anchor" id="GARCH-1" href="#GARCH-1">GARCH</a></h3><p>The GARCH(p, q) model, due to <a href="https://doi.org/10.1016/0304-4076(86)90063-1">Bollerslev (1986)</a>, specifies the volatility as</p><div>\[\sigma_t^2=\omega+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i a_{t-i}^2, \quad \omega, \alpha_i, \beta_i&gt;0,\quad \sum_{i=1}^{\max p,q} \alpha_i+\beta_i&lt;1.\]</div><p>It is available as <a href="../reference/#ARCHModels.GARCH"><code>GARCH{p, q}</code></a>:</p><pre><code class="language-julia-repl">julia&gt; using ARCHModels
 
 julia&gt; GARCH{1, 1}([1., .9, .05])
 TGARCH{0,1,1} specification.
 
-               ω  β₁   α₁
-Parameters:  1.0 0.9 0.05</code></pre><p>This creates a GARCH(1, 1) specification with <span>$ω=1$</span>, <span>$β=.9$</span>, and <span>$α=.05$</span>.</p><h3><a class="nav-anchor" id="TGARCH-1" href="#TGARCH-1">TGARCH</a></h3><p>As may have been guessed from the output above, the ARCH and GARCH models are actually special cases of a more general class of models, known as TGARCH (Threshold GARCH), due to <a href="https://doi.org/10.1111/j.1540-6261.1993.tb05128.x">Glosten, Jagannathan, and Runkle</a>. The TGARCH{o, p, q} model takes the form</p><div>\[\sigma_t^2=\omega+\sum_{i=1}^o\gamma_i  a_{t-i}^2 1_{a_{t-i}&lt;0}+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i a_{t-i}^2, \quad \omega, \alpha_i, \beta_i, \gamma_i&gt;0, \sum_{i=1}^{\max o,p,q} \alpha_i+\beta_i+\gamma_i/2&lt;1.\]</div><p>The TGARCH model allows the volatility to react differently (typically more strongly) to negative shocks, a feature known as the (statistical) leverage effect. Is available as <a href="../reference/#ARCHModels.TGARCH"><code>TGARCH{o, p, q}</code></a>:</p><pre><code class="language-julia-repl">julia&gt; using ARCHModels
+───────────────────────────
+               ω   β₁    α₁
+───────────────────────────
+Parameters:  1.0  0.9  0.05
+───────────────────────────</code></pre><p>This creates a GARCH(1, 1) specification with <span>$ω=1$</span>, <span>$β=.9$</span>, and <span>$α=.05$</span>.</p><h3><a class="nav-anchor" id="TGARCH-1" href="#TGARCH-1">TGARCH</a></h3><p>As may have been guessed from the output above, the ARCH and GARCH models are actually special cases of a more general class of models, known as TGARCH (Threshold GARCH), due to <a href="https://doi.org/10.1111/j.1540-6261.1993.tb05128.x">Glosten, Jagannathan, and Runkle</a>. The TGARCH{o, p, q} model takes the form</p><div>\[\sigma_t^2=\omega+\sum_{i=1}^o\gamma_i  a_{t-i}^2 1_{a_{t-i}&lt;0}+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i a_{t-i}^2, \quad \omega, \alpha_i, \beta_i, \gamma_i&gt;0, \sum_{i=1}^{\max o,p,q} \alpha_i+\beta_i+\gamma_i/2&lt;1.\]</div><p>The TGARCH model allows the volatility to react differently (typically more strongly) to negative shocks, a feature known as the (statistical) leverage effect. Is available as <a href="../reference/#ARCHModels.TGARCH"><code>TGARCH{o, p, q}</code></a>:</p><pre><code class="language-julia-repl">julia&gt; using ARCHModels
 
 julia&gt; TGARCH{1, 1, 1}([1., .04, .9, .01])
 TGARCH{1,1,1} specification.
 
-               ω   γ₁  β₁   α₁
-Parameters:  1.0 0.04 0.9 0.01</code></pre><h3><a class="nav-anchor" id="EGARCH-1" href="#EGARCH-1">EGARCH</a></h3><p>The EGARCH{o, p, q} volatility specification, due to <a href="https://doi.org/10.2307/2938260">Nelson (1991)</a>, is</p><div>\[\log(\sigma_t^2)=\omega+\sum_{i=1}^o\gamma_i z_{t-i}+\sum_{i=1}^p\beta_i \log(\sigma_{t-i}^2)+\sum_{i=1}^q\alpha_i (|z_{t-i}|-\sqrt{2/\pi}), \quad z_t=r_t/\sigma_t,\quad \sum_{i=1}^{p}\beta_i&lt;1.\]</div><p>Like the TGARCH model, it can account for the leverage effect. The corresponding type is <a href="../reference/#ARCHModels.EGARCH"><code>EGARCH{o, p, q}</code></a>:</p><pre><code class="language-julia-repl">julia&gt; EGARCH{1, 1, 1}([-0.1, .1, .9, .04])
+─────────────────────────────────
+               ω    γ₁   β₁    α₁
+─────────────────────────────────
+Parameters:  1.0  0.04  0.9  0.01
+─────────────────────────────────</code></pre><h3><a class="nav-anchor" id="EGARCH-1" href="#EGARCH-1">EGARCH</a></h3><p>The EGARCH{o, p, q} volatility specification, due to <a href="https://doi.org/10.2307/2938260">Nelson (1991)</a>, is</p><div>\[\log(\sigma_t^2)=\omega+\sum_{i=1}^o\gamma_i z_{t-i}+\sum_{i=1}^p\beta_i \log(\sigma_{t-i}^2)+\sum_{i=1}^q\alpha_i (|z_{t-i}|-\sqrt{2/\pi}), \quad z_t=r_t/\sigma_t,\quad \sum_{i=1}^{p}\beta_i&lt;1.\]</div><p>Like the TGARCH model, it can account for the leverage effect. The corresponding type is <a href="../reference/#ARCHModels.EGARCH"><code>EGARCH{o, p, q}</code></a>:</p><pre><code class="language-julia-repl">julia&gt; EGARCH{1, 1, 1}([-0.1, .1, .9, .04])
 EGARCH{1,1,1} specification.
 
-                ω  γ₁  β₁   α₁
-Parameters:  -0.1 0.1 0.9 0.04</code></pre><h2><a class="nav-anchor" id="meanspec-1" href="#meanspec-1">Mean specifications</a></h2><p>Mean specifications serve to specify <span>$\mu_t$</span>. They are modelled as subtypes of <a href="../reference/#ARCHModels.MeanSpec"><code>MeanSpec</code></a>. They contain their parameters as (possibly empty) vectors, but convenience constructors are provided where appropriate. Currently, three specifications are available:</p><ul><li>A zero mean: <span>$\mu_t=0$</span>. Available as <a href="../reference/#ARCHModels.NoIntercept"><code>NoIntercept</code></a>:</li></ul><pre><code class="language-julia-repl">julia&gt; NoIntercept() # convenience constructor, eltype defaults to Float64
+─────────────────────────────────
+                ω   γ₁   β₁    α₁
+─────────────────────────────────
+Parameters:  -0.1  0.1  0.9  0.04
+─────────────────────────────────</code></pre><h2><a class="nav-anchor" id="meanspec-1" href="#meanspec-1">Mean specifications</a></h2><p>Mean specifications serve to specify <span>$\mu_t$</span>. They are modelled as subtypes of <a href="../reference/#ARCHModels.MeanSpec"><code>MeanSpec</code></a>. They contain their parameters as (possibly empty) vectors, but convenience constructors are provided where appropriate. Currently, three specifications are available:</p><ul><li>A zero mean: <span>$\mu_t=0$</span>. Available as <a href="../reference/#ARCHModels.NoIntercept"><code>NoIntercept</code></a>:</li></ul><pre><code class="language-julia-repl">julia&gt; NoIntercept() # convenience constructor, eltype defaults to Float64
 NoIntercept{Float64}(Float64[])</code></pre><ul><li>An intercept: <span>$\mu_t=\mu$</span>. Available as <a href="../reference/#ARCHModels.Intercept"><code>Intercept</code></a>:</li></ul><pre><code class="language-julia-repl">julia&gt; Intercept(3) # convenience constructor
 Intercept{Float64}([3.0])</code></pre><ul><li>A linear regression model: <span>$\mu_t=\mathbf{x}_t^{\mathrm{\scriptscriptstyle T}}\boldsymbol{\beta}$</span>. Available as <a href="../reference/#ARCHModels.Regression"><code>Regression</code></a>:</li></ul><pre><code class="language-julia-repl">julia&gt; X = ones(100, 1);
 
@@ -45,32 +57,44 @@ julia&gt; am = UnivariateARCHModel(spec, data; dist=StdT(3.), meanspec=Intercept
 TGARCH{0,1,1} model with Student&#39;s t errors, T=1974.
 
 
+──────────────────────────────
                              μ
+──────────────────────────────
 Mean equation parameters:  1.0
-
-                             ω  β₁   α₁
-Volatility parameters:     1.0 0.9 0.05
-
+──────────────────────────────
+─────────────────────────────────────────
+                             ω   β₁    α₁
+─────────────────────────────────────────
+Volatility parameters:     1.0  0.9  0.05
+─────────────────────────────────────────
+──────────────────────────────
                              ν
-Distribution parameters:   3.0</code></pre><p>The model can then be fitted as follows:</p><pre><code class="language-julia-repl">julia&gt; fit!(am)
+──────────────────────────────
+Distribution parameters:   3.0
+──────────────────────────────</code></pre><p>The model can then be fitted as follows:</p><pre><code class="language-julia-repl">julia&gt; fit!(am)
 
 TGARCH{0,1,1} model with Student&#39;s t errors, T=1974.
 
-
 Mean equation parameters:
-
-       Estimate  Std.Error  z value Pr(&gt;|z|)
-μ    0.00227251 0.00686802 0.330882   0.7407
+─────────────────────────────────────────────
+     Estimate   Std.Error   z value  Pr(&gt;|z|)
+─────────────────────────────────────────────
+μ  0.00227251  0.00686802  0.330882    0.7407
+─────────────────────────────────────────────
 
 Volatility parameters:
-
-       Estimate  Std.Error z value Pr(&gt;|z|)
-ω    0.00232225 0.00163909 1.41679   0.1565
-β₁     0.884488   0.036963  23.929   &lt;1e-99
-α₁     0.124866  0.0405471 3.07952   0.0021
+──────────────────────────────────────────────
+      Estimate   Std.Error   z value  Pr(&gt;|z|)
+──────────────────────────────────────────────
+ω   0.00232225  0.00163909   1.41679    0.1565
+β₁  0.884488    0.036963    23.929      &lt;1e-99
+α₁  0.124866    0.0405471    3.07952    0.0021
+──────────────────────────────────────────────
 
 Distribution parameters:
-
-     Estimate Std.Error z value Pr(&gt;|z|)
-ν     4.11211  0.400384 10.2704   &lt;1e-24</code></pre><p>It should, however, rarely be necessary to construct an <code>UnivariateARCHModel</code> manually via its constructor; typically, instances of it are created by calling <a href="../reference/#StatsBase.fit"><code>fit</code></a>, <a href="../reference/#ARCHModels.selectmodel-Union{Tuple{MS}, Tuple{SD}, Tuple{T}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where MS&lt;:MeanSpec where SD&lt;:StandardizedDistribution where T&lt;:AbstractFloat where VS&lt;:VolatilitySpec"><code>selectmodel</code></a>, or <a href="../reference/#ARCHModels.simulate"><code>simulate</code></a>.</p><p>As discussed earlier, <a href="../reference/#ARCHModels.UnivariateARCHModel"><code>UnivariateARCHModel</code></a> implements the interface of StatisticalModel from <a href="http://juliastats.github.io/StatsBase.jl/stable/statmodels.html"><code>StatsBase</code></a>, so you can call <code>coef</code>, <code>coefnames</code>, <code>confint</code>, <code>dof</code>, <code>informationmatrix</code>, <code>isfitted</code>, <code>loglikelihood</code>, <code>nobs</code>,  <code>score</code>, <code>stderror</code>, <code>vcov</code>, etc. on its instances:</p><pre><code class="language-julia-repl">julia&gt; nobs(am)
+─────────────────────────────────────────
+   Estimate  Std.Error  z value  Pr(&gt;|z|)
+─────────────────────────────────────────
+ν   4.11211   0.400384  10.2704    &lt;1e-24
+─────────────────────────────────────────</code></pre><p>It should, however, rarely be necessary to construct an <code>UnivariateARCHModel</code> manually via its constructor; typically, instances of it are created by calling <a href="../reference/#StatsBase.fit"><code>fit</code></a>, <a href="../reference/#ARCHModels.selectmodel-Union{Tuple{MS}, Tuple{SD}, Tuple{T}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where MS&lt;:MeanSpec where SD&lt;:StandardizedDistribution where T&lt;:AbstractFloat where VS&lt;:VolatilitySpec"><code>selectmodel</code></a>, or <a href="../reference/#ARCHModels.simulate"><code>simulate</code></a>.</p><p>As discussed earlier, <a href="../reference/#ARCHModels.UnivariateARCHModel"><code>UnivariateARCHModel</code></a> implements the interface of StatisticalModel from <a href="http://juliastats.github.io/StatsBase.jl/stable/statmodels.html"><code>StatsBase</code></a>, so you can call <code>coef</code>, <code>coefnames</code>, <code>confint</code>, <code>dof</code>, <code>informationmatrix</code>, <code>isfitted</code>, <code>loglikelihood</code>, <code>nobs</code>,  <code>score</code>, <code>stderror</code>, <code>vcov</code>, etc. on its instances:</p><pre><code class="language-julia-repl">julia&gt; nobs(am)
 1974</code></pre><p>Other useful methods include <a href="../reference/#ARCHModels.means-Tuple{UnivariateARCHModel}"><code>means</code></a>, <a href="../reference/#ARCHModels.volatilities-Union{Tuple{UnivariateARCHModel{T,VS,SD,MS} where MS&lt;:MeanSpec{T}}, Tuple{SD}, Tuple{VS}, Tuple{T}} where SD where VS where T"><code>volatilities</code></a> and <a href="../reference/#StatsBase.residuals-Union{Tuple{UnivariateARCHModel{T,VS,SD,MS} where MS&lt;:MeanSpec{T}}, Tuple{SD}, Tuple{VS}, Tuple{T}} where SD where VS where T"><code>residuals</code></a>.</p><footer><hr/><a class="previous" href="../"><span class="direction">Previous</span><span class="title">Home</span></a><a class="next" href="../manual/"><span class="direction">Next</span><span class="title">Usage</span></a></footer></article></body></html>
