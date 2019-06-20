@@ -19,8 +19,11 @@ Construct an EGARCH specification with the given parameters.
 julia> EGARCH{1, 1, 1}([-0.1, .1, .9, .04])
 EGARCH{1,1,1} specification.
 
-                ω  γ₁  β₁   α₁
-Parameters:  -0.1 0.1 0.9 0.04
+─────────────────────────────────
+                ω   γ₁   β₁    α₁
+─────────────────────────────────
+Parameters:  -0.1  0.1  0.9  0.04
+─────────────────────────────────
 ```
 """
 EGARCH{o, p, q}(coefs::Vector{T}) where {o, p, q, T}  = EGARCH{o, p, q, T}(coefs)
