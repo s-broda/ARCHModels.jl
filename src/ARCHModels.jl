@@ -29,6 +29,7 @@ using Roots
 using LinearAlgebra
 using DataStructures: CircularBuffer
 using DelimitedFiles
+using Parameters
 
 import Distributions: quantile
 import Base: show, showerror, eltype
@@ -43,6 +44,7 @@ export ARCHModel, UnivariateARCHModel, VolatilitySpec, StandardizedDistribution,
        NoIntercept, ARMA, AR, MA, BG96, volatilities, mean, quantile, VaRs, pvalue, means,
 	   EGARCH, ARCH, GARCH, TGARCH, ARCHLMTest, DQTest
 
+export TGARCHn
 
 include("utils.jl")
 include("general.jl")

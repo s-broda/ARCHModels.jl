@@ -175,6 +175,18 @@ end
     meancoefs = coefs[ng+nd+1:ng+nd+nm]
     return garchcoefs, distcoefs, meancoefs
 end
+
+@inline function splitcoefs(coefs, specinst::VS, SD, meanspec) where VS<:VolatilitySpec
+    ng = nparams(specinst)
+    nd = nparams(SD)
+    nm = nparams(typeof(meanspec))
+    length(coefs) == ng+nd+nm || throw(NumParamError(ng+nd+nm, length(coefs)))
+    garchcoefs = coefs[1:ng]
+    distcoefs = coefs[ng+1:ng+nd]
+    meancoefs = coefs[ng+nd+1:ng+nd+nm]
+    return garchcoefs, distcoefs, meancoefs
+end
+
 """
     volatilities(am::UnivariateARCHModel)
 Return the conditional volatilities.
@@ -299,6 +311,54 @@ end
     LL += T*logconst(SD, distcoefs)
 end#function
 
+@inline function loglik!(ht::AbstractVector{T2}, lht::AbstractVector{T2},
+                         zt::AbstractVector{T2}, at::AbstractVector{T2}, specinst::VS, ::Type{SD}, meanspec::MS,
+                         data::Vector{T1}, coefs::AbstractVector{T2}
+                         ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
+                                  MS<:MeanSpec, T1<:AbstractFloat, T2
+                                  }
+    garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, specinst, SD, meanspec)
+    #the below 6 lines can be removed when using Fminbox
+    lowergarch, uppergarch = constraints(specinst, T1)
+    lowerdist, upperdist = constraints(SD, T1)
+    lowermean, uppermean = constraints(MS, T1)
+    lower = vcat(lowergarch, lowerdist, lowermean)
+    upper = vcat(uppergarch, upperdist, uppermean)
+    all(lower.<coefs.<upper) || return T2(-Inf)
+    T = length(data)
+	r1 = presample(specinst)
+	r2 = presample(meanspec)
+    r = max(r1, r2)
+    T > r || error("Sample too small.")
+	ki = kernelinvariants(SD, distcoefs)
+    @inbounds begin
+        h0 = var(data) # could be moved outside
+		m0 = mean(data)
+        #h0 = uncond(VS, garchcoefs)
+        #h0 > 0 || return T2(NaN)
+        LL = zero(T2)
+        for t = 1:T
+			if t>r2
+				themean = mean(at, ht, lht, data, meanspec, meancoefs, t)
+			else
+				themean = m0
+			end
+			if t > r1
+                update!(ht, lht, zt, at, specinst, meanspec, data, garchcoefs, meancoefs)
+            else
+				push!(ht, h0)
+                push!(lht, log(h0))
+            end
+            ht[end] < 0 && return T2(NaN)
+			push!(at, data[t]-themean)
+			push!(zt, at[end]/sqrt(ht[end]))
+			LL += -lht[end]/2 + logkernel(SD, zt[end], distcoefs, ki...)
+
+        end#for
+    end#inbounds
+    LL += T*logconst(SD, distcoefs)
+end#function
+
 function loglik(spec::Type{VS}, dist::Type{SD}, meanspec::MS,
                    data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}
                    ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
@@ -311,6 +371,21 @@ function loglik(spec::Type{VS}, dist::Type{SD}, meanspec::MS,
     zt = CircularBuffer{T2}(r)
 	at = CircularBuffer{T2}(r)
     loglik!(ht, lht, zt, at, spec, dist, meanspec, data, coefs)
+
+end
+
+function loglik(specinst::VS, dist::Type{SD}, meanspec::MS,
+                   data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}
+                   ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
+                            MS<:MeanSpec, T2
+                            }
+    r = max(presample(specinst), presample(meanspec))
+	r = max(r, 1) # make sure this works for, e.g., ARCH{0}; CircularBuffer requires at least a length of 1
+    ht = CircularBuffer{T2}(r)
+    lht = CircularBuffer{T2}(r)
+    zt = CircularBuffer{T2}(r)
+	at = CircularBuffer{T2}(r)
+    loglik!(ht, lht, zt, at, specinst, dist, meanspec, data, coefs)
 
 end
 
@@ -355,6 +430,33 @@ function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
     res = optimize(obj, coefs, algorithm; autodiff=autodiff, kwargs...)
     coefs .= Optim.minimizer(res)
     ng = nparams(VS)
+    ns = nparams(SD)
+    nm = nparams(typeof(meanspec))
+    garchcoefs .= coefs[1:ng]
+    distcoefs .= coefs[ng+1:ng+ns]
+    meancoefs .= coefs[ng+ns+1:ng+ns+nm]
+	meanspec.coefs .= meancoefs
+    return nothing
+end
+
+function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
+              meancoefs::Vector{T}, specinst::VS, ::Type{SD}, meanspec::MS,
+              data::Vector{T}; algorithm=BFGS(), autodiff=:forward, kwargs...
+              ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
+                       MS<:MeanSpec, T<:AbstractFloat
+                       }
+    obj = x -> -loglik(specinst, SD, meanspec, data, x)
+    coefs = vcat(garchcoefs, distcoefs, meancoefs)
+    #for fminbox:
+    # lowergarch, uppergarch = constraints(VS, T)
+    # lowerdist, upperdist = constraints(SD, T)
+    # lowermean, uppermean = constraints(MS, T)
+    # lower = vcat(lowergarch, lowerdist, lowermean)
+    # upper = vcat(uppergarch, upperdist, uppermean)
+    # res = optimize(obj, lower, upper, coefs, Fminbox(algorithm); autodiff=autodiff, kwargs...)
+    res = optimize(obj, coefs, algorithm; autodiff=autodiff, kwargs...)
+    coefs .= Optim.minimizer(res)
+    ng = nparams(specinst)
     ns = nparams(SD)
     nm = nparams(typeof(meanspec))
     garchcoefs .= coefs[1:ng]
@@ -416,6 +518,22 @@ function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
     meancoefs = startingvals(ms, data)
 	_fit!(coefs, distcoefs, meancoefs, VS, SD, ms, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
 	return UnivariateARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=ms, fitted=true)
+end
+
+function fit(specinst::VS, data::Vector{T}; dist::Type{SD}=StdNormal{T},
+             meanspec::Union{MS, Type{MS}}=Intercept{T}(T[0]), algorithm=BFGS(),
+             autodiff=:forward, kwargs...
+             ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
+                      MS<:MeanSpec, T<:AbstractFloat
+                      }
+	#can't use dispatch for this b/c meanspec is a kwarg
+	meanspec isa Type ? ms = meanspec(zeros(T, nparams(meanspec))) : ms = deepcopy(meanspec)
+    coefs = startingvals(specinst, data)
+    distcoefs = startingvals(SD, data)
+    meancoefs = startingvals(ms, data)
+	_fit!(coefs, distcoefs, meancoefs, specinst, SD, ms, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
+	specinst.coefs .= coefs
+	return UnivariateARCHModel(specinst, data; dist=SD(distcoefs), meanspec=ms, fitted=true)
 end
 
 """
@@ -533,6 +651,7 @@ end
 function show(io::IO, spec::VolatilitySpec)
     println(io, modname(typeof(spec)), " specification.\n\n", CoefTable(spec.coefs, coefnames(typeof(spec)), ["Parameters:"]))
 end
+
 function show(io::IO, am::UnivariateARCHModel)
 	if isfitted(am)
 		cc = coef(am)
