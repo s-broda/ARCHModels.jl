@@ -383,3 +383,6 @@ end
     @test startswith(str, "Engle and Manganelli's (2004) DQ test (out of sample)")
     @test ARCHModels.testname(DQ) == "Engle and Manganelli's (2004) DQ test (out of sample)"
 end
+@testset "multivariate" begin
+    @test all(isapprox(fit(DCC{1, 1}, DOW29[1:100, 1:5]).coefs,[0.0620920988436495, 0.8471141289464545]))
+end
