@@ -21,4 +21,4 @@ The extensive documentation is available [here](https://s-broda.github.io/ARCHMo
 
 This project has received funding from the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (grant agreement No. 750559).
 
-<img src="docs/src/assets/LOGO.jpg" width="240">
+<img src="docs/src/assets/EULOGO.jpg" width="240">
