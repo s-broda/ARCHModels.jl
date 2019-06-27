@@ -34,9 +34,15 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}) where {p, q, VS<: 
     iD = inv(D)
     R = iD * Σ * iD
     R = (R + R') / 2
-    f = x -> LL2step(x, R, resids, p, q)
-    res = optimize(x->-sum(f(x)), [.05, .9], BFGS(), autodiff=:forward)
+    #f = x -> LL2step(x, R, resids, p, q)
+    #res = optimize(x->-sum(f(x)), [.05, .9], BFGS(), autodiff=:forward)
+    #@show x = Optim.minimizer(res)
+    ff = x -> LL2step_pairs(x, R, resids, p, q)
+    res = optimize(x->-ff(x), [.05, .9], BFGS(), autodiff=:forward)
     @show x = Optim.minimizer(res)
+
+
+    return
 
     Hpp = ForwardDiff.hessian(x->sum(f(x)), x)/n
     dp = ForwardDiff.jacobian(f, x)
@@ -136,6 +142,42 @@ function LL2step(coef::Array{T}, R, resids::Array{T2}, p, q) where {T, T2}
     LL
 end
 
+function LL2step_pairs(coef::Array{T}, R, resids::Array{T2}, p, q) where {T, T2}
+    n, dims = size(resids)
+    LL = zeros(T, dims)
+    Threads.@threads for k = 1:dims-1
+        LL[k] = ll(coef, R[k, k+1], resids[:, k:k+1], p, q)
+    end
+    sum(LL)
+end
+
+function ll(coef::Array{T}, rho, resids, p, q) where T
+    a = coef[1]
+    b = coef[2]
+    0 < a < 1 || return T(-Inf)
+    0 < b < 1 || return T(-Inf)
+    abs(a + b) < 1 || return T(-Inf)
+    n, dims = size(resids)
+    f = 1 - a - b
+    L = T(0)
+    rt = T(rho)
+    e1 = resids[1, 2]
+    e2 = resids[1, 2]
+    for t=1:n
+        if t > max(p, q)
+            s1 = 1 + a * (e1 * e1 - 1)
+            s2 = 1 + a * (e2 * e2 - 1)
+            rt = rho * f + a * e1 * e2 + b * rt
+            rt = rt / sqrt(s1 * s2)
+        end
+        e1 = resids[t, 1]
+        e2 = resids[t, 2]
+        r2 = rt^2
+        d = 1 - r2
+        L -= (((e1*e1 + e2*e2) * r2 - 2 * rt *e1 * e2) / d + log(d)) / 2
+    end
+    L
+end
 # same as LL2step except for the inititalization type.
 function LL2step2(coef::Array{T}, R, resids::Array{T2}, p, q) where {T, T2}
     n, dims = size(resids)
