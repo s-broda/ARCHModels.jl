@@ -12,9 +12,9 @@ DCC{p, q}(R::Matrix{T}, coefs::Vector{T}, univariatespecs::Array{UnivariateARCHM
 
 nparams(::Type{DCC{p, q}}) where {p, q} = p+q
 
-fit(::Type{<:DCC}, data) = fit(DCC{1, 1}, data; method=method1)
+fit(::Type{<:DCC}, data; method=:largescale) = fit(DCC{1, 1}, data; method=method)
 
-fit(DCCspec::Type{<:DCC{p, q}}, data; method) where {p, q} = fit(DCC{p, q, GARCH{1, 1}}, data; method=method)
+fit(DCCspec::Type{<:DCC{p, q}}, data; method=:largescale) where {p, q} = fit(DCC{p, q, GARCH{1, 1}}, data; method=method)
 
 function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; method=:largescale) where {p, q, VS<: VolatilitySpec, T, d}
     n, dim = size(data)
