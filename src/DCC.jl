@@ -45,9 +45,12 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
         Htt[w, w] .= -informationmatrix(univariatespecs[i], expected=false)[1:nvolaparams, 1:nvolaparams]
         dt[:, w] = scores(univariatespecs[i])[:, 1:nvolaparams]
     end
+    x0 = zeros(T, p+q)
+    x0[1:p] .= 0.9/p
+    x0[p+1:end] .= 0.05/q
     if method == :twostep
-        f = x -> LL2step(x, R, resids, p, q)
-        res = optimize(x->-sum(f(x)), [.05, .9], BFGS(), autodiff=:forward)
+        f = x -> LL2step(DCCspec, x, R, resids)
+        res = optimize(x->-sum(f(x)), x0, BFGS(), autodiff=:forward)
         @show x = Optim.minimizer(res)
         coefs[1:r] .= x
         Hpp = ForwardDiff.hessian(x->sum(f(x)), x)/n
@@ -57,7 +60,7 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
         # Hpt = ForwardDiff.hessian(g, coefs)[1:2, 3:end]/n
         # use finite differences instead, because we don't need the whole
         # Hessian, and I couldn't figure out how to do this with ForwardDiff
-        g = (x, y) -> sum(LL2step_full(VS, x, y, R, data, p, q))
+        g = (x, y) -> sum(LL2step_full(DCCspec, VS, x, y, R, data))
         dg = x -> ForwardDiff.gradient(y->g(x, y), coefs[1+r:end])/n
         h = 1e-7
         e1 = [h, 0]
@@ -70,30 +73,30 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
         C = inv(Hpp)*A'*A*inv(Hpp)/n^2
         @show std = sqrt(Diagonal(C))
     elseif method==:largescale
-        f = x -> LL2step_pairs(x, R, resids, p, q)
-        res = optimize(x->-sum(f(x)), [.05, .9], BFGS(), autodiff=:forward)
+        f = x -> LL2step_pairs(DCCspec, x, R, resids)
+        res = optimize(x->-sum(f(x)), x0, BFGS(), autodiff=:forward)
         @show x = Optim.minimizer(res)
         #return
         coefs[1:r] = x
-        g = x -> LL2step_pairs(x, R, resids, p, q, true)
+        g = x -> LL2step_pairs(DCCspec, x, R, resids, true)
         sc = ForwardDiff.jacobian(g, x)
         I = sc'*sc/n/(dim-1)
 
-        h = x-> LL2step_pairs_full(VS, x, R, data, p, q)
+        h = x-> LL2step_pairs_full(DCCspec, VS, x, R, data)
         H = ForwardDiff.hessian(x->sum(h(x)), coefs)/n/(dim-1)
         #J = H[1:r, 1:r] - H[1:r, r+1:end] * inv(H[1+r:end, 1+r:end]) * H[1:r, 1+r:end]'
         #@show std = sqrt.(diag(inv(J)*I*inv(J))/n) # from the 2014 version of the paper
         as = hcat(dt, sc) # all scores
         Sig = as'*as/n/dim
         Jnt = hcat(inv(H[1:r, 1:r])*H[1:r, 1+r:end]*inv(Htt), -inv(H[1:r, 1:r]))
-        @show std2=sqrt.(diag(Jnt*Sig*Jnt'/n)) # from the 2018 version
+        @show std=sqrt.(diag(Jnt*Sig*Jnt'/n)) # from the 2018 version
     else error("No method :$method.")
     end
-    return MultivariateARCHModel(DCC{p, q}(R, x, getproperty.(univariatespecs, :spec)), data, MultivariateStdNormal{T, dim}(), getproperty.(univariatespecs, :meanspec))
+    return MultivariateARCHModel(DCC{p, q}(R, x, getproperty.(univariatespecs, :spec)), data, MultivariateStdNormal{T, dim}(), getproperty.(univariatespecs, :meanspec), true)
 end
 
 #LC(Θ, ϕ) in Engle (2002)
-function LL2step_full(VS, dcccoef::Array{T}, garchcoef::Array{T2}, R, data, p, q) where {T, T2}
+function LL2step_full(DCCspec::Type{<:DCC{p, q}}, VS, dcccoef::Array{T}, garchcoef::Array{T2}, R, data) where {T, T2, p, q}
     n, dims = size(data)
     resids = Array{T2}(undef, size(data))
     for i = 1:dims
@@ -105,7 +108,7 @@ function LL2step_full(VS, dcccoef::Array{T}, garchcoef::Array{T2}, R, data, p, q
         loglik!(ht, lht, zt, at, VS, StdNormal{Float64}, NoIntercept(), data[:, i], params)
         resids[:, i] = zt
     end
-    LL2step2(dcccoef, R, resids, p, q)
+    LL2step2(DCCspec, dcccoef, R, resids)
 end
 
 #LC(Θ, ϕ) in Engle (2002). not actually the full log-likelihood
@@ -126,13 +129,15 @@ end
 # end
 
 #LC(Θ_hat, ϕ) in Engle (2002)
-function LL2step(coef::Array{T}, R, resids::Array{T2}, p, q) where {T, T2}
+function LL2step(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, R, resids::Array{T2}) where {T, T2, p, q}
     n, dims = size(resids)
     LL = zeros(T, n)
-    all([0, 0] .< coef .< [1, 1]) || (fill!(LL, T(-Inf)); return LL)
-    a = coef[1]
-    b = coef[2]
-    abs(a+b)>1 && (fill!(LL, T(-Inf)); return LL)
+    all(0 .< coef .< 1) || (fill!(LL, T(-Inf)); return LL)
+    abs(sum(coef))>1 && (fill!(LL, T(-Inf)); return LL)
+
+    b = coef[1]
+    a = coef[2]
+
     e = @view resids[1, :]
     Rt = Symmetric(zeros(T, dims, dims))
     Rt .= Symmetric(R)
@@ -157,12 +162,13 @@ function LL2step(coef::Array{T}, R, resids::Array{T2}, p, q) where {T, T2}
 end
 
 #doall toggles whether to return all individual likelihood contributions
-function LL2step_pairs(coef::Array{T}, R, resids::Array{T2}, p, q, doall=false) where {T, T2}
+function LL2step_pairs(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, R, resids::Array{T2}, doall=false) where {T, T2, p, q}
     n, dims = size(resids)
     len = doall ? n : 1
     LL = zeros(T, len, dims)
-    Threads.@threads for k = 1:dims-1
-        thell = ll(coef, R[k, k+1], resids[:, k:k+1], p, q, doall)
+    #Threads.@threads
+    for k = 1:dims-1
+        thell = ll(DCCspec, coef, R[k, k+1], resids[:, k:k+1], doall)
         if doall
             LL[:, k] .= thell
         else
@@ -171,7 +177,7 @@ function LL2step_pairs(coef::Array{T}, R, resids::Array{T2}, p, q, doall=false) 
     end
     sum(LL, dims=2)
 end
-function LL2step_pairs_full(VS::Type{<:VolatilitySpec}, coef::Array{T}, R, data, p, q) where {T, T2}
+function LL2step_pairs_full(DCCspec::Type{<:DCC{p, q}}, VS::Type{<:VolatilitySpec}, coef::Array{T}, R, data) where {T, T2, p, q}
     dcccoef = coef[1:p+q]
     garchcoef = coef[p+q+1:end]
     n, dims = size(data)
@@ -185,35 +191,38 @@ function LL2step_pairs_full(VS::Type{<:VolatilitySpec}, coef::Array{T}, R, data,
         loglik!(ht, lht, zt, at, VS, StdNormal{Float64}, NoIntercept(), data[:, i], params)
         resids[:, i] = zt
     end
-    LL2step_pairs(dcccoef, R, resids, p, q)
+    LL2step_pairs(DCCspec::Type{<:DCC{p, q}}, dcccoef, R, resids)
 end
-function ll(coef::Array{T}, rho, resids, p, q, doall=false) where T
-    a = coef[1]
-    b = coef[2]
-    0 < a < 1 || return T(-Inf)
-    0 < b < 1 || return T(-Inf)
-    abs(a + b) < 1 || return T(-Inf)
+function ll(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, rho, resids, doall=false) where {T, p, q}
+    all(0 .< coef .< 1) || return T(-Inf)
+    abs(sum(coef)) < 1 || return T(-Inf)
     n, dims = size(resids)
-    f = 1 - a - b
+    f = 1 - sum(coef)
     len = doall ? n : 1
     LL = zeros(T, len)
 
-    rt = T(rho)
-    e1 = resids[1, 1]
-    e2 = resids[1, 2]
+    rt = zeros(T, n) # should switch this to circbuff for speed
+    s1 = T[1]
+    s2 = T[1]
+    fill!(rt, rho)
     for t=1:n
         if t > max(p, q)
-            s1 = 1 + a * (e1 * e1 - 1)
-            s2 = 1 + a * (e2 * e2 - 1)
-            rt = rho * f + a * e1 * e2 + b * rt
-            rt = rt / sqrt(s1 * s2)
+            for i = 1:q
+                s1 = 1 + coef[p+i] * (resids[t-i, 1]^2 - 1)
+                s2 = 1 + coef[p+i] * (resids[t-i, 2]^2 - 1)
+                rt[t] = rho * f + coef[p+i] * resids[t-i, 1] * resids[t-i, 2]
+            end
+            for i = 1:p
+                rt[t] += coef[i] * rt[t-i]
+            end
+            rt[t] = rt[t] / sqrt(s1 * s2)
         end
         e1 = resids[t, 1]
         e2 = resids[t, 2]
-        r2 = rt^2
+        r2 = rt[t]^2
         d = 1 - r2
 
-        L = (((e1*e1 + e2*e2) * r2 - 2 * rt *e1 * e2) / d + log(d)) / 2
+        L = (((e1*e1 + e2*e2) * r2 - 2 * rt[t] *e1 * e2) / d + log(d)) / 2
 
         if doall
             LL[t] = -L
@@ -226,12 +235,12 @@ end
 
 
 # same as LL2step except for the inititalization type.
-function LL2step2(coef::Array{T}, R, resids::Array{T2}, p, q) where {T, T2}
+function LL2step2(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, R, resids::Array{T2}) where {p, q, T, T2}
     n, dims = size(resids)
     LL = zeros(T2, n)
     all([0, 0] .< coef .< [1, 1]) || (fill!(LL, T2(-Inf)); return LL)
-    a = coef[1]
-    b = coef[2]
+    b = coef[1]
+    a = coef[2]
     abs(a+b)>1 && (fill!(LL, T2(-Inf)); return LL)
     e = @view resids[1, :]
     Rt = Symmetric(zeros(T2, dims, dims))
