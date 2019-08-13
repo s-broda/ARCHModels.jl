@@ -56,6 +56,7 @@ include("EGARCH.jl")
 include("TGARCH.jl")
 include("tests.jl")
 include("multivariatearchmodel.jl")
+include("multivariatestandardizeddistributions.jl")
 include("DCC.jl")
 function __init__()
 	@require GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a" begin
