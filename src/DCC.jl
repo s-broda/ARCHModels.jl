@@ -1,14 +1,14 @@
-struct DCC{p, q, VS<:VolatilitySpec, SD<:StandardizedDistribution, MS<:MeanSpec, T<:AbstractFloat, d} <: MultivariateVolatilitySpec{T, d}
+struct DCC{p, q, VS<:VolatilitySpec, T<:AbstractFloat, d} <: MultivariateVolatilitySpec{T, d}
     R::Matrix{T}
     coefs::Vector{T}
-    univariatespecs::Vector{UnivariateARCHModel{T, VS, SD, MS}}
-    function DCC{p, q, VS, SD, MS, T, d}(R::Array{T}, coefs::Vector{T}, univariatespecs:: Array{UnivariateARCHModel{T, VS, SD, MS}}) where {p, q, T, VS<:VolatilitySpec, SD<:StandardizedDistribution, MS<:MeanSpec, d}
+    univariatespecs::Vector{VS}
+    function DCC{p, q, VS, T, d}(R::Array{T}, coefs::Vector{T}, univariatespecs:: Vector{VS}) where {p, q, T, VS<:VolatilitySpec, d}
         length(coefs) == nparams(DCC{p, q})  || throw(NumParamError(nparams(DCC{p, q}), length(coefs)))
         @assert d == length(univariatespecs)
-        new{p, q, VS, SD, MS, T, d}(R, coefs, univariatespecs)
+        new{p, q, VS, T, d}(R, coefs, univariatespecs)
     end
 end
-DCC{p, q}(R::Matrix{T}, coefs::Vector{T}, univariatespecs::Array{UnivariateARCHModel{T, VS, SD, MS}}) where {p, q, T, VS<:VolatilitySpec{T}, SD<:StandardizedDistribution{T}, MS<:MeanSpec{T} } = DCC{p, q, VS, SD, MS, T, length(univariatespecs)}(R, coefs, univariatespecs)
+DCC{p, q}(R::Matrix{T}, coefs::Vector{T}, univariatespecs::Vector{VS}) where {p, q, T, VS<:VolatilitySpec{T}} = DCC{p, q, VS, T, length(univariatespecs)}(R, coefs, univariatespecs)
 
 nparams(::Type{DCC{p, q}}) where {p, q} = p+q
 
@@ -28,9 +28,8 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; method=:largescale
         univariatespecs[i] = m
         resids[:, i] = residuals(m)
     end
-    #method == :largescale ? Σ = analytical_shrinkage(resids) :
-    Σ = cov(resids)
-        D = sqrt(Diagonal(Σ))
+    method == :largescale ? Σ = analytical_shrinkage(resids) : Σ = cov(resids)
+    D = sqrt(Diagonal(Σ))
     iD = inv(D)
     R = iD * Σ * iD
     R = (R + R') / 2
@@ -88,7 +87,7 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; method=:largescale
         @show std2=sqrt.(diag(Jnt*Sig*Jnt'/n)) # from the 2018 version
     else error("No method :$method.")
     end
-    return DCC{p, q}(R, x, univariatespecs)
+    return MultivariateARCHModel(DCC{p, q}(R, x, getproperty.(univariatespecs, :spec)), data)
 end
 
 #LC(Θ, ϕ) in Engle (2002)
