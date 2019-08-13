@@ -384,6 +384,6 @@ end
     @test ARCHModels.testname(DQ) == "Engle and Manganelli's (2004) DQ test (out of sample)"
 end
 @testset "multivariate" begin
-    ret=100 * diff(log.(DOW29), dims=1)
+    ret= 100 * diff(log.(DOW29), dims=1)
     @test all(isapprox(fit(DCC{1, 1}, ret[:, 1:2]).coefs, [0.05343957796906253, 0.894642321422344]))
 end
