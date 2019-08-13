@@ -18,6 +18,7 @@ fit(DCCspec::Type{<:DCC{p, q}}, data; meanspec=Intercept{T},  method=:largescale
 
 function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale) where {p, q, VS<: VolatilitySpec, T, d}
     n, dim = size(data)
+    r = p + q
     resids = similar(data)
     m = fit(VS, data[:, 1], meanspec=meanspec)
     resids[:, 1] = residuals(m)
@@ -33,15 +34,14 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
     iD = inv(D)
     R = iD * Σ * iD
     R = (R + R') / 2
-    nvolaparams = nparams(GARCH{1, 1})
-    np = 2 + dim * nvolaparams
+    nvolaparams = nparams(VS)
+    np = r + dim * nvolaparams
     coefs = zeros(np)
     Htt = zeros(np-2, np-2)
     dt = zeros(n, np-2)
-
     for i = 1:dim
         w=1+(i-1)*nvolaparams:1+i*nvolaparams-1
-        coefs[2 .+ w] .= univariatespecs[i].spec.coefs
+        coefs[r .+ w] .= univariatespecs[i].spec.coefs
         Htt[w, w] .= -informationmatrix(univariatespecs[i], expected=false)[1:nvolaparams, 1:nvolaparams]
         dt[:, w] = scores(univariatespecs[i])[:, 1:nvolaparams]
     end
@@ -49,7 +49,7 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
         f = x -> LL2step(x, R, resids, p, q)
         res = optimize(x->-sum(f(x)), [.05, .9], BFGS(), autodiff=:forward)
         @show x = Optim.minimizer(res)
-        coefs[1:2] .= x
+        coefs[1:r] .= x
         Hpp = ForwardDiff.hessian(x->sum(f(x)), x)/n
         dp = ForwardDiff.jacobian(f, x)
 
@@ -57,8 +57,8 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
         # Hpt = ForwardDiff.hessian(g, coefs)[1:2, 3:end]/n
         # use finite differences instead, because we don't need the whole
         # Hessian, and I couldn't figure out how to do this with ForwardDiff
-        g = (x, y) -> sum(LL2step_full(x, y, R, data, p, q))
-        dg = x -> ForwardDiff.gradient(y->g(x, y), coefs[3:end])/n
+        g = (x, y) -> sum(LL2step_full(VS, x, y, R, data, p, q))
+        dg = x -> ForwardDiff.gradient(y->g(x, y), coefs[1+r:end])/n
         h = 1e-7
         e1 = [h, 0]
         e2 = [0, h]
@@ -73,19 +73,19 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
         f = x -> LL2step_pairs(x, R, resids, p, q)
         res = optimize(x->-sum(f(x)), [.05, .9], BFGS(), autodiff=:forward)
         @show x = Optim.minimizer(res)
-        coefs[1:2] = x
+        #return
+        coefs[1:r] = x
         g = x -> LL2step_pairs(x, R, resids, p, q, true)
         sc = ForwardDiff.jacobian(g, x)
         I = sc'*sc/n/(dim-1)
 
-        h = x-> LL2step_pairs_full(x, R, data, p, q)
+        h = x-> LL2step_pairs_full(VS, x, R, data, p, q)
         H = ForwardDiff.hessian(x->sum(h(x)), coefs)/n/(dim-1)
-        J = H[1:2, 1:2] - H[1:2, 3:end] * inv(H[3:end, 3:end]) * H[1:2, 3:end]'
-        @show std = sqrt.(diag(inv(J)*I*inv(J))/n) # from the 2014 version of the paper
-
+        #J = H[1:r, 1:r] - H[1:r, r+1:end] * inv(H[1+r:end, 1+r:end]) * H[1:r, 1+r:end]'
+        #@show std = sqrt.(diag(inv(J)*I*inv(J))/n) # from the 2014 version of the paper
         as = hcat(dt, sc) # all scores
         Sig = as'*as/n/dim
-        Jnt = hcat(inv(H[1:2, 1:2])*H[1:2, 3:end]*inv(Htt), -inv(H[1:2, 1:2]))
+        Jnt = hcat(inv(H[1:r, 1:r])*H[1:r, 1+r:end]*inv(Htt), -inv(H[1:r, 1:r]))
         @show std2=sqrt.(diag(Jnt*Sig*Jnt'/n)) # from the 2018 version
     else error("No method :$method.")
     end
@@ -93,16 +93,16 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
 end
 
 #LC(Θ, ϕ) in Engle (2002)
-function LL2step_full(dcccoef::Array{T}, garchcoef::Array{T2}, R, data, p, q) where {T, T2}
+function LL2step_full(VS, dcccoef::Array{T}, garchcoef::Array{T2}, R, data, p, q) where {T, T2}
     n, dims = size(data)
     resids = Array{T2}(undef, size(data))
     for i = 1:dims
-        params = garchcoef[1+(i-1)*nparams(GARCH{1, 1}):1+i*nparams(GARCH{1, 1})-1]
+        params = garchcoef[1+(i-1)*nparams(VS):1+i*nparams(VS)-1]
         ht = T2[]
         lht = T2[]
         zt = T2[]
         at = T2[]
-        loglik!(ht, lht, zt, at, GARCH{1, 1, Float64}, StdNormal{Float64}, NoIntercept(), data[:, i], params)
+        loglik!(ht, lht, zt, at, VS, StdNormal{Float64}, NoIntercept(), data[:, i], params)
         resids[:, i] = zt
     end
     LL2step2(dcccoef, R, resids, p, q)
@@ -171,18 +171,18 @@ function LL2step_pairs(coef::Array{T}, R, resids::Array{T2}, p, q, doall=false) 
     end
     sum(LL, dims=2)
 end
-function LL2step_pairs_full(coef::Array{T}, R, data, p, q) where {T, T2}
-    dcccoef = coef[1:2]
-    garchcoef = coef[3:end]
+function LL2step_pairs_full(VS::Type{<:VolatilitySpec}, coef::Array{T}, R, data, p, q) where {T, T2}
+    dcccoef = coef[1:p+q]
+    garchcoef = coef[p+q+1:end]
     n, dims = size(data)
     resids = Array{T}(undef, size(data))
     for i = 1:dims
-        params = garchcoef[1+(i-1)*nparams(GARCH{1, 1}):1+i*nparams(GARCH{1, 1})-1]
+        params = garchcoef[1+(i-1)*nparams(VS):1+i*nparams(VS)-1]
         ht = T[]
         lht = T[]
         zt = T[]
         at = T[]
-        loglik!(ht, lht, zt, at, GARCH{1, 1, Float64}, StdNormal{Float64}, NoIntercept(), data[:, i], params)
+        loglik!(ht, lht, zt, at, VS, StdNormal{Float64}, NoIntercept(), data[:, i], params)
         resids[:, i] = zt
     end
     LL2step_pairs(dcccoef, R, resids, p, q)
