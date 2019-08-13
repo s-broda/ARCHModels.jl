@@ -1,9 +1,9 @@
 
 const DOW29 = readdlm(joinpath(dirname(pathof(ARCHModels)), "data", "dow29.csv"), ',')
 
-abstract type MultivariateVolatilitySpec{T, d} end
-
 abstract type MultivariateStandardizedDistribution{T, d} <: Distribution{Multivariate, Continuous} end
+
+abstract type MultivariateVolatilitySpec{T, d} end
 
 mutable struct MultivariateARCHModel{T<:AbstractFloat,
 									 d,
@@ -17,18 +17,18 @@ mutable struct MultivariateARCHModel{T<:AbstractFloat,
     meanspec::MS
 	fitted::Bool
     function MultivariateARCHModel{T, d, VS, SD, MS}(spec, data, dist, meanspec, fitted) where {T, d, VS, SD, MS}
-        new(spec, d, data, dist, meanspec, fitted)
+        new(spec, data, dist, meanspec, fitted)
     end
 end
 
 function MultivariateARCHModel(spec::VS,
 							   data::Matrix{T},
-          					   dist::SD=MultivariateStdNormal{T}(),
+          					   dist::SD=MultivariateStdNormal{T, d}(),
           				 	   meanspec::MS=NoIntercept{T}(),
 		  			 		   fitted::Bool=false
           					  ) where {T<:AbstractFloat,
 							   		   d,
-                    			 	   VS<:MultivariateVolatilitySpec,
+                    			 	   VS<:MultivariateVolatilitySpec{T, d},
                    					   SD<:MultivariateStandardizedDistribution,
                    					   MS<:MeanSpec
                    			 		  }
