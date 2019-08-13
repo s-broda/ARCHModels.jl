@@ -12,19 +12,19 @@ DCC{p, q}(R::Matrix{T}, coefs::Vector{T}, univariatespecs::Vector{VS}) where {p,
 
 nparams(::Type{DCC{p, q}}) where {p, q} = p+q
 
-fit(::Type{<:DCC}, data; method=:largescale) = fit(DCC{1, 1}, data; method=method)
+fit(::Type{<:DCC}, data; meanspec=Intercept{T}, method=:largescale) = fit(DCC{1, 1}, data; meanspec=meanspec, method=method)
 
-fit(DCCspec::Type{<:DCC{p, q}}, data; method=:largescale) where {p, q} = fit(DCC{p, q, GARCH{1, 1}}, data; method=method)
+fit(DCCspec::Type{<:DCC{p, q}}, data; meanspec=Intercept{T},  method=:largescale) where {p, q} = fit(DCC{p, q, GARCH{1, 1}}, data; meanspec=meanspec, method=method)
 
-function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; method=:largescale) where {p, q, VS<: VolatilitySpec, T, d}
+function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale) where {p, q, VS<: VolatilitySpec, T, d}
     n, dim = size(data)
     resids = similar(data)
-    m = fit(VS, data[:, 1], meanspec=NoIntercept())
+    m = fit(VS, data[:, 1], meanspec=meanspec)
     resids[:, 1] = residuals(m)
     univariatespecs = Vector{typeof(m)}(undef, dim)
     univariatespecs[1] = m
     Threads.@threads for i = 2:dim
-        m = fit(VS, data[:, i], meanspec=NoIntercept())
+        m = fit(VS, data[:, i], meanspec=meanspec)
         univariatespecs[i] = m
         resids[:, i] = residuals(m)
     end
@@ -33,15 +33,17 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; method=:largescale
     iD = inv(D)
     R = iD * Σ * iD
     R = (R + R') / 2
-    np = 2 + dim * nparams(GARCH{1, 1})
+    nvolaparams = nparams(GARCH{1, 1})
+    np = 2 + dim * nvolaparams
     coefs = zeros(np)
     Htt = zeros(np-2, np-2)
     dt = zeros(n, np-2)
+
     for i = 1:dim
-        w=1+(i-1)*nparams(GARCH{1, 1}):1+i*nparams(GARCH{1, 1})-1
+        w=1+(i-1)*nvolaparams:1+i*nvolaparams-1
         coefs[2 .+ w] .= univariatespecs[i].spec.coefs
-        Htt[w, w] .= -informationmatrix(univariatespecs[i], expected=false)
-        dt[:, w] = scores(univariatespecs[i])
+        Htt[w, w] .= -informationmatrix(univariatespecs[i], expected=false)[1:nvolaparams, 1:nvolaparams]
+        dt[:, w] = scores(univariatespecs[i])[:, 1:nvolaparams]
     end
     if method == :twostep
         f = x -> LL2step(x, R, resids, p, q)
@@ -87,7 +89,7 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; method=:largescale
         @show std2=sqrt.(diag(Jnt*Sig*Jnt'/n)) # from the 2018 version
     else error("No method :$method.")
     end
-    return MultivariateARCHModel(DCC{p, q}(R, x, getproperty.(univariatespecs, :spec)), data)
+    return MultivariateARCHModel(DCC{p, q}(R, x, getproperty.(univariatespecs, :spec)), data, MultivariateStdNormal{T, dim}(), getproperty.(univariatespecs, :meanspec))
 end
 
 #LC(Θ, ϕ) in Engle (2002)

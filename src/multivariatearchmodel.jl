@@ -14,7 +14,7 @@ mutable struct MultivariateARCHModel{T<:AbstractFloat,
     spec::VS
     data::Matrix{T}
     dist::SD
-    meanspec::MS
+    meanspec::Vector{MS}
 	fitted::Bool
     function MultivariateARCHModel{T, d, VS, SD, MS}(spec, data, dist, meanspec, fitted) where {T, d, VS, SD, MS}
         new(spec, data, dist, meanspec, fitted)
@@ -24,7 +24,7 @@ end
 function MultivariateARCHModel(spec::VS,
 							   data::Matrix{T},
           					   dist::SD=MultivariateStdNormal{T, d}(),
-          				 	   meanspec::MS=NoIntercept{T}(),
+          				 	   meanspec::Vector{MS}=[NoIntercept{T}() for _ in 1:d], # should come up with a proper multivariate version
 		  			 		   fitted::Bool=false
           					  ) where {T<:AbstractFloat,
 							   		   d,
