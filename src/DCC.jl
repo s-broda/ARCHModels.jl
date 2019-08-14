@@ -29,7 +29,8 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
         univariatespecs[i] = m
         resids[:, i] = residuals(m)
     end
-    method == :largescale ? Σ = analytical_shrinkage(resids) : Σ = cov(resids)
+    #method == :largescale ? Σ = analytical_shrinkage(resids) :
+    Σ = cov(resids)
     D = sqrt(Diagonal(Σ))
     iD = inv(D)
     R = iD * Σ * iD
@@ -37,8 +38,8 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
     nvolaparams = nparams(VS)
     np = r + dim * nvolaparams
     coefs = zeros(np)
-    Htt = zeros(np-2, np-2)
-    dt = zeros(n, np-2)
+    Htt = zeros(np-p-q, np-p-q)
+    dt = zeros(n, np-p-q)
     for i = 1:dim
         w=1+(i-1)*nvolaparams:1+i*nvolaparams-1
         coefs[r .+ w] .= univariatespecs[i].spec.coefs
@@ -63,15 +64,16 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
         g = (x, y) -> sum(LL2step_full(DCCspec, VS, x, y, R, data))
         dg = x -> ForwardDiff.gradient(y->g(x, y), coefs[1+r:end])/n
         h = 1e-7
-        e1 = [h, 0]
-        e2 = [0, h]
-        dg0 = dg(x)
-        j1 = (dg(x+e1)-dg0)/h
-        j2 = (dg(x+e2)-dg0)/h
-        Hpt = [j1'; j2']
+        Hpt = zeros(p+q, dim*nparams(VS))
+        for j=1:p+q
+            dg0 = dg(x)
+            xp = copy(x); xp[j] += h
+            ddg = (dg(xp)-dg0)/h
+            Hpt[j, :] = ddg
+        end
         A = dp-(Hpt*inv(Htt)*dt')'
         C = inv(Hpp)*A'*A*inv(Hpp)/n^2
-        @show std = sqrt(Diagonal(C))
+        @show std = sqrt.(diag(C))
     elseif method==:largescale
         f = x -> LL2step_pairs(DCCspec, x, R, resids)
         res = optimize(x->-sum(f(x)), x0, BFGS(), autodiff=:forward)
@@ -80,12 +82,12 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
         coefs[1:r] = x
         g = x -> LL2step_pairs(DCCspec, x, R, resids, true)
         sc = ForwardDiff.jacobian(g, x)
-        I = sc'*sc/n/(dim-1)
+        I = sc'*sc/n/dim
 
         h = x-> LL2step_pairs_full(DCCspec, VS, x, R, data)
-        H = ForwardDiff.hessian(x->sum(h(x)), coefs)/n/(dim-1)
-        #J = H[1:r, 1:r] - H[1:r, r+1:end] * inv(H[1+r:end, 1+r:end]) * H[1:r, 1+r:end]'
-        #@show std = sqrt.(diag(inv(J)*I*inv(J))/n) # from the 2014 version of the paper
+        H = ForwardDiff.hessian(x->sum(h(x)), coefs)/n/dim
+        J = H[1:r, 1:r] - H[1:r, r+1:end] * inv(H[1+r:end, 1+r:end]) * H[1:r, 1+r:end]'
+        @show std = sqrt.(diag(inv(J)*I*inv(J))/n) # from the 2014 version of the paper
         as = hcat(dt, sc) # all scores
         Sig = as'*as/n/dim
         Jnt = hcat(inv(H[1:r, 1:r])*H[1:r, 1+r:end]*inv(Htt), -inv(H[1:r, 1:r]))
@@ -134,24 +136,65 @@ function LL2step(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, R, resids::Array{T2
     LL = zeros(T, n)
     all(0 .< coef .< 1) || (fill!(LL, T(-Inf)); return LL)
     abs(sum(coef))>1 && (fill!(LL, T(-Inf)); return LL)
+    f = 1 - sum(coef)
 
-    b = coef[1]
-    a = coef[2]
 
     e = @view resids[1, :]
-    Rt = Symmetric(zeros(T, dims, dims))
-    Rt .= Symmetric(R)
-    RD5 = Diagonal(zeros(T, dims))
+    Rt = [zeros(T, dims, dims) for _ in 1:n]
     R = Symmetric(R)
-    C = cholesky(Rt).L
+    Rt[1:max(p,q)] .= [R for _ in 1:max(p,q)]
+    RD5 = Diagonal(zeros(T, dims))
+    C = cholesky(Rt[1]).L
     u = inv(C) * e
     for t=1:n
         if t > max(p, q)
-            Rt .= Symmetric(R* (1-a-b)  .+ a * Symmetric(e*e') .+ b * Rt)
-            RD5 .= inv(sqrt(Diagonal(Rt)))
-            Rt .= Symmetric(RD5 * Rt * RD5)
-            #Rt .= (Rt + Rt')/2
-            C .= cholesky(Rt).L
+            Rt[t] .= R * f
+            for i = 1:p
+                Rt[t] .+=  coef[i] * Rt[t-i]
+            end
+            for i = 1:q
+                Rt[t] .+= coef[p+i]  * resids[t-i, :]*resids[t-i, :]'
+            end
+            RD5 .= inv(sqrt(Diagonal(Rt[t])))
+            Rt[t] .= Symmetric(RD5 * Rt[t] * RD5)
+            C .= cholesky(Rt[t]).L
+        end
+        e = @view resids[t, :]
+        u .= inv(C) * e
+        L = (dot(e, e) - dot(u, u))/2-logdet(C)
+        LL[t] = L
+    end
+    LL
+end
+
+#same as LL2step, except for init type
+function LL2step2(DCCspec::Type{<:DCC{p, q}}, coef::Array{T2}, R, resids::Array{T}) where {T, T2, p, q}
+    n, dims = size(resids)
+    LL = zeros(T, n)
+    all(0 .< coef .< 1) || (fill!(LL, T(-Inf)); return LL)
+    abs(sum(coef))>1 && (fill!(LL, T(-Inf)); return LL)
+    f = 1 - sum(coef)
+
+
+    e = @view resids[1, :]
+    Rt = [zeros(T, dims, dims) for _ in 1:n]
+    R = Symmetric(R)
+    Rt[1:max(p,q)] .= [R for _ in 1:max(p,q)]
+    RD5 = Diagonal(zeros(T, dims))
+    C = cholesky(Rt[1]).L
+    u = inv(C) * e
+    for t=1:n
+        if t > max(p, q)
+            Rt[t] .= R * f
+            for i = 1:p
+                Rt[t] .+=  coef[i] * Rt[t-i]
+            end
+            for i = 1:q
+                Rt[t] .+= coef[p+i]  * resids[t-i, :]*resids[t-i, :]'
+            end
+            RD5 .= inv(sqrt(Diagonal(Rt[t])))
+            Rt[t] .= Symmetric(RD5 * Rt[t] * RD5)
+            C .= cholesky(Rt[t]).L
         end
         e = @view resids[t, :]
         u .= inv(C) * e
@@ -202,15 +245,18 @@ function ll(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, rho, resids, doall=false
     LL = zeros(T, len)
 
     rt = zeros(T, n) # should switch this to circbuff for speed
-    s1 = T[1]
-    s2 = T[1]
+    s1 = T(1)
+    s2 = T(1)
     fill!(rt, rho)
     for t=1:n
         if t > max(p, q)
+            s1 = T(1)
+            s2 = T(1)
+            rt[t] = rho * f
             for i = 1:q
-                s1 = 1 + coef[p+i] * (resids[t-i, 1]^2 - 1)
-                s2 = 1 + coef[p+i] * (resids[t-i, 2]^2 - 1)
-                rt[t] = rho * f + coef[p+i] * resids[t-i, 1] * resids[t-i, 2]
+                s1 += coef[p+i] * (resids[t-i, 1]^2 - 1)
+                s2 += coef[p+i] * (resids[t-i, 2]^2 - 1)
+                rt[t] += coef[p+i] * resids[t-i, 1] * resids[t-i, 2]
             end
             for i = 1:p
                 rt[t] += coef[i] * rt[t-i]
@@ -230,37 +276,5 @@ function ll(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, rho, resids, doall=false
             LL[1] -= L
         end
      end
-    LL
-end
-
-
-# same as LL2step except for the inititalization type.
-function LL2step2(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, R, resids::Array{T2}) where {p, q, T, T2}
-    n, dims = size(resids)
-    LL = zeros(T2, n)
-    all([0, 0] .< coef .< [1, 1]) || (fill!(LL, T2(-Inf)); return LL)
-    b = coef[1]
-    a = coef[2]
-    abs(a+b)>1 && (fill!(LL, T2(-Inf)); return LL)
-    e = @view resids[1, :]
-    Rt = Symmetric(zeros(T2, dims, dims))
-    Rt .= Symmetric(R)
-    RD5 = Diagonal(zeros(T2, dims))
-    R = Symmetric(R)
-    C = cholesky(Rt).L
-    u = inv(C) * e
-    for t=1:n
-        if t > max(p, q)
-            Rt .= Symmetric(R* (1-a-b)  .+ a * Symmetric(e*e') .+ b * Rt)
-            RD5 .= inv(sqrt(Diagonal(Rt)))
-            Rt .= Symmetric(RD5 * Rt * RD5)
-            #Rt .= (Rt + Rt')/2
-            C .= cholesky(Rt).L
-        end
-        e = @view resids[t, :]
-        u .= inv(C) * e
-        L = (dot(e, e) - dot(u, u))/2-logdet(C)
-        LL[t] = L
-    end
     LL
 end
