@@ -12,9 +12,9 @@ DCC{p, q}(R::Matrix{T}, coefs::Vector{T}, univariatespecs::Vector{VS}) where {p,
 
 nparams(::Type{DCC{p, q}}) where {p, q} = p+q
 
-fit(::Type{<:DCC}, data; meanspec=Intercept{T}, method=:largescale) = fit(DCC{1, 1}, data; meanspec=meanspec, method=method)
+fit(::Type{<:DCC}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale) where {T} = fit(DCC{1, 1}, data; meanspec=meanspec, method=method)
 
-fit(DCCspec::Type{<:DCC{p, q}}, data; meanspec=Intercept{T},  method=:largescale) where {p, q} = fit(DCC{p, q, GARCH{1, 1}}, data; meanspec=meanspec, method=method)
+fit(DCCspec::Type{<:DCC{p, q}}, data::Matrix{T}; meanspec=Intercept{T},  method=:largescale) where {p, q, T} = fit(DCC{p, q, GARCH{1, 1}}, data; meanspec=meanspec, method=method)
 
 function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale) where {p, q, VS<: VolatilitySpec, T, d}
     n, dim = size(data)
