@@ -14,9 +14,6 @@ for (j, ticker) in enumerate(tickers)
             filename = joinpath(datadir, "$ticker.csv")
             isfile(joinpath(datadir, "$ticker.csv")) || download("http://quotes.wsj.com/$ticker/historical-prices/download?num_rows=100000000&range_days=100000000&startDate=03/19/2008&endDate=04/11/2019", filename)
             data = parse.(Float64, readdlm(joinpath(datadir, "$ticker.csv"), ',', String, skipstart=1)[:, 5])
-            if ticker == "CSCO" #wsj misses the quote for June 14th, 2010
-                insert!(data, 2223, 22.76)
-            end
             length(data) == 2786 || error("Download failed for $ticker.")
             alldata[:, j] .= data
             rm(filename)
