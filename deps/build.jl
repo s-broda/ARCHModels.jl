@@ -20,6 +20,7 @@ for (j, ticker) in enumerate(tickers)
         catch e
             @delay_retry if 1==1 end
         end
+        alldata = 100 * diff(log.(alldata), dims=1)
         open(joinpath(datadir, "dow29.csv"), "w") do io
              writedlm(io, alldata, ',')
         end
