@@ -245,7 +245,7 @@ end
     am = simulate(GARCH{1, 1}([1., .9, .05]), 1999; meanspec=reg, warmup=0)
     @test predict(am, :return) ≈ 1.2174653422550268
     data = DataFrame(X=ones(1974), Y=BG96)
-    model = lm(@formula(Y ~ X-1), data)
+    model = lm(@formula(Y ~ -1 + X), data)
     am = fit(GARCH{1, 1}, model)
     @test all(isapprox(coef(am), coef(fit(GARCH{1, 1}, BG96, meanspec=Intercept)), rtol=1e-4))
     @test coefnames(am)[end] == "X"
