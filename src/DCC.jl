@@ -2,13 +2,15 @@ struct DCC{p, q, VS<:VolatilitySpec, T<:AbstractFloat, d} <: MultivariateVolatil
     R::Matrix{T}
     coefs::Vector{T}
     univariatespecs::Vector{VS}
-    function DCC{p, q, VS, T, d}(R::Array{T}, coefs::Vector{T}, univariatespecs:: Vector{VS}) where {p, q, T, VS<:VolatilitySpec, d}
+    method::Symbol
+    function DCC{p, q, VS, T, d}(R::Array{T}, coefs::Vector{T}, univariatespecs:: Vector{VS}, method::Symbol) where {p, q, T, VS<:VolatilitySpec, d}
         length(coefs) == nparams(DCC{p, q})  || throw(NumParamError(nparams(DCC{p, q}), length(coefs)))
         @assert d == length(univariatespecs)
-        new{p, q, VS, T, d}(R, coefs, univariatespecs)
+        @assert method==:twostep || method==:largescale
+        new{p, q, VS, T, d}(R, coefs, univariatespecs, method)
     end
 end
-DCC{p, q}(R::Matrix{T}, coefs::Vector{T}, univariatespecs::Vector{VS}) where {p, q, T, VS<:VolatilitySpec{T}} = DCC{p, q, VS, T, length(univariatespecs)}(R, coefs, univariatespecs)
+DCC{p, q}(R::Matrix{T}, coefs::Vector{T}, univariatespecs::Vector{VS}; method::Symbol=:largescale) where {p, q, T, VS<:VolatilitySpec{T}} = DCC{p, q, VS, T, length(univariatespecs)}(R, coefs, univariatespecs, method)
 
 nparams(::Type{DCC{p, q}}) where {p, q} = p+q
 
@@ -93,7 +95,7 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
         @show std=sqrt.(diag(Jnt*Sig*Jnt'/n)) # from the 2018 version
     else error("No method :$method.")
     end
-    return MultivariateARCHModel(DCC{p, q}(R, x, getproperty.(univariatespecs, :spec)), data, MultivariateStdNormal{T, dim}(), getproperty.(univariatespecs, :meanspec), true)
+    return MultivariateARCHModel(DCC{p, q}(R, x, getproperty.(univariatespecs, :spec); method=method), data, MultivariateStdNormal{T, dim}(), getproperty.(univariatespecs, :meanspec), true)
 end
 
 #LC(Θ, ϕ) in Engle (2002)
