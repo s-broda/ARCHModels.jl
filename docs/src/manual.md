@@ -198,7 +198,7 @@ julia> am2.spec.coefs == am.spec.coefs
 true
 ```
 ### Integration with GLM.jl
-Assuming the [GLM](https://github.com/JuliaStats/GLM.jl) (and possibly [DataFrames](https://github.com/JuliaData/DataFrames.jl)) packages are installed, it is also possible to pass a `LinearModel` (or `DataFrameRegressionModel`) to [`fit`](@ref) instead of a data vector. This is equivalent to using a [`Regression`](@ref) as a mean specification. In the following example, we fit a linear model with [`GARCH{1, 1}`](@ref) errors, where the design matrix consists of a breaking intercept and time trend:
+Assuming the [GLM](https://github.com/JuliaStats/GLM.jl) (and possibly [DataFrames](https://github.com/JuliaData/DataFrames.jl)) packages are installed, it is also possible to pass a `LinearModel` (or `TableRegressionModel`) to [`fit`](@ref) instead of a data vector. This is equivalent to using a [`Regression`](@ref) as a mean specification. In the following example, we fit a linear model with [`GARCH{1, 1}`](@ref) errors, where the design matrix consists of a breaking intercept and time trend:
 ```jldoctest MANUAL
 julia> using GLM, DataFrames
 
