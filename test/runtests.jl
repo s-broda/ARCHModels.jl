@@ -384,6 +384,6 @@ end
     @test ARCHModels.testname(DQ) == "Engle and Manganelli's (2004) DQ test (out of sample)"
 end
 @testset "multivariate" begin
-    @test all(isapprox(fit(DCC{1, 1}, DOW29[:, 1:2]; method=:largescale).spec.coefs, [0.8912884521017908, 0.05515419379547665]))
-    @test all(isapprox(fit(DCC{1, 1}, DOW29[:, 1:2]; method=:twostep).spec.coefs,    [0.8912161306136979, 0.055139392936998946]))
+    @test all(isapprox(fit(DCC{1, 1}, DOW29[:, 1:2]; method=:largescale).spec.coefs, [0.8912884521017908, 0.05515419379547665], rtol=1e-4))
+    @test all(isapprox(fit(DCC{1, 1}, DOW29[:, 1:2]; method=:twostep).spec.coefs,    [0.8912161306136979, 0.055139392936998946], rtol=1e-4))
 end
