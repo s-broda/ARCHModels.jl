@@ -29,8 +29,7 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
         univariatespecs[i] = m
         resids[:, i] = residuals(m)
     end
-    #method == :largescale ? Σ = analytical_shrinkage(resids) :
-    Σ = cov(resids)
+    method == :largescale ? Σ = analytical_shrinkage(resids) : Σ = cov(resids)
     D = sqrt(Diagonal(Σ))
     iD = inv(D)
     R = iD * Σ * iD
