@@ -53,46 +53,13 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
     if method == :twostep
         f = x -> LL2step(DCCspec, x, R, resids)
         res = optimize(x->-sum(f(x)), x0, BFGS(), autodiff=:forward)
-        @show x = Optim.minimizer(res)
+        x = Optim.minimizer(res)
         coefs[1:r] .= x
-        Hpp = ForwardDiff.hessian(x->sum(f(x)), x)/n
-        dp = ForwardDiff.jacobian(f, x)
-
-        # g = x -> sum(LL2step_full(x, R, data, p, q))
-        # Hpt = ForwardDiff.hessian(g, coefs)[1:2, 3:end]/n
-        # use finite differences instead, because we don't need the whole
-        # Hessian, and I couldn't figure out how to do this with ForwardDiff
-        g = (x, y) -> sum(LL2step_full(DCCspec, VS, x, y, R, data))
-        dg = x -> ForwardDiff.gradient(y->g(x, y), coefs[1+r:end])/n
-        h = 1e-7
-        Hpt = zeros(p+q, dim*nparams(VS))
-        for j=1:p+q
-            dg0 = dg(x)
-            xp = copy(x); xp[j] += h
-            ddg = (dg(xp)-dg0)/h
-            Hpt[j, :] = ddg
-        end
-        A = dp-(Hpt*inv(Htt)*dt')'
-        C = inv(Hpp)*A'*A*inv(Hpp)/n^2
-        @show std = sqrt.(diag(C))
     elseif method==:largescale
         f = x -> LL2step_pairs(DCCspec, x, R, resids)
         res = optimize(x->-sum(f(x)), x0, BFGS(), autodiff=:forward)
-        @show x = Optim.minimizer(res)
-        #return
-        coefs[1:r] = x
-        g = x -> LL2step_pairs(DCCspec, x, R, resids, true)
-        sc = ForwardDiff.jacobian(g, x)
-        I = sc'*sc/n/dim
-
-        h = x-> LL2step_pairs_full(DCCspec, VS, x, R, data)
-        H = ForwardDiff.hessian(x->sum(h(x)), coefs)/n/dim
-        J = H[1:r, 1:r] - H[1:r, r+1:end] * inv(H[1+r:end, 1+r:end]) * H[1:r, 1+r:end]'
-        @show std = sqrt.(diag(inv(J)*I*inv(J))/n) # from the 2014 version of the paper
-        as = hcat(dt, sc) # all scores
-        Sig = as'*as/n/dim
-        Jnt = hcat(inv(H[1:r, 1:r])*H[1:r, 1+r:end]*inv(Htt), -inv(H[1:r, 1:r]))
-        @show std=sqrt.(diag(Jnt*Sig*Jnt'/n)) # from the 2018 version
+        x = Optim.minimizer(res)
+        coefs[1:r] = x        
     else error("No method :$method.")
     end
     return MultivariateARCHModel(DCC{p, q}(R, x, getproperty.(univariatespecs, :spec); method=method), data, MultivariateStdNormal{T, dim}(), getproperty.(univariatespecs, :meanspec), true)
@@ -278,4 +245,63 @@ function ll(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, rho, resids, doall=false
         end
      end
     LL
+end
+
+function stderror(am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, MVS<:DCC{p, q, VS}}
+    n, dim = size(am.data)
+    r = p + q
+    resids = similar(am.data)
+    nvolaparams = nparams(VS)
+    np = r + dim * nvolaparams
+    coefs = zeros(np)
+    coefs[1:r] = am.spec.coefs
+    Htt = zeros(np-p-q, np-p-q)
+    dt = zeros(n, np-p-q)
+    for i = 1:dim
+        m = UnivariateARCHModel(am.spec.univariatespecs[i], am.data[:, i]; meanspec=am.meanspec[i], fitted=true)
+        resids[:, i] = residuals(m)
+        w=1+(i-1)*nvolaparams:1+i*nvolaparams-1
+        coefs[r .+ w] .= m.spec.coefs
+        Htt[w, w] .= -informationmatrix(m, expected=false)[1:nvolaparams, 1:nvolaparams]
+        dt[:, w] = scores(m)[:, 1:nvolaparams]
+    end
+
+    if am.spec.method == :twostep
+        f = x -> LL2step(MVS, x, am.spec.R, resids)
+        Hpp = ForwardDiff.hessian(x->sum(f(x)), coefs[1:r])/n
+        dp = ForwardDiff.jacobian(f, coefs[1:r])
+
+        # g = x -> sum(LL2step_full(x, R, data, p, q))
+        # Hpt = ForwardDiff.hessian(g, coefs)[1:2, 3:end]/n
+        # use finite differences instead, because we don't need the whole
+        # Hessian, and I couldn't figure out how to do this with ForwardDiff
+        g = (x, y) -> sum(LL2step_full(MVS, VS, x, y, am.spec.R, am.data))
+        dg = x -> ForwardDiff.gradient(y->g(x, y), coefs[1+r:end])/n
+        h = 1e-7
+        Hpt = zeros(p+q, dim*nparams(VS))
+        for j=1:p+q
+            dg0 = dg(coefs[1:r])
+            xp = copy(coefs[1:r]); xp[j] += h
+            ddg = (dg(xp)-dg0)/h
+            Hpt[j, :] = ddg
+        end
+        A = dp-(Hpt*inv(Htt)*dt')'
+        C = inv(Hpp)*A'*A*inv(Hpp)/n^2
+        std = sqrt.(diag(C))
+    elseif am.spec.method==:largescale
+        g = x -> LL2step_pairs(MVS, x, am.spec.R, resids, true)
+        sc = ForwardDiff.jacobian(g, coefs[1:r])
+        I = sc'*sc/n/dim
+        h = x-> LL2step_pairs_full(MVS, VS, x, am.spec.R, am.data)
+        H = ForwardDiff.hessian(x->sum(h(x)), coefs)/n/dim
+        #J = H[1:r, 1:r] - H[1:r, r+1:end] * inv(H[1+r:end, 1+r:end]) * H[1:r, 1+r:end]'
+        #std = sqrt.(diag(inv(J)*I*inv(J))/n) # from the 2014 version of the paper
+        as = hcat(dt, sc) # all scores
+        Sig = as'*as/n/dim
+        Jnt = hcat(inv(H[1:r, 1:r])*H[1:r, 1+r:end]*inv(Htt), -inv(H[1:r, 1:r]))
+        std=sqrt.(diag(Jnt*Sig*Jnt'/n)) # from the 2018 version
+    else
+        error("No method :$method.")
+    end
+    return std
 end
