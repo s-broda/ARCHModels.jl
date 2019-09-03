@@ -1,3 +1,6 @@
+#todo: stderror for mean params?
+#rename volaspec univariatevolaspec and make it and MultivariateVolatilitySpec subtypes? saves us show method
+
 struct DCC{p, q, VS<:VolatilitySpec, T<:AbstractFloat, d} <: MultivariateVolatilitySpec{T, d}
     R::Matrix{T}
     coefs::Vector{T}
@@ -59,7 +62,7 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
         f = x -> LL2step_pairs(DCCspec, x, R, resids)
         res = optimize(x->-sum(f(x)), x0, BFGS(), autodiff=:forward)
         x = Optim.minimizer(res)
-        coefs[1:r] = x        
+        coefs[1:r] = x
     else error("No method :$method.")
     end
     return MultivariateARCHModel(DCC{p, q}(R, x, getproperty.(univariatespecs, :spec); method=method), data, MultivariateStdNormal{T, dim}(), getproperty.(univariatespecs, :meanspec), true)
@@ -253,15 +256,13 @@ function stderror(am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, M
     resids = similar(am.data)
     nvolaparams = nparams(VS)
     np = r + dim * nvolaparams
-    coefs = zeros(np)
-    coefs[1:r] = am.spec.coefs
+    coefs = coef(am.spec)
     Htt = zeros(np-p-q, np-p-q)
     dt = zeros(n, np-p-q)
     for i = 1:dim
         m = UnivariateARCHModel(am.spec.univariatespecs[i], am.data[:, i]; meanspec=am.meanspec[i], fitted=true)
         resids[:, i] = residuals(m)
         w=1+(i-1)*nvolaparams:1+i*nvolaparams-1
-        coefs[r .+ w] .= m.spec.coefs
         Htt[w, w] .= -informationmatrix(m, expected=false)[1:nvolaparams, 1:nvolaparams]
         dt[:, w] = scores(m)[:, 1:nvolaparams]
     end
@@ -304,4 +305,72 @@ function stderror(am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, M
         error("No method :$method.")
     end
     return std
+end
+
+function coefnames(::Type{<:DCC{p, q, VS, T, d}}) where {p, q, VS, T, d}
+    names = Array{String, 1}(undef, p + q + d * nparams(VS))
+    names[1:p] .= (i -> "β"*subscript(i)).([1:p...])
+    names[p+1:p+q] .= (i -> "α"*subscript(i)).([1:q...])
+    for i = 1:d
+            names[p + q + 1 + (i-1) * nparams(VS) : p + q +  (i) * nparams(VS)] = coefnames(VS) .* subscript(i)
+    end
+    return names
+end
+
+function coef(spec::DCC{p, q, VS, T, d})  where {p, q, VS, T, d}
+    vcat(spec.coefs, [spec.univariatespecs[i].coefs for i in 1:d]...)
+end
+
+coef(am::MultivariateARCHModel{T, d, MVS}) where {T, d, MVS<:DCC} = coef(am.spec)
+
+
+coefnames(am::MultivariateARCHModel{T, d, MVS}) where {T, d, MVS<:DCC} = coefnames(MVS)
+
+function show(io::IO, spec::DCC{p, q, VS}) where {p, q, VS}
+    println(io, "DCC{$p, $q} - $(modname(VS)) specification.\n\n", CoefTable(spec.coefs, coefnames(typeof(spec))[1:p+q], ["DCC parameters:"]))
+end
+
+
+function show(io::IO, am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, MVS<:DCC{p, q, VS}}
+	if isfitted(am)
+		cc = coef(am)
+	    se = stderror(am)
+	    ccg, ccd, ccm = splitcoefs(cc, typeof(am.spec),
+	                               typeof(am.dist), am.meanspec
+	                               )
+	    seg, sed, sem = splitcoefs(se, typeof(am.spec),
+	                               typeof(am.dist), am.meanspec
+	                               )
+	    zzg = ccg ./ seg
+	    zzd = ccd ./ sed
+	    zzm = ccm ./ sem
+	    println(io, "\n", modname(typeof(am.spec)), " model with ",
+	            distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n")
+
+	    length(sem) > 0 && println(io, "Mean equation parameters:", "\n",
+	                               CoefTable(hcat(ccm, sem, zzm, 2.0 * normccdf.(abs.(zzm))),
+	                                         ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
+	                                         coefnames(am.meanspec), 4
+	                                         )
+	                              )
+	    println(io, "\nVolatility parameters:", "\n",
+	            CoefTable(hcat(ccg, seg, zzg, 2.0 * normccdf.(abs.(zzg))),
+	                      ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
+	                      coefnames(typeof(am.spec)), 4
+	                      )
+	            )
+	    length(sed) > 0 && println(io, "\nDistribution parameters:", "\n",
+	                               CoefTable(hcat(ccd, sed, zzd, 2.0 * normccdf.(abs.(zzd))),
+	                                         ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
+	                                         coefnames(typeof(am.dist)), 4
+	                                         )
+	                              )
+
+   else
+	   println(io, "\n", modname(typeof(am.spec)), " model with ",
+			   distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n\n")
+	   length(am.meanspec.coefs) > 0 && println(io, CoefTable(am.meanspec.coefs, coefnames(am.meanspec), ["Mean equation parameters:"]))
+	   println(io, CoefTable(am.spec.coefs, coefnames(typeof(am.spec)), ["Volatility parameters:   "]))
+	   length(am.dist.coefs) > 0 && println(io, CoefTable(am.dist.coefs, coefnames(typeof(am.dist)), ["Distribution parameters: "]))
+   end
 end
