@@ -12,7 +12,7 @@ Abstract supertype that mean specifications inherit from.
 abstract type MeanSpec{T} end
 
 
-nobs(am::ARCHModel) = length(am.data)
+nobs(am::ARCHModel) = size(am.data)[1]
 islinear(am::ARCHModel) = false
 isfitted(am::ARCHModel) = am.fitted
 
