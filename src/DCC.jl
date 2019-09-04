@@ -1,4 +1,3 @@
-#todo: stderror for mean params?
 #rename volaspec univariatevolaspec and make it and MultivariateVolatilitySpec subtypes? saves us show method
 
 struct DCC{p, q, VS<:VolatilitySpec, T<:AbstractFloat, d} <: MultivariateVolatilitySpec{T, d}
@@ -23,7 +22,6 @@ fit(DCCspec::Type{<:DCC{p, q}}, data::Matrix{T}; meanspec=Intercept{T},  method=
 
 function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale) where {p, q, VS<: VolatilitySpec, T, d}
     n, dim = size(data)
-    r = p + q
     resids = similar(data)
     m = fit(VS, data[:, 1], meanspec=meanspec)
     resids[:, 1] = residuals(m)
@@ -39,67 +37,21 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
     iD = inv(D)
     R = iD * Σ * iD
     R = (R + R') / 2
-    nvolaparams = nparams(VS)
-    np = r + dim * nvolaparams
-    coefs = zeros(np)
-    Htt = zeros(np-p-q, np-p-q)
-    dt = zeros(n, np-p-q)
-    for i = 1:dim
-        w=1+(i-1)*nvolaparams:1+i*nvolaparams-1
-        coefs[r .+ w] .= univariatespecs[i].spec.coefs
-        Htt[w, w] .= -informationmatrix(univariatespecs[i], expected=false)[1:nvolaparams, 1:nvolaparams]
-        dt[:, w] = scores(univariatespecs[i])[:, 1:nvolaparams]
-    end
     x0 = zeros(T, p+q)
     x0[1:p] .= 0.9/p
     x0[p+1:end] .= 0.05/q
     if method == :twostep
-        f = x -> LL2step(DCCspec, x, R, resids)
-        res = optimize(x->-sum(f(x)), x0, BFGS(), autodiff=:forward)
-        x = Optim.minimizer(res)
-        coefs[1:r] .= x
+        obj = LL2step
     elseif method==:largescale
-        f = x -> LL2step_pairs(DCCspec, x, R, resids)
-        res = optimize(x->-sum(f(x)), x0, BFGS(), autodiff=:forward)
-        x = Optim.minimizer(res)
-        coefs[1:r] = x
-    else error("No method :$method.")
+        obj = LL2step_pairs
+    else
+        error("No method :$method.")
     end
+    f = x -> obj(DCCspec, x, R, resids)
+    x = optimize(x->-sum(f(x)), x0, BFGS(), autodiff=:forward).minimizer
     return MultivariateARCHModel(DCC{p, q}(R, x, getproperty.(univariatespecs, :spec); method=method), data, MultivariateStdNormal{T, dim}(), getproperty.(univariatespecs, :meanspec), true)
 end
 
-#LC(Θ, ϕ) in Engle (2002)
-function LL2step_full(DCCspec::Type{<:DCC{p, q}}, VS, dcccoef::Array{T}, garchcoef::Array{T2}, R, data) where {T, T2, p, q}
-    n, dims = size(data)
-    resids = Array{T2}(undef, size(data))
-    for i = 1:dims
-        params = garchcoef[1+(i-1)*nparams(VS):1+i*nparams(VS)-1]
-        ht = T2[]
-        lht = T2[]
-        zt = T2[]
-        at = T2[]
-        loglik!(ht, lht, zt, at, VS, StdNormal{Float64}, NoIntercept(), data[:, i], params)
-        resids[:, i] = zt
-    end
-    LL2step2(DCCspec, dcccoef, R, resids)
-end
-
-#LC(Θ, ϕ) in Engle (2002). not actually the full log-likelihood
-#this method only needed for Hpt when using ForwardDiff
-# function LL2step_full(coef::Array{T}, R, data, p, q) where {T}
-#     n, dims = size(data)
-#     resids = Array{T}(undef, size(data))
-#     for i = 1:dims
-#         params = coef[3+(i-1)*nparams(GARCH{1, 1}):3+i*nparams(GARCH{1, 1})-1]
-#         ht = T[]
-#         lht = T[]
-#         zt = T[]
-#         at = T[]
-#         loglik!(ht, lht, zt, at, GARCH{1, 1, Float64}, StdNormal{Float64}, NoIntercept(), data[:, i], params)
-#         resids[:, i] = zt
-#     end
-#     LL2step(coef[1:2], R, resids, p, q)
-# end
 
 #LC(Θ_hat, ϕ) in Engle (2002)
 function LL2step(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, R, resids::Array{T2}) where {T, T2, p, q}
@@ -154,7 +106,7 @@ function LL2step2(DCCspec::Type{<:DCC{p, q}}, coef::Array{T2}, R, resids::Array{
     RD5 = Diagonal(zeros(T, dims))
     C = cholesky(Rt[1]).L
     u = inv(C) * e
-    for t=1:n
+    for t = 1:n
         if t > max(p, q)
             Rt[t] .= R * f
             for i = 1:p
@@ -191,23 +143,8 @@ function LL2step_pairs(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, R, resids::Ar
     end
     sum(LL, dims=2)
 end
-function LL2step_pairs_full(DCCspec::Type{<:DCC{p, q}}, VS::Type{<:VolatilitySpec}, coef::Array{T}, R, data) where {T, T2, p, q}
-    dcccoef = coef[1:p+q]
-    garchcoef = coef[p+q+1:end]
-    n, dims = size(data)
-    resids = Array{T}(undef, size(data))
-    for i = 1:dims
-        params = garchcoef[1+(i-1)*nparams(VS):1+i*nparams(VS)-1]
-        ht = T[]
-        lht = T[]
-        zt = T[]
-        at = T[]
-        loglik!(ht, lht, zt, at, VS, StdNormal{Float64}, NoIntercept(), data[:, i], params)
-        resids[:, i] = zt
-    end
-    LL2step_pairs(DCCspec::Type{<:DCC{p, q}}, dcccoef, R, resids)
-end
-function ll(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, rho, resids, doall=false) where {T, p, q}
+
+@inline function ll(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, rho, resids, doall=false) where {T, p, q}
     all(0 .< coef .< 1) || return T(-Inf)
     abs(sum(coef)) < 1 || return T(-Inf)
     n, dims = size(resids)
@@ -219,7 +156,7 @@ function ll(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, rho, resids, doall=false
     s1 = T(1)
     s2 = T(1)
     fill!(rt, rho)
-    for t=1:n
+    @inbounds for t=1:n
         if t > max(p, q)
             s1 = T(1)
             s2 = T(1)
@@ -250,21 +187,24 @@ function ll(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, rho, resids, doall=false
     LL
 end
 
+
 function stderror(am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, MVS<:DCC{p, q, VS}}
     n, dim = size(am.data)
     r = p + q
     resids = similar(am.data)
-    nvolaparams = nparams(VS)
-    np = r + dim * nvolaparams
-    coefs = coef(am.spec)
-    Htt = zeros(np-p-q, np-p-q)
-    dt = zeros(n, np-p-q)
-    for i = 1:dim
+    nunivariateparams = nparams(VS) + nparams(typeof(am.meanspec[1]))
+    np = r + dim * nunivariateparams
+    coefs = coef(am)
+    Htt = zeros(np - r, np - r)
+    dt = zeros(n, np - r)
+    stderrors = zeros(np)
+    Threads.@threads for i = 1:dim
         m = UnivariateARCHModel(am.spec.univariatespecs[i], am.data[:, i]; meanspec=am.meanspec[i], fitted=true)
         resids[:, i] = residuals(m)
-        w=1+(i-1)*nvolaparams:1+i*nvolaparams-1
-        Htt[w, w] .= -informationmatrix(m, expected=false)[1:nvolaparams, 1:nvolaparams]
-        dt[:, w] = scores(m)[:, 1:nvolaparams]
+        w=1+(i-1)*nunivariateparams:1+i*nunivariateparams-1
+        Htt[w, w] .= -informationmatrix(m, expected=false)
+        dt[:, w] = scores(m)
+        stderrors[r .+ w] = stderror(m)
     end
 
     if am.spec.method == :twostep
@@ -276,10 +216,10 @@ function stderror(am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, M
         # Hpt = ForwardDiff.hessian(g, coefs)[1:2, 3:end]/n
         # use finite differences instead, because we don't need the whole
         # Hessian, and I couldn't figure out how to do this with ForwardDiff
-        g = (x, y) -> sum(LL2step_full(MVS, VS, x, y, am.spec.R, am.data))
+        g = (x, y) -> sum(LL2step_full(MVS, VS, am.meanspec, x, y, am.spec.R, am.data))
         dg = x -> ForwardDiff.gradient(y->g(x, y), coefs[1+r:end])/n
         h = 1e-7
-        Hpt = zeros(p+q, dim*nparams(VS))
+        Hpt = zeros(p+q, dim * nunivariateparams)
         for j=1:p+q
             dg0 = dg(coefs[1:r])
             xp = copy(coefs[1:r]); xp[j] += h
@@ -288,24 +228,79 @@ function stderror(am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, M
         end
         A = dp-(Hpt*inv(Htt)*dt')'
         C = inv(Hpp)*A'*A*inv(Hpp)/n^2
-        std = sqrt.(diag(C))
+        stderrors[1:r] = sqrt.(diag(C))
     elseif am.spec.method==:largescale
         g = x -> LL2step_pairs(MVS, x, am.spec.R, resids, true)
         sc = ForwardDiff.jacobian(g, coefs[1:r])
         I = sc'*sc/n/dim
-        h = x-> LL2step_pairs_full(MVS, VS, x, am.spec.R, am.data)
+        h = x-> LL2step_pairs_full(MVS, VS, am.meanspec, x, am.spec.R, am.data)
         H = ForwardDiff.hessian(x->sum(h(x)), coefs)/n/dim
         #J = H[1:r, 1:r] - H[1:r, r+1:end] * inv(H[1+r:end, 1+r:end]) * H[1:r, 1+r:end]'
         #std = sqrt.(diag(inv(J)*I*inv(J))/n) # from the 2014 version of the paper
         as = hcat(dt, sc) # all scores
         Sig = as'*as/n/dim
         Jnt = hcat(inv(H[1:r, 1:r])*H[1:r, 1+r:end]*inv(Htt), -inv(H[1:r, 1:r]))
-        std=sqrt.(diag(Jnt*Sig*Jnt'/n)) # from the 2018 version
+        stderrors[1:r] .= sqrt.(diag(Jnt*Sig*Jnt'/n)) # from the 2018 version
     else
         error("No method :$method.")
     end
-    return std
+    return stderrors
 end
+
+
+
+#LC(Θ, ϕ) in Engle (2002)
+function LL2step_full(DCCspec::Type{<:DCC{p, q}}, VS, meanspec, dcccoef::Array{T}, garchcoef::Array{T2}, R, data) where {T, T2, p, q}
+    n, dims = size(data)
+    resids = Array{T2}(undef, size(data))
+    nunivariateparams = nparams(VS) + nparams(typeof(meanspec[1]))
+    for i = 1:dims
+        params = garchcoef[1+(i-1)*nunivariateparams:1+i*nunivariateparams-1]
+        ht = T2[]
+        lht = T2[]
+        zt = T2[]
+        at = T2[]
+        loglik!(ht, lht, zt, at, VS, StdNormal{Float64}, meanspec[i], data[:, i], params)
+        resids[:, i] = zt
+    end
+    LL2step2(DCCspec, dcccoef, R, resids)
+end
+
+#LC(Θ, ϕ) in Engle (2002). not actually the full log-likelihood
+#this method only needed for Hpt when using ForwardDiff
+# function LL2step_full(coef::Array{T}, R, data, p, q) where {T}
+#     n, dims = size(data)
+#     resids = Array{T}(undef, size(data))
+#     for i = 1:dims
+#         params = coef[3+(i-1)*nparams(GARCH{1, 1}):3+i*nparams(GARCH{1, 1})-1]
+#         ht = T[]
+#         lht = T[]
+#         zt = T[]
+#         at = T[]
+#         loglik!(ht, lht, zt, at, GARCH{1, 1, Float64}, StdNormal{Float64}, NoIntercept(), data[:, i], params)
+#         resids[:, i] = zt
+#     end
+#     LL2step(coef[1:2], R, resids, p, q)
+# end
+
+function LL2step_pairs_full(DCCspec::Type{<:DCC{p, q}}, VS::Type{<:VolatilitySpec}, meanspec, coef::Array{T}, R, data) where {T, T2, p, q}
+    dcccoef = coef[1:p+q]
+    garchcoef = coef[p+q+1:end]
+    n, dims = size(data)
+    resids = Array{T}(undef, size(data))
+    nunivariateparams = nparams(VS) + nparams(typeof(meanspec[1]))
+    for i = 1:dims
+        params = garchcoef[1+(i-1)*nunivariateparams:1+i*nunivariateparams-1]
+        ht = T[]
+        lht = T[]
+        zt = T[]
+        at = T[]
+        loglik!(ht, lht, zt, at, VS, StdNormal{Float64}, meanspec[i], data[:, i], params)
+        resids[:, i] = zt
+    end
+    LL2step_pairs(DCCspec::Type{<:DCC{p, q}}, dcccoef, R, resids)
+end
+
 
 function coefnames(::Type{<:DCC{p, q, VS, T, d}}) where {p, q, VS, T, d}
     names = Array{String, 1}(undef, p + q + d * nparams(VS))
@@ -321,10 +316,20 @@ function coef(spec::DCC{p, q, VS, T, d})  where {p, q, VS, T, d}
     vcat(spec.coefs, [spec.univariatespecs[i].coefs for i in 1:d]...)
 end
 
-coef(am::MultivariateARCHModel{T, d, MVS}) where {T, d, MVS<:DCC} = coef(am.spec)
+function coef(am::MultivariateARCHModel{T, d, MVS}) where {T, d, MVS<:DCC}
+    vcat(am.spec.coefs, [vcat(am.spec.univariatespecs[i].coefs, am.meanspec[i].coefs) for i in 1:d]...)
+end
 
-
-coefnames(am::MultivariateARCHModel{T, d, MVS}) where {T, d, MVS<:DCC} = coefnames(MVS)
+function coefnames(am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, MVS<:DCC{p, q, VS}}
+    nunivariateparams = nparams(VS) + nparams(typeof(am.meanspec[1]))
+    names = Array{String, 1}(undef, p + q + d * nunivariateparams)
+    names[1:p] .= (i -> "β"*subscript(i)).([1:p...])
+    names[p+1:p+q] .= (i -> "α"*subscript(i)).([1:q...])
+    for i = 1:d
+            names[p + q + 1 + (i-1) * nunivariateparams : p + q +  i * nunivariateparams] = vcat(coefnames(VS) .* subscript(i), coefnames(am.meanspec[i]) .* subscript(i))
+    end
+    return names
+end
 
 function show(io::IO, spec::DCC{p, q, VS}) where {p, q, VS}
     println(io, "DCC{$p, $q} - $(modname(VS)) specification.\n\n", CoefTable(spec.coefs, coefnames(typeof(spec))[1:p+q], ["DCC parameters:"]))
