@@ -302,13 +302,10 @@ function LL2step_pairs_full(DCCspec::Type{<:DCC{p, q}}, VS::Type{<:VolatilitySpe
 end
 
 
-function coefnames(::Type{<:DCC{p, q, VS, T, d}}) where {p, q, VS, T, d}
-    names = Array{String, 1}(undef, p + q + d * nparams(VS))
+function coefnames(::Type{<:DCC{p, q}}) where {p, q}
+    names = Array{String, 1}(undef, p + q)
     names[1:p] .= (i -> "β"*subscript(i)).([1:p...])
     names[p+1:p+q] .= (i -> "α"*subscript(i)).([1:q...])
-    for i = 1:d
-            names[p + q + 1 + (i-1) * nparams(VS) : p + q +  (i) * nparams(VS)] = coefnames(VS) .* subscript(i)
-    end
     return names
 end
 
@@ -323,8 +320,7 @@ end
 function coefnames(am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, MVS<:DCC{p, q, VS}}
     nunivariateparams = nparams(VS) + nparams(typeof(am.meanspec[1]))
     names = Array{String, 1}(undef, p + q + d * nunivariateparams)
-    names[1:p] .= (i -> "β"*subscript(i)).([1:p...])
-    names[p+1:p+q] .= (i -> "α"*subscript(i)).([1:q...])
+    names[1:p+q] .= coefnames(MVS)
     for i = 1:d
             names[p + q + 1 + (i-1) * nunivariateparams : p + q +  i * nunivariateparams] = vcat(coefnames(VS) .* subscript(i), coefnames(am.meanspec[i]) .* subscript(i))
     end
@@ -337,45 +333,25 @@ end
 
 
 function show(io::IO, am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, MVS<:DCC{p, q, VS}}
-	if isfitted(am)
-		cc = coef(am)
-	    se = stderror(am)
-	    ccg, ccd, ccm = splitcoefs(cc, typeof(am.spec),
-	                               typeof(am.dist), am.meanspec
-	                               )
-	    seg, sed, sem = splitcoefs(se, typeof(am.spec),
-	                               typeof(am.dist), am.meanspec
-	                               )
-	    zzg = ccg ./ seg
-	    zzd = ccd ./ sed
-	    zzm = ccm ./ sem
-	    println(io, "\n", modname(typeof(am.spec)), " model with ",
-	            distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n")
-
-	    length(sem) > 0 && println(io, "Mean equation parameters:", "\n",
-	                               CoefTable(hcat(ccm, sem, zzm, 2.0 * normccdf.(abs.(zzm))),
-	                                         ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
-	                                         coefnames(am.meanspec), 4
-	                                         )
-	                              )
-	    println(io, "\nVolatility parameters:", "\n",
-	            CoefTable(hcat(ccg, seg, zzg, 2.0 * normccdf.(abs.(zzg))),
+    r = p + q
+    cc = coef(am)[1:r]
+    println(io, "\n", "$d-dimensional DCC{$p, $q} - $(modname(VS)) - $(modname(typeof(am.meanspec[1]))) specification, T=", nobs(am), ".\n")
+    if isfitted(am) && (:se=>true) in io
+        se = stderror(am)[1:r]
+        z = cc ./ se
+        println(io, "DCC parameters, estimated by $(am.spec.method) procedure:", "\n",
+	            CoefTable(hcat(cc, se, z, 2.0 * normccdf.(abs.(z))),
 	                      ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
-	                      coefnames(typeof(am.spec)), 4
+	                      coefnames(MVS), 4
 	                      )
 	            )
-	    length(sed) > 0 && println(io, "\nDistribution parameters:", "\n",
-	                               CoefTable(hcat(ccd, sed, zzd, 2.0 * normccdf.(abs.(zzd))),
-	                                         ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
-	                                         coefnames(typeof(am.dist)), 4
-	                                         )
-	                              )
-
-   else
-	   println(io, "\n", modname(typeof(am.spec)), " model with ",
-			   distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n\n")
-	   length(am.meanspec.coefs) > 0 && println(io, CoefTable(am.meanspec.coefs, coefnames(am.meanspec), ["Mean equation parameters:"]))
-	   println(io, CoefTable(am.spec.coefs, coefnames(typeof(am.spec)), ["Volatility parameters:   "]))
-	   length(am.dist.coefs) > 0 && println(io, CoefTable(am.dist.coefs, coefnames(typeof(am.dist)), ["Distribution parameters: "]))
-   end
+    else
+        println(io, "DCC parameters, estimated by $(am.spec.method) procedure:", "\n",
+	            CoefTable(cc, coefnames(MVS), [""])
+	            )
+        if isfitted(am)
+            println("\n","""Calculating standard errors is expensive. To show them, use
+             `show(IOContext(stdout, :se=>true), <model>)`""")
+        end
+    end
 end
