@@ -388,6 +388,6 @@ end
     am2 = fit(DCC{1, 1}, DOW29[:, 1:2]; method=:twostep)
     @test all(isapprox(am1.spec.coefs, [0.8912884521017908, 0.05515419379547665], rtol=1e-4))
     @test all(isapprox(am2.spec.coefs,    [0.8912161306136979, 0.055139392936998946], rtol=1e-4))
-    @test all(isapprox(stderror(am1), [0.04529321083033382,  0.021169981617088926], rtol=1e-4))
-    @test all(isapprox(stderror(am2), [0.03038929166708753,  0.014785744555267228], rtol=1e-4))
+    @test all(isapprox(stderror(am1)[1:2], [0.0434344187103969, 0.020778846682313102], rtol=1e-4))
+    @test all(isapprox(stderror(am2)[1:2], [0.030405542205923865, 0.014782869078355866], rtol=1e-4))
 end
