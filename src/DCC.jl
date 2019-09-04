@@ -54,16 +54,13 @@ end
 
 
 #LC(Θ_hat, ϕ) in Engle (2002)
-function LL2step(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, R, resids::Array{T2}) where {T, T2, p, q}
+@inline function LL2step!(Rt::Array{Array{T, 2}, 1}, DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, R, resids::Array{T2}) where {T, T2, p, q}
     n, dims = size(resids)
     LL = zeros(T, n)
     all(0 .< coef .< 1) || (fill!(LL, T(-Inf)); return LL)
     abs(sum(coef))>1 && (fill!(LL, T(-Inf)); return LL)
     f = 1 - sum(coef)
-
-
     e = @view resids[1, :]
-    Rt = [zeros(T, dims, dims) for _ in 1:n]
     R = Symmetric(R)
     Rt[1:max(p,q)] .= [R for _ in 1:max(p,q)]
     RD5 = Diagonal(zeros(T, dims))
@@ -88,6 +85,12 @@ function LL2step(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, R, resids::Array{T2
         LL[t] = L
     end
     LL
+end
+
+function LL2step(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, R, resids::Array{T2}) where {T, T2, p, q}
+    n, dims = size(resids)
+    Rt = [zeros(T, dims, dims) for _ in 1:n]
+    LL2step!(Rt, DCCspec, coef, R, resids)
 end
 
 #same as LL2step, except for init type
@@ -354,4 +357,41 @@ function show(io::IO, am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, V
              `show(IOContext(stdout, :se=>true), <model>)`""")
         end
     end
+end
+
+function correlations(am::MultivariateARCHModel{T, d, MVS}) where {T, d, MVS<:DCC}
+    resids = residuals(am; decorrelated=false)
+    n, dims = size(resids)
+    Rt = [zeros(T, dims, dims) for _ in 1:n]
+    LL2step!(Rt, MVS, am.spec.coefs, am.spec.R, resids)
+    return Rt
+end
+
+function covariances(am::MultivariateARCHModel{T, d, MVS}) where {T, d, MVS<:DCC}
+    n, dims = size(am.data)
+    Rt = correlations(am)
+    Threads.@threads for i = 1:d
+        v = volatilities(UnivariateARCHModel(am.spec.univariatespecs[i], am.data[:, i]; meanspec=am.meanspec[i], fitted=true))
+        @inbounds @simd for t=1:n # this is ugly, but I couldn't figure out how to do this w/ broadcasting
+            Rt[t][i, :] *= v[t]
+            Rt[t][:, i] *= v[t]
+        end
+    end
+    return Rt
+end
+
+function residuals(am::MultivariateARCHModel{T, d, MVS}; standardized = true, decorrelated = true) where {T, d, MVS<:DCC}
+    n, dims = size(am.data)
+    resids = similar(am.data)
+    Threads.@threads for i = 1:dims
+        m = UnivariateARCHModel(am.spec.univariatespecs[i], am.data[:, i]; meanspec=am.meanspec[i], fitted=true)
+        resids[:, i] = residuals(m; standardized=standardized)
+    end
+    if decorrelated
+        Rt = standardized ? correlations(am) : covariances(am)
+        @inbounds for t = 1:n
+            resids[t, :] = inv(cholesky(Rt[t]; check=false).L) * resids[t, :]
+        end
+    end
+    return resids
 end
