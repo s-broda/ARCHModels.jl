@@ -1,4 +1,5 @@
-#rename volaspec univariatevolaspec and make it and MultivariateVolatilitySpec subtypes? saves us show method
+# rename volaspec univariatevolaspec and make it and MultivariateVolatilitySpec subtypes? saves us show method
+# proper multivariate meanspec, include return prediction in predict
 
 struct DCC{p, q, VS<:VolatilitySpec, T<:AbstractFloat, d} <: MultivariateVolatilitySpec{T, d}
     R::Matrix{T}
@@ -372,7 +373,7 @@ function covariances(am::MultivariateARCHModel{T, d, MVS}) where {T, d, MVS<:DCC
     Rt = correlations(am)
     Threads.@threads for i = 1:d
         v = volatilities(UnivariateARCHModel(am.spec.univariatespecs[i], am.data[:, i]; meanspec=am.meanspec[i], fitted=true))
-        @inbounds @simd for t=1:n # this is ugly, but I couldn't figure out how to do this w/ broadcasting
+        @inbounds @simd for t = 1:n # this is ugly, but I couldn't figure out how to do this w/ broadcasting
             Rt[t][i, :] *= v[t]
             Rt[t][:, i] *= v[t]
         end
@@ -394,4 +395,28 @@ function residuals(am::MultivariateARCHModel{T, d, MVS}; standardized = true, de
         end
     end
     return resids
+end
+
+Base.@propagate_inbounds @inline function update!(Ht, Rt, H, R, zt, at, MVS::Type{DCC{p, q, VS, T, d}}, coefs) where {p, q, VS, T, d}
+    nvolaparams = nparams(VS)
+    h5s = zeros(T, d)
+    for i = 1:d
+        ht = getindex.(Ht, i, i)
+        lht = log.(ht)
+        update!(ht, lht, zt[:, i], at[:, i], VS, coefs[p + q + 1 + (i-1) * nvolaparams : p + q + i * nvolaparams])
+        h5s[i] = sqrt(ht[end])
+    end
+    Rtemp = R * (1-sum(coefs[1:p+q]))
+    for i = 1:p
+        Rtemp .+=  coefs[i] * Rt[end-i]
+    end
+    for i = 1:q
+        Rtemp .+= coefs[p+i]  * zt[end-i, :] * zt[end-i, :]'
+    end
+    RD5 = inv(sqrt(Diagonal(Rtemp)))
+    Rtemp .= RD5 * Rtemp * RD5
+    Rtemp .= .5 * (Rtemp + Rtemp')
+    push!(Rt, Rtemp)
+    H5 = diagm(0 => h5s)
+    push!(Ht,  H5 * Rtemp * H5)
 end

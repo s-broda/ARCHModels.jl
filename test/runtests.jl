@@ -390,4 +390,6 @@ end
     @test all(isapprox(am2.spec.coefs,    [0.8912161306136979, 0.055139392936998946], rtol=1e-4))
     @test all(isapprox(stderror(am1)[1:2], [0.0434344187103969, 0.020778846682313102], rtol=1e-4))
     @test all(isapprox(stderror(am2)[1:2], [0.030405542205923865, 0.014782869078355866], rtol=1e-4))
+    @test all(isapprox(predict(am1; what=:correlation)[:], [1.0, 0.406059690659599, 0.4060596906595999, 1.0], rtol=1e-4))
+    @test all(isapprox(predict(am1; what=:covariance)[:], [6.9165917393333505, 1.2366473228090205, 1.2366473228090202, 1.340972349032465], rtol=1e-4))
 end

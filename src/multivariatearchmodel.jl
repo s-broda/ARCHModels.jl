@@ -74,3 +74,20 @@ else
 end
 return u * Diagonal(dtilde[:]) * u'
 end
+
+function predict(am::MultivariateARCHModel; what=:covariance)
+    Ht = covariances(am)
+    Rt = correlations(am)
+    H = Ht[1] # this is a bit shady. assumes first element is covariance target
+    R = Rt[1] # and so is this
+    zt = residuals(am; decorrelated=false)
+    at = residuals(am; standardized=false, decorrelated=false)
+    update!(Ht, Rt, H, R, zt, at, typeof(am.spec), coef(am.spec))
+    if what == :covariance
+        return Ht[end]
+    elseif what == :correlation
+        return Rt[end]
+    else
+        error("Prediction target $what unknown.")
+    end
+end
