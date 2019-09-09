@@ -150,9 +150,7 @@ function _simulate!(data::Vector{T2}, spec::VolatilitySpec{T2};
 				themean = m0
 			end
 			if t>r1
-                update!(ht, lht, zt, at, typeof(spec), meanspec,
-                        data, spec.coefs, meanspec.coefs
-                        )
+                update!(ht, lht, zt, at, typeof(spec), spec.coefs)
             else
 				push!(ht, h0)
                 push!(lht, log(h0))
@@ -204,7 +202,7 @@ function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility; level=0.0
 	if what == :return || what == :VaR
 		themean = mean(at, ht, lht, am.data, am.meanspec, am.meanspec.coefs, t)
 	end
-	update!(ht, lht, zt, at, VS, am.meanspec, am.data, am.spec.coefs, am.meanspec.coefs)
+	update!(ht, lht, zt, at, VS, am.spec.coefs)
 	if what == :return
 		return themean
 	elseif what == :volatility
@@ -284,7 +282,7 @@ end
 				themean = m0
 			end
 			if t > r1
-                update!(ht, lht, zt, at, VS, meanspec, data, garchcoefs, meancoefs)
+                update!(ht, lht, zt, at, VS, garchcoefs)
             else
 				push!(ht, h0)
                 push!(lht, log(h0))

@@ -75,8 +75,7 @@ const ARCH = GARCH{0}
 @inline presample(::Type{<:TGARCH{o, p, q}}) where {o, p, q} = max(o, p, q)
 
 Base.@propagate_inbounds @inline function update!(
-        ht, lht, zt, at, ::Type{<:TGARCH{o, p, q}}, meanspec::MeanSpec,
-        data, garchcoefs, meancoefs
+        ht, lht, zt, at, ::Type{<:TGARCH{o, p, q}}, garchcoefs
         ) where {o, p, q}
     mht = garchcoefs[1]
     for i = 1:o
