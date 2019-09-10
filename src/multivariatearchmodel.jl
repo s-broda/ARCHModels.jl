@@ -23,6 +23,12 @@ end
 
 fit(am::MultivariateARCHModel; kwargs...) = fit(typeof(am.spec), am.data; dist=am.dist, meanspec=am.meanspec[1], kwargs...) # hacky. need multivariate version
 
+function loglikelihood(am::MultivariateARCHModel)
+	sigs = covariances(am)
+	a = residuals(am; standardized=false, decorrelated=false)
+	@compat sum(logpdf.(MvNormal.(sigs), eachrow(a)))
+end
+
 function MultivariateARCHModel(spec::VS,
 							   data::Matrix{T},
           					   dist::SD=MultivariateStdNormal{T, d}(),

@@ -411,6 +411,7 @@ end
     str = sprint(io -> show(io, show(IOContext(io, :se=>true), am1)))
     @test occursin("Std.Error", str)
     @test_throws ErrorException fit(DCC, DOW29[1:11, :]) # shrinkage requires n>=12
+    @test loglikelihood(am1) ≈ -9810.905799585276
 
     @test ARCHModels.nparams(MultivariateStdNormal) == 0
     @test typeof(MultivariateStdNormal{Float64, 3}()) == typeof(MultivariateStdNormal{Float64, 3}(Float64[]))
