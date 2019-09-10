@@ -21,9 +21,12 @@ fit(::Type{<:DCC}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale) w
 
 fit(DCCspec::Type{<:DCC{p, q}}, data::Matrix{T}; meanspec=Intercept{T},  method=:largescale) where {p, q, T} = fit(DCC{p, q, GARCH{1, 1}}, data; meanspec=meanspec, method=method)
 
-function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale) where {p, q, VS<: VolatilitySpec, T, d}
+function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale, dist::Type{<:MultivariateStandardizedDistribution}=MultivariateStdNormal{T}) where {p, q, VS<: VolatilitySpec, T, d}
     n, dim = size(data)
     resids = similar(data)
+    if n<12 && method == :largescale
+        error("largescale method requires n>11.")
+    end
     m = fit(VS, data[:, 1], meanspec=meanspec)
     resids[:, 1] = residuals(m)
     univariatespecs = Vector{typeof(m)}(undef, dim)
@@ -245,8 +248,6 @@ function stderror(am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, M
         Sig = as'*as/n/dim
         Jnt = hcat(inv(H[1:r, 1:r])*H[1:r, 1+r:end]*inv(Htt), -inv(H[1:r, 1:r]))
         stderrors[1:r] .= sqrt.(diag(Jnt*Sig*Jnt'/n)) # from the 2018 version
-    else
-        error("No method :$method.")
     end
     return stderrors
 end
@@ -350,7 +351,7 @@ function show(io::IO, am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, V
 	                      )
 	            )
     else
-        println(io, "DCC parameters, estimated by $(am.spec.method) procedure:", "\n",
+        println(io, "DCC parameters", isfitted(am) ? ", estimated by $(am.spec.method) procedure:" : "", "\n",
 	            CoefTable(cc, coefnames(MVS), [""])
 	            )
         if isfitted(am)
