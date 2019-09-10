@@ -25,8 +25,9 @@ fit(am::MultivariateARCHModel; kwargs...) = fit(typeof(am.spec), am.data; dist=a
 
 function loglikelihood(am::MultivariateARCHModel)
 	sigs = covariances(am)
-	a = residuals(am; standardized=false, decorrelated=false)
-	@compat sum(logpdf.(MvNormal.(sigs), eachrow(a)))
+	z = residuals(am; standardized=true, decorrelated=true)
+	n, d = size(am.data)
+	return -.5 * (n * d * log(2π) + sum(logdet.(cholesky.(sigs))) + sum(z.^2))
 end
 
 function MultivariateARCHModel(spec::VS,

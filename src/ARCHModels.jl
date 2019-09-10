@@ -30,9 +30,7 @@ using LinearAlgebra
 using DataStructures: CircularBuffer
 using DelimitedFiles
 using Statistics: cov
-using Compat
 
-import Compat.eachrow
 import Distributions: quantile
 import Base: show, showerror, eltype
 import Statistics: mean
