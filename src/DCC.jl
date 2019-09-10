@@ -372,9 +372,9 @@ end
 function covariances(am::MultivariateARCHModel{T, d, MVS}) where {T, d, MVS<:DCC}
     n, dims = size(am.data)
     Rt = correlations(am)
-    Threads.@threads for i = 1:d
+    for i = 1:d
         v = volatilities(UnivariateARCHModel(am.spec.univariatespecs[i], am.data[:, i]; meanspec=am.meanspec[i], fitted=true))
-        @inbounds @simd for t = 1:n # this is ugly, but I couldn't figure out how to do this w/ broadcasting
+        @inbounds for t = 1:n # this is ugly, but I couldn't figure out how to do this w/ broadcasting
             Rt[t][i, :] *= v[t]
             Rt[t][:, i] *= v[t]
         end
