@@ -389,6 +389,7 @@ end
     am2 = fit(DCC, DOW29[:, 1:2]; method=:twostep)
     am3 = MultivariateARCHModel(DCC{1, 1}([1. 0.; 0. 1.], [0., 0.], [GARCH{1, 1}([1., 0., 0.]), GARCH{1, 1}([1., 0., 0.])]), DOW29[:, 1:2]) # not fitted
     am4 = fit(DCC, DOW29[1:20, 1:29]) # shrinkage n<p
+    @test all(fit(am1).spec.coefs .== am1.spec.coefs)
     @test all(isapprox(am1.spec.coefs, [0.8912884521017908, 0.05515419379547665], rtol=1e-4))
     @test all(isapprox(am2.spec.coefs,    [0.8912161306136979, 0.055139392936998946], rtol=1e-4))
     @test all(isapprox(am4.spec.coefs, [0.8935938309400944, 6.938893903907228e-18], rtol=1e-4))
@@ -401,6 +402,9 @@ end
     @test_throws ErrorException fit(DCC, DOW29; method=:bla)
     @test_throws ARCHModels.NumParamError DCC{1, 1}([1. 0.; 0. 1.], [1., 0., 0.], [GARCH{1, 1}([1., 0., 0.]), GARCH{1, 1}([1., 0., 0.])])
     @test_throws AssertionError DCC{1, 1}([1. 0.; 0. 1.], [0., 0.], [GARCH{1, 1}([1., 0., 0.]), GARCH{1, 1}([1., 0., 0.])]; method=:bla)
+    @test coefnames(am1) == ["β₁", "α₁", "ω₁", "β₁₁", "α₁₁", "μ₁", "ω₂", "β₁₂", "α₁₂", "μ₂"]
+    @test ARCHModels.nparams(DCC{1, 1}) == 2
+    
     io = IOBuffer()
     str = sprint(io -> show(io, am1))
     @test startswith(str, "\n2-dim")
