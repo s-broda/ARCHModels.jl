@@ -21,7 +21,7 @@ mutable struct MultivariateARCHModel{T<:AbstractFloat,
     end
 end
 
-fit(am::MultivariateARCHModel; kwargs...) = fit(typeof(am.spec), am.data; dist=am.dist, meanspec=am.meanspec[1], kwargs...) # hacky. need multivariate version
+fit(am::MultivariateARCHModel; kwargs...) = fit(typeof(am.spec), am.data; dist=typeof(am.dist), meanspec=am.meanspec[1], kwargs...) # hacky. need multivariate version
 
 function loglikelihood(am::MultivariateARCHModel)
 	sigs = covariances(am)
