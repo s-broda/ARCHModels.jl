@@ -87,10 +87,13 @@ end
 function predict(am::MultivariateARCHModel; what=:covariance)
     Ht = covariances(am)
     Rt = correlations(am)
-    H = Ht[1] # this is a bit shady. assumes first element is covariance target
-    R = Rt[1] # and so is this
+    H = uncond(am.spec)
+    R = to_corr(H)
     zt = residuals(am; decorrelated=false)
     at = residuals(am; standardized=false, decorrelated=false)
+	T = nobs(am)
+	zt = [zt[t, :] for t in 1:T]
+	at = [at[t, :] for t in 1:T]
     update!(Ht, Rt, H, R, zt, at, typeof(am.spec), coef(am.spec))
     if what == :covariance
         return Ht[end]
@@ -99,4 +102,67 @@ function predict(am::MultivariateARCHModel; what=:covariance)
     else
         error("Prediction target $what unknown.")
     end
+end
+
+function simulate(spec::MultivariateVolatilitySpec{T2, d}, nobs;
+                  warmup=100,
+                  dist::MultivariateStandardizedDistribution{T2}=MultivariateStdNormal{T2, d}(),
+                  meanspec::Vector{<:MeanSpec{T2}}=[NoIntercept{T2}() for i = 1:d]
+                  ) where {T2<:AbstractFloat, d}
+    data = zeros(T2, nobs, d)
+	_simulate!(data, spec; warmup=warmup, dist=dist, meanspec=meanspec)
+	return data
+end
+
+function simulate(am::MultivariateARCHModel; warmup=100)
+	am2 = deepcopy(am)
+	simulate!(am2; warmup=warmup)
+	am2.fitted=false
+	am2
+end
+function simulate!(am::MultivariateARCHModel; warmup=100)
+	_simulate!(am.data, am.spec; warmup=warmup, dist=am.dist, meanspec=am.meanspec)
+	am.fitted = false
+	am
+end
+
+function _simulate!(data::Matrix{T2}, spec::MultivariateVolatilitySpec{T2, d};
+                  warmup=100,
+                  dist::MultivariateStandardizedDistribution{T2}=MultivariateStdNormal{T2, d}(),
+                  meanspec::Vector{<:MeanSpec{T2}}=[NoIntercept{T2}() for i = 1:d]
+                  ) where {T2<:AbstractFloat, d}
+	@assert warmup >= 0
+
+	T, d2 = size(data)
+	@assert d == d2
+	simdata = zeros(T2, T + warmup, d)
+
+	r1 = presample(typeof(spec))
+	#r2 = presample(meanspec[1])
+	#r = max(r1, r2)
+	r = r1
+	Ht = CircularBuffer{Array{T2, d}}(r)
+	Rt = CircularBuffer{Array{T2, d}}(r)
+	zt = CircularBuffer{Vector{T2}}(r)
+	at = CircularBuffer{Vector{T2}}(r)
+
+	r = max(r, 1) # make sure this works for, e.g., ARCH{0}; CircularBuffer requires at least a length of 1
+    @inbounds begin
+        H = uncond(spec)
+		R = to_corr(H)
+		all(eigvals(H) .> 0) || error("Model is nonstationary.")
+        for t = 1: warmup + T
+			if t>r1
+                update!(Ht, Rt, H, R, zt, at, typeof(spec), coef(spec))
+            else
+				push!(Ht, H)
+				push!(Rt, R)
+            end
+			z = rand(dist)
+			push!(zt, cholesky(Rt[end], check=false).L * z)
+			push!(at, sqrt.(diag(Ht[end])) .* zt[end])
+			simdata[t, :] .= at[end]
+        end
+    end
+    data .= simdata[warmup + 1 : end, :]
 end

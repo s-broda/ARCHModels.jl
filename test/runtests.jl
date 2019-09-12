@@ -395,8 +395,8 @@ end
     @test all(isapprox(am4.spec.coefs, [0.8935938309400944, 6.938893903907228e-18], rtol=1e-4))
     @test all(isapprox(stderror(am1)[1:2], [0.0434344187103969, 0.020778846682313102], rtol=1e-4))
     @test all(isapprox(stderror(am2)[1:2], [0.030405542205923865, 0.014782869078355866], rtol=1e-4))
-    @test all(isapprox(predict(am1; what=:correlation)[:], [1.0, 0.406059690659599, 0.4060596906595999, 1.0], rtol=1e-4))
-    @test all(isapprox(predict(am1; what=:covariance)[:], [6.9165917393333505, 1.2366473228090205, 1.2366473228090202, 1.340972349032465], rtol=1e-4))
+    @test all(isapprox(predict(am1; what=:correlation)[:], [1.0, 0.4365129466277069, 0.4365129466277069, 1.0], rtol=1e-4))
+    @test all(isapprox(predict(am1; what=:covariance)[:], [6.916591739333349, 1.329392154000225, 1.329392154000225,  1.340972349032465], rtol=1e-4))
     @test_throws ErrorException predict(am1; what=:bla)
     @test residuals(am1)[1, 1] ≈ 0.5107042609407892
     @test_throws ErrorException fit(DCC, DOW29; method=:bla)
@@ -404,7 +404,7 @@ end
     @test_throws AssertionError DCC{1, 1}([1. 0.; 0. 1.], [0., 0.], [GARCH{1, 1}([1., 0., 0.]), GARCH{1, 1}([1., 0., 0.])]; method=:bla)
     @test coefnames(am1) == ["β₁", "α₁", "ω₁", "β₁₁", "α₁₁", "μ₁", "ω₂", "β₁₂", "α₁₂", "μ₂"]
     @test ARCHModels.nparams(DCC{1, 1}) == 2
-    
+    @test ARCHModels.presample(DCC{1, 2, GARCH{3, 4}}) == 4
     io = IOBuffer()
     str = sprint(io -> show(io, am1))
     @test startswith(str, "\n2-dim")
@@ -427,4 +427,13 @@ end
     @test all(isapprox(rand(MultivariateStdNormal(2)), [0.2972879845354616, 0.3823959677906078], rtol=1e-6))
     @test coefnames(MultivariateStdNormal) == String[]
     @test ARCHModels.distname(MultivariateStdNormal) == "Multivariate Normal"
+
+    Random.seed!(1)
+    ams = am1
+    ams.spec.coefs .= [.7, .2]
+    r  = simulate(ams.spec, T)
+    ams2 = fit(DCC, r)
+    @test all(isapprox(ams2.spec.coefs, [0.6911394337988699, 0.20594383462652424], rtol=1e-4))
+
+
 end

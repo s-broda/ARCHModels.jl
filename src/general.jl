@@ -42,3 +42,10 @@ function vcov(am::ARCHModel)
 end
 
 stderror(am::ARCHModel) = sqrt.(abs.(diag(vcov(am))))
+
+@inline function to_corr(Σ)
+	D = sqrt(Diagonal(Σ))
+    iD = inv(D)
+    R = iD * Σ * iD
+    R = (R + R') / 2
+end

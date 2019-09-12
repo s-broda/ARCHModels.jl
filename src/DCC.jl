@@ -17,6 +17,15 @@ DCC{p, q}(R::Matrix{T}, coefs::Vector{T}, univariatespecs::Vector{VS}; method::S
 
 nparams(::Type{DCC{p, q}}) where {p, q} = p+q
 
+# strange dispatch behavior. to me these methods look the same, but they aren't.
+
+# this matches ARCHModels.presample(DCC{1,1,TGARCH{0,1,1,Float64}})
+presample(::Type{DCC{p, q, VS}}) where {p, q, VS} = max(p, q, presample(VS))
+
+# this matches ARCHModels.presample(DCC{1,1,TGARCH{0,1,1,Float64},Float64,2})
+presample(::Type{DCC{p, q, VS, T, d}}) where {p, q, VS, T, d} = max(p, q, presample(VS))
+
+
 fit(::Type{<:DCC}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale) where {T} = fit(DCC{1, 1}, data; meanspec=meanspec, method=method)
 
 fit(DCCspec::Type{<:DCC{p, q}}, data::Matrix{T}; meanspec=Intercept{T},  method=:largescale) where {p, q, T} = fit(DCC{p, q, GARCH{1, 1}}, data; meanspec=meanspec, method=method)
@@ -37,10 +46,7 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
         resids[:, i] = residuals(m)
     end
     method == :largescale ? Σ = analytical_shrinkage(resids) : Σ = cov(resids)
-    D = sqrt(Diagonal(Σ))
-    iD = inv(D)
-    R = iD * Σ * iD
-    R = (R + R') / 2
+    R = to_corr(Σ)
     x0 = zeros(T, p+q)
     x0[1:p] .= 0.9/p
     x0[p+1:end] .= 0.05/q
@@ -398,26 +404,30 @@ function residuals(am::MultivariateARCHModel{T, d, MVS}; standardized = true, de
     return resids
 end
 
+#this assumes Ht, Rt, zt, and at are circularbuffers or vectors of arrays
 Base.@propagate_inbounds @inline function update!(Ht, Rt, H, R, zt, at, MVS::Type{DCC{p, q, VS, T, d}}, coefs) where {p, q, VS, T, d}
     nvolaparams = nparams(VS)
     h5s = zeros(T, d)
     for i = 1:d
         ht = getindex.(Ht, i, i)
         lht = log.(ht)
-        update!(ht, lht, zt[:, i], at[:, i], VS, coefs[p + q + 1 + (i-1) * nvolaparams : p + q + i * nvolaparams])
+        update!(ht, lht, getindex.(zt, i), getindex.(at, i), VS, coefs[p + q + 1 + (i-1) * nvolaparams : p + q + i * nvolaparams])
         h5s[i] = sqrt(ht[end])
     end
     Rtemp = R * (1-sum(coefs[1:p+q]))
     for i = 1:p
-        Rtemp .+=  coefs[i] * Rt[end-i]
+        Rtemp .+=  coefs[i] * Rt[end-i+1]
     end
     for i = 1:q
-        Rtemp .+= coefs[p+i]  * zt[end-i, :] * zt[end-i, :]'
+        Rtemp .+= coefs[p+i]  * zt[end-i+1] * zt[end-i+1]'
     end
-    RD5 = inv(sqrt(Diagonal(Rtemp)))
-    Rtemp .= RD5 * Rtemp * RD5
-    Rtemp .= .5 * (Rtemp + Rtemp')
-    push!(Rt, Rtemp)
+    push!(Rt, to_corr(Rtemp))
     H5 = diagm(0 => h5s)
-    push!(Ht,  H5 * Rtemp * H5)
+    push!(Ht,  H5 * Rt[end] * H5)
+end
+
+function uncond(spec::DCC{p, q, VS, T, d}) where {p, q, VS, T, d}
+    h = uncond.(typeof.(spec.univariatespecs), getproperty.(spec.univariatespecs, :coefs))
+    D = diagm(0 => sqrt.(h))
+    return D * spec.R * D
 end
