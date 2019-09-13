@@ -1,6 +1,3 @@
-# rename volaspec univariatevolaspec and make it and MultivariateVolatilitySpec subtypes? saves us show method
-# proper multivariate meanspec, include return prediction in predict
-
 struct DCC{p, q, VS<:VolatilitySpec, T<:AbstractFloat, d} <: MultivariateVolatilitySpec{T, d}
     R::Matrix{T}
     coefs::Vector{T}
@@ -13,6 +10,9 @@ struct DCC{p, q, VS<:VolatilitySpec, T<:AbstractFloat, d} <: MultivariateVolatil
         new{p, q, VS, T, d}(R, coefs, univariatespecs, method)
     end
 end
+
+const CCC = DCC{0, 0}
+
 DCC{p, q}(R::Matrix{T}, coefs::Vector{T}, univariatespecs::Vector{VS}; method::Symbol=:largescale) where {p, q, T, VS<:VolatilitySpec{T}} = DCC{p, q, VS, T, length(univariatespecs)}(R, coefs, univariatespecs, method)
 
 nparams(::Type{DCC{p, q}}) where {p, q} = p+q
@@ -36,6 +36,7 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
     if n<12 && method == :largescale
         error("largescale method requires n>11.")
     end
+
     m = fit(VS, data[:, 1], meanspec=meanspec)
     resids[:, 1] = residuals(m)
     univariatespecs = Vector{typeof(m)}(undef, dim)
@@ -48,18 +49,22 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
     method == :largescale ? Σ = analytical_shrinkage(resids) : Σ = cov(resids)
     R = to_corr(Σ)
     x0 = zeros(T, p+q)
-    x0[1:p] .= 0.9/p
-    x0[p+1:end] .= 0.05/q
-    if method == :twostep
-        obj = LL2step
-    elseif method==:largescale
-        obj = LL2step_pairs
-    else
-        error("No method :$method.")
+    if p+q>0
+        x0[1:p] .= 0.9/p
+        x0[p+1:end] .= 0.05/q
+        if method == :twostep
+            obj = LL2step
+        elseif method==:largescale
+            obj = LL2step_pairs
+        else
+            error("No method :$method.")
+        end
+        f = x -> obj(DCCspec, x, R, resids)
+        x = optimize(x->-sum(f(x)), x0, BFGS(), autodiff=:forward).minimizer
+    else # CCC
+        x = x0
     end
-    f = x -> obj(DCCspec, x, R, resids)
-    x = optimize(x->-sum(f(x)), x0, BFGS(), autodiff=:forward).minimizer
-    return MultivariateARCHModel(DCC{p, q}(R, x, getproperty.(univariatespecs, :spec); method=method), data, MultivariateStdNormal{T, dim}(), getproperty.(univariatespecs, :meanspec), true)
+    return MultivariateARCHModel(DCC{p, q}(R, x, getproperty.(univariatespecs, :spec); method=method), data; dist=MultivariateStdNormal{T, dim}(), meanspec=getproperty.(univariatespecs, :meanspec), fitted=true)
 end
 
 
@@ -219,41 +224,42 @@ function stderror(am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, M
         dt[:, w] = scores(m)
         stderrors[r .+ w] = stderror(m)
     end
+    if p + q > 0
+        if am.spec.method == :twostep
+            f = x -> LL2step(MVS, x, am.spec.R, resids)
+            Hpp = ForwardDiff.hessian(x->sum(f(x)), coefs[1:r])/n
+            dp = ForwardDiff.jacobian(f, coefs[1:r])
 
-    if am.spec.method == :twostep
-        f = x -> LL2step(MVS, x, am.spec.R, resids)
-        Hpp = ForwardDiff.hessian(x->sum(f(x)), coefs[1:r])/n
-        dp = ForwardDiff.jacobian(f, coefs[1:r])
-
-        # g = x -> sum(LL2step_full(x, R, data, p, q))
-        # Hpt = ForwardDiff.hessian(g, coefs)[1:2, 3:end]/n
-        # use finite differences instead, because we don't need the whole
-        # Hessian, and I couldn't figure out how to do this with ForwardDiff
-        g = (x, y) -> sum(LL2step_full(MVS, VS, am.meanspec, x, y, am.spec.R, am.data))
-        dg = x -> ForwardDiff.gradient(y->g(x, y), coefs[1+r:end])/n
-        h = 1e-7
-        Hpt = zeros(p+q, dim * nunivariateparams)
-        for j=1:p+q
-            dg0 = dg(coefs[1:r])
-            xp = copy(coefs[1:r]); xp[j] += h
-            ddg = (dg(xp)-dg0)/h
-            Hpt[j, :] = ddg
+            # g = x -> sum(LL2step_full(x, R, data, p, q))
+            # Hpt = ForwardDiff.hessian(g, coefs)[1:2, 3:end]/n
+            # use finite differences instead, because we don't need the whole
+            # Hessian, and I couldn't figure out how to do this with ForwardDiff
+            g = (x, y) -> sum(LL2step_full(MVS, VS, am.meanspec, x, y, am.spec.R, am.data))
+            dg = x -> ForwardDiff.gradient(y->g(x, y), coefs[1+r:end])/n
+            h = 1e-7
+            Hpt = zeros(p+q, dim * nunivariateparams)
+            for j=1:p+q
+                dg0 = dg(coefs[1:r])
+                xp = copy(coefs[1:r]); xp[j] += h
+                ddg = (dg(xp)-dg0)/h
+                Hpt[j, :] = ddg
+            end
+            A = dp-(Hpt*inv(Htt)*dt')'
+            C = inv(Hpp)*A'*A*inv(Hpp)/n^2
+            stderrors[1:r] = sqrt.(diag(C))
+        elseif am.spec.method==:largescale
+            g = x -> LL2step_pairs(MVS, x, am.spec.R, resids, true)
+            sc = ForwardDiff.jacobian(g, coefs[1:r])
+            I = sc'*sc/n/dim
+            h = x-> LL2step_pairs_full(MVS, VS, am.meanspec, x, am.spec.R, am.data)
+            H = ForwardDiff.hessian(x->sum(h(x)), coefs)/n/dim
+            #J = H[1:r, 1:r] - H[1:r, r+1:end] * inv(H[1+r:end, 1+r:end]) * H[1:r, 1+r:end]'
+            #std = sqrt.(diag(inv(J)*I*inv(J))/n) # from the 2014 version of the paper
+            as = hcat(dt, sc) # all scores
+            Sig = as'*as/n/dim
+            Jnt = hcat(inv(H[1:r, 1:r])*H[1:r, 1+r:end]*inv(Htt), -inv(H[1:r, 1:r]))
+            stderrors[1:r] .= sqrt.(diag(Jnt*Sig*Jnt'/n)) # from the 2018 version
         end
-        A = dp-(Hpt*inv(Htt)*dt')'
-        C = inv(Hpp)*A'*A*inv(Hpp)/n^2
-        stderrors[1:r] = sqrt.(diag(C))
-    elseif am.spec.method==:largescale
-        g = x -> LL2step_pairs(MVS, x, am.spec.R, resids, true)
-        sc = ForwardDiff.jacobian(g, coefs[1:r])
-        I = sc'*sc/n/dim
-        h = x-> LL2step_pairs_full(MVS, VS, am.meanspec, x, am.spec.R, am.data)
-        H = ForwardDiff.hessian(x->sum(h(x)), coefs)/n/dim
-        #J = H[1:r, 1:r] - H[1:r, r+1:end] * inv(H[1+r:end, 1+r:end]) * H[1:r, 1+r:end]'
-        #std = sqrt.(diag(inv(J)*I*inv(J))/n) # from the 2014 version of the paper
-        as = hcat(dt, sc) # all scores
-        Sig = as'*as/n/dim
-        Jnt = hcat(inv(H[1:r, 1:r])*H[1:r, 1+r:end]*inv(Htt), -inv(H[1:r, 1:r]))
-        stderrors[1:r] .= sqrt.(diag(Jnt*Sig*Jnt'/n)) # from the 2018 version
     end
     return stderrors
 end
@@ -339,7 +345,10 @@ function coefnames(am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, 
 end
 
 function show(io::IO, spec::DCC{p, q, VS}) where {p, q, VS}
-    println(io, "DCC{$p, $q} - $(modname(VS)) specification.\n\n", CoefTable(spec.coefs, coefnames(typeof(spec))[1:p+q], ["DCC parameters:"]))
+    println(io, "DCC{$p, $q} - $(modname(VS)) specification.")
+    if p + q > 0
+        println("\n\n", CoefTable(spec.coefs, coefnames(typeof(spec))[1:p+q], ["DCC parameters:"]))
+    end
 end
 
 
@@ -350,19 +359,23 @@ function show(io::IO, am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, V
     if isfitted(am) && (:se=>true) in io
         se = stderror(am)[1:r]
         z = cc ./ se
-        println(io, "DCC parameters, estimated by $(am.spec.method) procedure:", "\n",
-	            CoefTable(hcat(cc, se, z, 2.0 * normccdf.(abs.(z))),
-	                      ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
-	                      coefnames(MVS), 4
-	                      )
-	            )
+        if p + q >0
+            println(io, "DCC parameters, estimated by $(am.spec.method) procedure:", "\n",
+    	            CoefTable(hcat(cc, se, z, 2.0 * normccdf.(abs.(z))),
+    	                      ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
+    	                      coefnames(MVS), 4
+    	                      )
+    	            )
+        end
     else
-        println(io, "DCC parameters", isfitted(am) ? ", estimated by $(am.spec.method) procedure:" : "", "\n",
-	            CoefTable(cc, coefnames(MVS), [""])
-	            )
-        if isfitted(am)
-            println("\n","""Calculating standard errors is expensive. To show them, use
-             `show(IOContext(stdout, :se=>true), <model>)`""")
+        if p + q > 0
+            println(io, "DCC parameters", isfitted(am) ? ", estimated by $(am.spec.method) procedure:" : "", "\n",
+    	            CoefTable(cc, coefnames(MVS), [""])
+    	            )
+            if isfitted(am)
+                println("\n","""Calculating standard errors is expensive. To show them, use
+                 `show(IOContext(stdout, :se=>true), <model>)`""")
+            end
         end
     end
 end

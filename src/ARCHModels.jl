@@ -44,7 +44,7 @@ export ARCHModel, UnivariateARCHModel, VolatilitySpec, StandardizedDistribution,
        NoIntercept, ARMA, AR, MA, BG96, volatilities, mean, quantile, VaRs, pvalue, means,
 	   MultivariateVolatilitySpec, MultivariateStandardizedDistribution, MultivariateARCHModel, MultivariateStdNormal,
 	   EGARCH, ARCH, GARCH, TGARCH, ARCHLMTest, DQTest,
-	   DOW29, DCC, covariances, correlations
+	   DOW29, DCC, CCC, covariances, correlations
 
 
 include("utils.jl")

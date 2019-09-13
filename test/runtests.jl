@@ -429,11 +429,40 @@ end
     @test ARCHModels.distname(MultivariateStdNormal) == "Multivariate Normal"
 
     Random.seed!(1)
-    ams = am1
-    ams.spec.coefs .= [.7, .2]
-    r  = simulate(ams.spec, T)
-    ams2 = fit(DCC, r)
-    @test all(isapprox(ams2.spec.coefs, [0.6911394337988699, 0.20594383462652424], rtol=1e-4))
+    am = am1
+    am.spec.coefs .= [.7, .2]
+    ams  = simulate(am)
+    @test isfitted(ams) == false
+    fit!(ams)
+    @test isfitted(ams) == true
+    @test all(isapprox(ams.spec.coefs, [0.7122483516102956, 0.19156028421431875], rtol=1e-4))
+    Random.seed!(2)
+    simulate!(ams)
+    @test ams.fitted == false
+    fit!(ams)
+    @test all(isapprox(ams.spec.coefs, [0.6630049669013613, 0.22885770926598498], rtol=1e-4))
+    Random.seed!(1)
+    amc = fit(DCC{1, 2, GARCH{3, 2}}, DOW29[:, 1:4]; meanspec=AR{3})
+    ams = simulate(amc, T)
+    fit!(ams)
+    @test all(isapprox(ams.meanspec[1].coefs, [-0.09394176323811071, 0.05159711352207107, 0.011348428433666473, -0.020175913191330077], rtol=1e-4))
+    Random.seed!(1)
+    ame = fit(DCC{1, 2, EGARCH{1, 1, 1}}, DOW29[:, 1:4])
+    ams = simulate(ame, T)
+    fit!(ams)
+    @test all(isapprox(ams.spec.univariatespecs[1].coefs, [0.046700648921491957, -0.07258062140595305, 0.9664860227494515, 0.22051944930571496], rtol=1e-4))
 
-
+    Random.seed!(1)
+    ccc = fit(CCC, DOW29[:, 1:4])
+    @test ccc.spec.R[1, 2] ≈ 0.37095654552885643
+    @test stderror(ccc)[1] ≈ 0.06298215515406534
+    cccs = simulate(ccc, T)
+    @test  cccs.data[end, 1] ≈ -1.5061782364569236
+    @test coefnames(ccc) == ["ω₁", "β₁₁", "α₁₁", "μ₁", "ω₂", "β₁₂", "α₁₂", "μ₂", "ω₃", "β₁₃", "α₁₃", "μ₃", "ω₄", "β₁₄", "α₁₄", "μ₄"]
+    io = IOBuffer()
+    str = sprint(io -> show(io, ccc))
+    @test startswith(str, "\n4-dim")
+    io = IOBuffer()
+    str = sprint(io -> show(io, ccc.spec))
+    @test startswith(str, "DCC{0, 0}")
 end

@@ -1,3 +1,7 @@
+# rename volaspec univariatevolaspec and make it and MultivariateVolatilitySpec subtypes? saves us show method
+# can consolidate the simulate methods if we have default meanspecs for univariate/multivariate
+# proper multivariate meanspec, include return prediction in predict
+
 
 const DOW29 = readdlm(joinpath(dirname(pathof(ARCHModels)), "data", "dow29.csv"), ',')
 
@@ -31,7 +35,7 @@ function loglikelihood(am::MultivariateARCHModel)
 end
 
 function MultivariateARCHModel(spec::VS,
-							   data::Matrix{T},
+							   data::Matrix{T};
           					   dist::SD=MultivariateStdNormal{T, d}(),
           				 	   meanspec::Vector{MS}=[NoIntercept{T}() for _ in 1:d], # should come up with a proper multivariate version
 		  			 		   fitted::Bool=false
@@ -104,6 +108,16 @@ function predict(am::MultivariateARCHModel; what=:covariance)
     end
 end
 
+function fit!(am::MultivariateARCHModel)
+    am2 = fit(typeof(am.spec), am.data; meanspec=am.meanspec[1], method=am.spec.method, dist=typeof(am.dist))
+    am.spec = am2.spec
+    am.dist = am2.dist
+    am.meanspec = am2.meanspec
+    am.fitted = true
+    am
+end
+
+
 function simulate(spec::MultivariateVolatilitySpec{T2, d}, nobs;
                   warmup=100,
                   dist::MultivariateStandardizedDistribution{T2}=MultivariateStdNormal{T2, d}(),
@@ -111,14 +125,15 @@ function simulate(spec::MultivariateVolatilitySpec{T2, d}, nobs;
                   ) where {T2<:AbstractFloat, d}
     data = zeros(T2, nobs, d)
 	_simulate!(data, spec; warmup=warmup, dist=dist, meanspec=meanspec)
-	return data
+	return MultivariateARCHModel(spec, data; dist=dist, meanspec=meanspec, fitted=false)
 end
 
-function simulate(am::MultivariateARCHModel; warmup=100)
+
+simulate(am::MultivariateARCHModel; warmup=100) = simulate(am, nobs(am); warmup=warmup)
+
+function simulate(am::MultivariateARCHModel, nobs; warmup=100)
 	am2 = deepcopy(am)
-	simulate!(am2; warmup=warmup)
-	am2.fitted=false
-	am2
+	simulate(am2.spec, nobs; warmup=warmup, dist=am2.dist, meanspec=am2.meanspec)
 end
 function simulate!(am::MultivariateARCHModel; warmup=100)
 	_simulate!(am.data, am.spec; warmup=warmup, dist=am.dist, meanspec=am.meanspec)
@@ -136,32 +151,42 @@ function _simulate!(data::Matrix{T2}, spec::MultivariateVolatilitySpec{T2, d};
 	T, d2 = size(data)
 	@assert d == d2
 	simdata = zeros(T2, T + warmup, d)
-
 	r1 = presample(typeof(spec))
-	#r2 = presample(meanspec[1])
-	#r = max(r1, r2)
-	r = r1
-	Ht = CircularBuffer{Array{T2, d}}(r)
-	Rt = CircularBuffer{Array{T2, d}}(r)
+	r2 = maximum(presample.(meanspec))
+	r = max(r1, r2)
+	r = max(r, 1) # make sure this works for, e.g., ARCH{0}; CircularBuffer requires at least a length of 1
+	Ht = CircularBuffer{Matrix{T2}}(r)
+	Rt = CircularBuffer{Matrix{T2}}(r)
 	zt = CircularBuffer{Vector{T2}}(r)
 	at = CircularBuffer{Vector{T2}}(r)
 
-	r = max(r, 1) # make sure this works for, e.g., ARCH{0}; CircularBuffer requires at least a length of 1
-    @inbounds begin
+	@inbounds begin
         H = uncond(spec)
 		R = to_corr(H)
 		all(eigvals(H) .> 0) || error("Model is nonstationary.")
+		themean = zeros(T2, d)
         for t = 1: warmup + T
+			for i = 1:d
+				if t > r2
+					ht = getindex.(Ht, i, i)
+					lht = log.(ht)
+					themean[i] = mean(getindex.(at, i), ht, lht, simdata[:, i], meanspec[i], meanspec[i].coefs, t)
+				else
+					themean[i] = uncond(meanspec[i])
+				end
+			end
+
 			if t>r1
                 update!(Ht, Rt, H, R, zt, at, typeof(spec), coef(spec))
             else
 				push!(Ht, H)
 				push!(Rt, R)
             end
+
 			z = rand(dist)
 			push!(zt, cholesky(Rt[end], check=false).L * z)
 			push!(at, sqrt.(diag(Ht[end])) .* zt[end])
-			simdata[t, :] .= at[end]
+			simdata[t, :] .= themean + at[end]
         end
     end
     data .= simdata[warmup + 1 : end, :]
