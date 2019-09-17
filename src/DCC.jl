@@ -404,7 +404,7 @@ function show(io::IO, am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, V
     	            CoefTable(cc, coefnames(MVS), [""])
     	            )
             if isfitted(am)
-                println("\n","""Calculating standard errors is expensive. To show them, use
+                println(io, "\n","""Calculating standard errors is expensive. To show them, use
                  `show(IOContext(stdout, :se=>true), <model>)`""")
             end
         end
