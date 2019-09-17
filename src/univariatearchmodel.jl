@@ -459,20 +459,21 @@ function selectmodel(::Type{VS}, data::Vector{T};
     ndims = max(my_unwrap_unionall(VS)-1, 0)#e.g., two (p and q) for GARCH{p, q, T}
 	ndims2 = max(my_unwrap_unionall(MS)-1, 0)#e.g., two (p and q) for ARMA{p, q, T}
     res = Array{UnivariateARCHModel, ndims+ndims2}(undef, ntuple(i->maxlags, ndims+ndims2))
-    Threads.@threads for ind in collect(CartesianIndices(size(res)))
+    #Threads.@threads
+	for ind in collect(CartesianIndices(size(res)))
 		VSi = VS{ind.I[1:ndims]...}
 		MSi = (ndims2==0 ? meanspec : meanspec{ind.I[ndims+1:end]...})
 		res[ind] = fit(VSi, data; dist=dist, meanspec=MSi,
                        algorithm=algorithm, autodiff=autodiff, kwargs...)
         if show_trace
-            lock(mylock)
+            # lock(mylock)
             Core.print(modname(VSi))
 			ndims2>0 && Core.print("-", modname(MSi))
 			Core.println(" model has ",
                               uppercase(split("$criterion", ".")[end]), " ",
                               criterion(res[ind]), "."
                               )
-            unlock(mylock)
+            # unlock(mylock)
         end
     end
     crits = criterion.(res)
