@@ -26,11 +26,42 @@ presample(::Type{DCC{p, q, VS}}) where {p, q, VS} = max(p, q, presample(VS))
 presample(::Type{DCC{p, q, VS, T, d}}) where {p, q, VS, T, d} = max(p, q, presample(VS))
 
 
-fit(::Type{<:DCC}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale) where {T} = fit(DCC{1, 1}, data; meanspec=meanspec, method=method)
+fit(::Type{<:DCC}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale, algorithm=BFGS(), autodiff=:forward, kwargs...) where {T} = fit(DCC{1, 1}, data; meanspec=meanspec, method=method, algorithm=algorithm, autodiff=autodiff, kwargs...)
 
-fit(DCCspec::Type{<:DCC{p, q}}, data::Matrix{T}; meanspec=Intercept{T},  method=:largescale) where {p, q, T} = fit(DCC{p, q, GARCH{1, 1}}, data; meanspec=meanspec, method=method)
+fit(DCCspec::Type{<:DCC{p, q}}, data::Matrix{T}; meanspec=Intercept{T},  method=:largescale, algorithm=BFGS(), autodiff=:forward, kwargs...) where {p, q, T} = fit(DCC{p, q, GARCH{1, 1}}, data; meanspec=meanspec, method=method, algorithm=algorithm, autodiff=autodiff, kwargs...)
 
-function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale, dist::Type{<:MultivariateStandardizedDistribution}=MultivariateStdNormal{T}) where {p, q, VS<: VolatilitySpec, T, d}
+"""
+    fit(DCCspec::Type{<:DCC{p, q, VS<:VolatilitySpec}}, data::Matrix;
+        method=:largescale,  dist=MultivariateStdNormal, meanspec=Intercept,
+        algorithm=BFGS(), autodiff=:forward, kwargs...)
+
+Fit the DCC model specified by `DCCspec` to `data`. If `p` and `q` or `VS` are
+unspecified, then these default to 1, 1, and `GARCH{1, 1}`.
+
+# Keyword arguments:
+- `method`: one of `:largescale` or `twostep`
+- `dist`: the error distribution.
+- `meanspec`: the mean specification, as a type.
+- `algorithm, autodiff, kwargs, ...`: passed on to the optimizer.
+
+# Example: DCC{1, 1, GARCH{1, 1}} model:
+```jldoctest
+julia> fit(DCC, DOW29)
+
+29-dimensional DCC{1, 1} - TGARCH{0,1,1} - Intercept{Float64} specification, T=2785.
+
+DCC parameters, estimated by largescale procedure:
+────────────────────
+       β₁         α₁
+────────────────────
+  0.88762  0.0568001
+────────────────────
+
+Calculating standard errors is expensive. To show them, use
+`show(IOContext(stdout, :se=>true), <model>)`
+```
+"""
+function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale, algorithm=BFGS(), autodiff=:forward, dist::Type{<:MultivariateStandardizedDistribution}=MultivariateStdNormal{T}) where {p, q, VS<: VolatilitySpec, T, d}
     n, dim = size(data)
     resids = similar(data)
     if n<12 && method == :largescale
@@ -60,7 +91,7 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
             error("No method :$method.")
         end
         f = x -> obj(DCCspec, x, R, resids)
-        x = optimize(x->-sum(f(x)), x0, BFGS(), autodiff=:forward).minimizer
+        x = optimize(x->-sum(f(x)), x0, algorithm, autodiff=autodiff).minimizer
     else # CCC
         x = x0
     end
@@ -380,6 +411,10 @@ function show(io::IO, am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, V
     end
 end
 
+"""
+    correlations(am::MultivariateARCHModel)
+Return the `nobs(am)`` estimated conditional correlation matrices.
+"""
 function correlations(am::MultivariateARCHModel{T, d, MVS}) where {T, d, MVS<:DCC}
     resids = residuals(am; decorrelated=false)
     n, dims = size(resids)
@@ -388,6 +423,10 @@ function correlations(am::MultivariateARCHModel{T, d, MVS}) where {T, d, MVS<:DC
     return Rt
 end
 
+"""
+    covariances(am::MultivariateARCHModel)
+Return the `nobs(am)`` estimated conditional covariance matrices.
+"""
 function covariances(am::MultivariateARCHModel{T, d, MVS}) where {T, d, MVS<:DCC}
     n, dims = size(am.data)
     Rt = correlations(am)
@@ -401,6 +440,10 @@ function covariances(am::MultivariateARCHModel{T, d, MVS}) where {T, d, MVS<:DCC
     return Rt
 end
 
+"""
+    residuals(am::MultivariateARCHModel; standardized = true, decorrelated = true)
+Return the residuals.
+"""
 function residuals(am::MultivariateARCHModel{T, d, MVS}; standardized = true, decorrelated = true) where {T, d, MVS<:DCC}
     n, dims = size(am.data)
     resids = similar(am.data)

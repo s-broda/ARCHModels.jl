@@ -24,7 +24,7 @@ abstract type StandardizedDistribution{T} <: Distribution{Univariate, Continuous
               		    VS<:VolatilitySpec,
               			SD<:StandardizedDistribution{T},
               			MS<:MeanSpec{T}
-              			} <: StatisticalModel
+              			} <: ARCHModel
 """
 mutable struct UnivariateARCHModel{T<:AbstractFloat,
                  				   VS<:VolatilitySpec,
@@ -90,37 +90,13 @@ coefnames(am::UnivariateARCHModel) = vcat(coefnames(typeof(am.spec)),
                                 )
 
 
-"""
-    simulate(am::UnivariateARCHModel; warmup=100)
-	simulate(am::UnivariateARCHModel, nobs; warmup=100)
-    simulate(spec::VolatilitySpec, nobs; warmup=100, dist=StdNormal(), meanspec=NoIntercept())
-Simulate a UnivariateARCHModel.
-"""
-function simulate end
-
-simulate(am::UnivariateARCHModel; warmup=100) = simulate(am, nobs(am); warmup=warmup)
-
-function simulate(am::UnivariateARCHModel, nobs; warmup=100)
-	am2 = deepcopy(am)
-    simulate(am2.spec, nobs; warmup=warmup, dist=am2.dist, meanspec=am2.meanspec)
-end
-
+# documented in general
 function simulate(spec::VolatilitySpec{T2}, nobs; warmup=100, dist::StandardizedDistribution{T2}=StdNormal{T2}(),
                   meanspec::MeanSpec{T2}=NoIntercept{T2}()
                   ) where {T2<:AbstractFloat}
     data = zeros(T2, nobs)
     _simulate!(data,  spec; warmup=warmup, dist=dist, meanspec=meanspec)
     UnivariateARCHModel(spec, data; dist=dist, meanspec=meanspec, fitted=false)
-end
-
-"""
-    simulate!(am::UnivariateARCHModel; warmup=100)
-Simulate a UnivariateARCHModel, modifying `am` in place.
-"""
-function simulate!(am::UnivariateARCHModel; warmup=100)
-	am.fitted = false
-    _simulate!(am.data, am.spec; warmup=warmup, dist=am.dist, meanspec=am.meanspec)
-    am
 end
 
 function _simulate!(data::Vector{T2}, spec::VolatilitySpec{T2};
@@ -367,7 +343,7 @@ end
         algorithm=BFGS(), autodiff=:forward, kwargs...)
 
 Fit the ARCH model specified by `VS` to `data`. `data` can be a vector or a
-GLM.LinearModel (or GLM.DataFrameRegressionModel).
+GLM.LinearModel (or GLM.TableRegressionModel).
 
 # Keyword arguments:
 - `dist=StdNormal`: the error distribution.
@@ -399,8 +375,6 @@ Distribution parameters:
 ─────────────────────────────────────────
 ```
 """
-function fit end
-
 function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
              meanspec::Union{MS, Type{MS}}=Intercept{T}(T[0]), algorithm=BFGS(),
              autodiff=:forward, kwargs...
@@ -416,12 +390,6 @@ function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
 	return UnivariateARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=ms, fitted=true)
 end
 
-"""
-    fit!(am::UnivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
-
-Fit the UnivariateARCHModel specified by `am`, modifying `am` in place. Keyword arguments
-are passed on to the optimizer.
-"""
 function fit!(am::UnivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
     am.spec.coefs.=startingvals(typeof(am.spec), am.data)
     am.dist.coefs.=startingvals(typeof(am.dist), am.data)
@@ -434,12 +402,6 @@ function fit!(am::UnivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwar
     am
 end
 
-"""
-    fit(am::UnivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
-
-Fit the UnivariateARCHModel specified by `am` and return the result in a new instance of
-UnivariateARCHModel. Keyword arguments are passed on to the optimizer.
-"""
 function fit(am::UnivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
     am2=deepcopy(am)
     fit!(am2; algorithm=algorithm, autodiff=autodiff, kwargs...)

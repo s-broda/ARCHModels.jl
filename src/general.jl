@@ -11,6 +11,14 @@ Abstract supertype that mean specifications inherit from.
 """
 abstract type MeanSpec{T} end
 
+struct NumParamError <: Exception
+    expected::Int
+    got::Int
+end
+
+function showerror(io::IO, e::NumParamError)
+    print(io, "incorrect number of parameters: expected $(e.expected), got $(e.got).")
+end
 
 nobs(am::ARCHModel) = size(am.data)[1]
 islinear(am::ARCHModel) = false
@@ -43,9 +51,47 @@ end
 
 stderror(am::ARCHModel) = sqrt.(abs.(diag(vcov(am))))
 
-@inline function to_corr(Σ)
-	D = sqrt(Diagonal(Σ))
-    iD = inv(D)
-    R = iD * Σ * iD
-    R = (R + R') / 2
+"""
+    fit!(am::ARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
+
+Fit the uni- or multivariate ARCHModel specified by `am`, modifying `am` in place.
+Keyword arguments are passed on to the optimizer.
+"""
+function fit!(am::ARCHModel; kwargs...) end
+
+"""
+    fit(am::ARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
+
+Fit the uni- or multivariate ARCHModel specified by `am` and return the result in a new instance of
+`ARCHModel`. Keyword arguments are passed on to the optimizer.
+"""
+function fit(am::ARCHModel; kwargs...) end
+
+"""
+    simulate!(am::ARCHModel; warmup=100)
+Simulate an ARCHModel, modifying `am` in place.
+"""
+function simulate! end
+
+"""
+    simulate(am::ARCHModel; warmup=100)
+	simulate(am::ARCHModel, nobs; warmup=100)
+    simulate(spec::VolatilitySpec, nobs; warmup=100, dist=StdNormal(), meanspec=NoIntercept())
+Simulate a UnivariateARCHModel.
+	simulate(spec::MultivariateVolatilitySpec, nobs; warmup=100, dist=MultivariateStdNormal(), meanspec=[NoIntercept() for i = 1:d])
+Simulate a MultivariateARCHModel.
+"""
+function simulate end
+
+function simulate!(am::ARCHModel; warmup=100)
+	am.fitted = false
+    _simulate!(am.data, am.spec; warmup=warmup, dist=am.dist, meanspec=am.meanspec)
+    am
 end
+
+function simulate(am::ARCHModel, nobs; warmup=100)
+	am2 = deepcopy(am)
+	simulate(am2.spec, nobs; warmup=warmup, dist=am2.dist, meanspec=am2.meanspec)
+end
+
+simulate(am::ARCHModel; warmup=100) = simulate(am, nobs(am); warmup=warmup)

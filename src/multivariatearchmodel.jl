@@ -1,14 +1,37 @@
 # rename volaspec univariatevolaspec and make it and MultivariateVolatilitySpec subtypes? saves us show method
-# can consolidate the simulate methods if we have default meanspecs for univariate/multivariate
+# can consolidate the remaining simulate method if we have default meanspecs for univariate/multivariate
 # proper multivariate meanspec, include return prediction in predict
-
-
+# implement correlations, covariances, residuals in terms of update!, and move them from DCC to multivariate
+"""
+	DOW29
+Stock returns, in procent, from 03/19/2008 through 04/11/2019, for tickers
+AAPL, IBM, XOM, KO, MSFT, INTC, MRK, PG, VZ, WBA, V, JNJ, PFE, CSCO,
+TRV, WMT, MMM, UTX, UNH, NKE, HD, BA, AXP, MCD, CAT, GS, JPM, CVX, DIS.
+"""
 const DOW29 = readdlm(joinpath(dirname(pathof(ARCHModels)), "data", "dow29.csv"), ',')
 
+"""
+    MultivariateStandardizedDistribution{T, d} <: Distribution{Multivariate, Continuous}
+
+Abstract supertype that multivariate standardized distributions inherit from.
+"""
 abstract type MultivariateStandardizedDistribution{T, d} <: Distribution{Multivariate, Continuous} end
 
+"""
+    MultivariateVolatilitySpec{T, d}
+
+Abstract supertype that multivariate volatility specifications inherit from.
+"""
 abstract type MultivariateVolatilitySpec{T, d} end
 
+"""
+	MultivariateARCHModel{T<:AbstractFloat,
+	     				  d,
+						  VS<:MultivariateVolatilitySpec{T, d},
+						  SD<:MultivariateStandardizedDistribution{T, d},
+						  MS<:MeanSpec{T}
+						 } <: ARCHModel
+"""
 mutable struct MultivariateARCHModel{T<:AbstractFloat,
 									 d,
                  				     VS<:MultivariateVolatilitySpec{T, d},
@@ -25,8 +48,6 @@ mutable struct MultivariateARCHModel{T<:AbstractFloat,
     end
 end
 
-fit(am::MultivariateARCHModel; kwargs...) = fit(typeof(am.spec), am.data; dist=typeof(am.dist), meanspec=am.meanspec[1], kwargs...) # hacky. need multivariate version
-
 function loglikelihood(am::MultivariateARCHModel)
 	sigs = covariances(am)
 	z = residuals(am; standardized=true, decorrelated=true)
@@ -34,6 +55,14 @@ function loglikelihood(am::MultivariateARCHModel)
 	return -.5 * (n * d * log(2π) + sum(logdet.(cholesky.(sigs))) + sum(z.^2))
 end
 
+"""
+	MultivariateARCHModel(spec::MultivariateVolatilitySpec, data::Matrix;
+          			  	  dist=MultivariateStdNormal,
+					  	  meanspec::[NoIntercept{T}() for _ in 1:d]
+		  			  	  fitted::Bool=false
+					  	  )
+Create a MultivariateARCHModel.
+"""
 function MultivariateARCHModel(spec::VS,
 							   data::Matrix{T};
           					   dist::SD=MultivariateStdNormal{T, d}(),
@@ -48,46 +77,11 @@ function MultivariateARCHModel(spec::VS,
     MultivariateARCHModel{T, d, VS, SD, MS}(spec, data, dist, meanspec, fitted)
 end
 
-
 """
-    analytical_shrinkage(X::Matrix)
-Analytical nonlinear shrinkage estimator of the covariance matrix. Based on the
-Matlab code from [1]. Translated to Julia and used here under MIT license by
-permission from the authors.
-
-[1] Ledoit, O., and Wolf, M. (2018), "Analytical Nonlinear Shrinkage of
-Large-Dimensional Covariance Matrices", University of Zurich Econ WP 264.
-https://www.econ.uzh.ch/static/workingpapers_iframe.php?id=943
+    predict(am::MultivariateARCHModel, what=:covariance)
+Form a 1-step ahead prediction from `am`. `what` controls which object is predicted.
+The choices are `:covariance` (the default) or `:correlation`.
 """
-function analytical_shrinkage(X)
-n, p = size(X)
-@assert n >= 12 # important: sample size n must be >= 12
-sample = Symmetric(X'*X) / n
-E = eigen(sample)
-lambda = E.values
-u = E.vectors
-
-# compute analytical nonlinear shrinkage kernel formula
-lambda = lambda[max(1, p-n+1):p]
-L = repeat(lambda, 1, min(p, n))
-h = n^(-1/3) # Equation (4.9)
-H = h*L'
-x = (L-L') ./ H
-ftilde = (3/4/sqrt(5)) * mean(max.(1 .- x.^2 ./ 5, 0) ./ H, dims=2) # Equation (4.7)
-Hftemp = (-3/10/pi) * x + (3/4/sqrt(5)/pi) * (1 .- x.^2 ./ 5) .* log.(abs.((sqrt(5).-x) ./ (sqrt(5).+x))) # Equation (4.8)
-Hftemp[abs.(x) .== sqrt(5)] .= (-3/10/pi) .* x[abs.(x) .== sqrt(5)]
-Hftilde = mean(Hftemp./H, dims=2)
-if p<=n
-    dtilde = lambda ./ ((pi * (p/n) *lambda .* ftilde).^2  + (1 .- (p/n) .- pi * (p/n) * lambda .* Hftilde).^2) # Equation (4.3)
-else
-    Hftilde0 = (1/pi) * (3/10/h^2 + 3/4/sqrt(5)/h*(1-1/5/h^2) * log((1+sqrt(5)*h)/(1-sqrt(5)*h)))*mean(1 ./ lambda) # Equation (C.8)
-    dtilde0 = 1 / (pi * (p-n) / n * Hftilde0) # Equation (C.5)
-    dtilde1 = lambda ./ (pi^2*lambda.^2 .* (ftilde.^2 + Hftilde.^2)) # Eq. (C.4)
-    dtilde = [dtilde0*ones(p-n,1); dtilde1]
-end
-return u * Diagonal(dtilde[:]) * u'
-end
-
 function predict(am::MultivariateARCHModel; what=:covariance)
     Ht = covariances(am)
     Rt = correlations(am)
@@ -108,8 +102,12 @@ function predict(am::MultivariateARCHModel; what=:covariance)
     end
 end
 
-function fit!(am::MultivariateARCHModel)
-    am2 = fit(typeof(am.spec), am.data; meanspec=am.meanspec[1], method=am.spec.method, dist=typeof(am.dist))
+# documented in general
+fit(am::MultivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...) = fit(typeof(am.spec), am.data; dist=typeof(am.dist), meanspec=am.meanspec[1], algorithm=algorithm, autodiff=autodiff, kwargs...) # hacky. need multivariate version
+
+# documented in general
+function fit!(am::MultivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
+    am2 = fit(typeof(am.spec), am.data; meanspec=am.meanspec[1], method=am.spec.method, dist=typeof(am.dist), algorithm=algorithm, autodiff=autodiff, kwargs...)
     am.spec = am2.spec
     am.dist = am2.dist
     am.meanspec = am2.meanspec
@@ -117,7 +115,7 @@ function fit!(am::MultivariateARCHModel)
     am
 end
 
-
+# documented in general
 function simulate(spec::MultivariateVolatilitySpec{T2, d}, nobs;
                   warmup=100,
                   dist::MultivariateStandardizedDistribution{T2}=MultivariateStdNormal{T2, d}(),
@@ -129,17 +127,8 @@ function simulate(spec::MultivariateVolatilitySpec{T2, d}, nobs;
 end
 
 
-simulate(am::MultivariateARCHModel; warmup=100) = simulate(am, nobs(am); warmup=warmup)
 
-function simulate(am::MultivariateARCHModel, nobs; warmup=100)
-	am2 = deepcopy(am)
-	simulate(am2.spec, nobs; warmup=warmup, dist=am2.dist, meanspec=am2.meanspec)
-end
-function simulate!(am::MultivariateARCHModel; warmup=100)
-	_simulate!(am.data, am.spec; warmup=warmup, dist=am.dist, meanspec=am.meanspec)
-	am.fitted = false
-	am
-end
+
 
 function _simulate!(data::Matrix{T2}, spec::MultivariateVolatilitySpec{T2, d};
                   warmup=100,
