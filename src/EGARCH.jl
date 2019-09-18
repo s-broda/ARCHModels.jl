@@ -1,7 +1,7 @@
 """
-    EGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}
+    EGARCH{o, p, q, T<:AbstractFloat} <: UnivariateVolatilitySpec{T}
 """
-struct EGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}
+struct EGARCH{o, p, q, T<:AbstractFloat} <: UnivariateVolatilitySpec{T}
     coefs::Vector{T}
     function EGARCH{o, p, q, T}(coefs::Vector{T}) where {o, p, q, T}
         length(coefs) == nparams(EGARCH{o, p, q})  || throw(NumParamError(nparams(EGARCH{o, p, q}), length(coefs)))
@@ -10,7 +10,7 @@ struct EGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}
 end
 
 """
-    EGARCH{o, p, q}(coefs) -> VolatilitySpec
+    EGARCH{o, p, q}(coefs) -> UnivariateVolatilitySpec
 
 Construct an EGARCH specification with the given parameters.
 

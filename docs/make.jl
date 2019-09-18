@@ -7,8 +7,8 @@ makedocs(modules=[ARCHModels],
         doctest=true,
         strict=true,
         pages = ["Home" => "index.md",
-                 "types.md",
-                 "manual.md",
+                 "Univariate ARCH Models" => "univariate.md",
+                 "Multivariate ARCH Models" => "multivariate.md",
                  "reference.md"
                  ]
         )

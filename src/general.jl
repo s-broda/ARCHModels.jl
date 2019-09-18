@@ -3,7 +3,11 @@
 """
 abstract type ARCHModel <: StatisticalModel end
 
-
+"""
+	VolatilitySpec{T}
+Abstract supertype of UnivariateVolatilitySpec{T} and MultivariateVolatilitySpec{T} .
+"""
+abstract type VolatilitySpec{T} end
 
 """
     MeanSpec{T}
@@ -76,9 +80,9 @@ function simulate! end
 """
     simulate(am::ARCHModel; warmup=100)
 	simulate(am::ARCHModel, nobs; warmup=100)
-    simulate(spec::VolatilitySpec, nobs; warmup=100, dist=StdNormal(), meanspec=NoIntercept())
+    simulate(spec::UnivariateVolatilitySpec, nobs; warmup=100, dist=StdNormal(), meanspec=NoIntercept())
 Simulate a UnivariateARCHModel.
-	simulate(spec::MultivariateVolatilitySpec, nobs; warmup=100, dist=MultivariateStdNormal(), meanspec=[NoIntercept() for i = 1:d])
+	simulate(spec::MultivariateUnivariateVolatilitySpec, nobs; warmup=100, dist=MultivariateStdNormal(), meanspec=[NoIntercept() for i = 1:d])
 Simulate a MultivariateARCHModel.
 """
 function simulate end

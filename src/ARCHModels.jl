@@ -9,7 +9,7 @@
 #a simulated AM should probably contain a (zero) intercept, so that fit! is consistent with fit.
 #the constructor for UnivariateARCHModel should make a copy of its args
 #implement lrtest
-#allow uninititalized constructors for VolatilitySpec, MeanSpec and StandardizedDistribution? If so, then be consistent with how they are defined
+#allow uninititalized constructors for UnivariateVolatilitySpec, MeanSpec and StandardizedDistribution? If so, then be consistent with how they are defined
 #  (change for meanspec and dist ), document, and test. Also, NaN is prob. safer than undef.
 #logconst needs to return the correct type
 """
@@ -39,10 +39,10 @@ import HypothesisTests: HypothesisTest, testname, population_param_of_interest, 
 import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, confint, aic,
                   bic, aicc, dof, coef, coefnames, coeftable, CoefTable,
 				  informationmatrix, islinear, score, vcov, residuals, predict
-export ARCHModel, UnivariateARCHModel, VolatilitySpec, StandardizedDistribution, Standardized, MeanSpec,
+export ARCHModel, UnivariateARCHModel, UnivariateVolatilitySpec, StandardizedDistribution, Standardized, MeanSpec,
        simulate, simulate!, selectmodel, StdNormal, StdT, StdGED, Intercept, Regression,
        NoIntercept, ARMA, AR, MA, BG96, volatilities, mean, quantile, VaRs, pvalue, means,
-	   MultivariateVolatilitySpec, MultivariateStandardizedDistribution, MultivariateARCHModel, MultivariateStdNormal,
+	   MultivariateUnivariateVolatilitySpec, MultivariateStandardizedDistribution, MultivariateARCHModel, MultivariateStdNormal,
 	   EGARCH, ARCH, GARCH, TGARCH, ARCHLMTest, DQTest,
 	   DOW29, DCC, CCC, covariances, correlations
 
@@ -62,10 +62,10 @@ function __init__()
 	@require GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a" begin
 		using .GLM
 		import .StatsModels: TableRegressionModel
-		function fit(vs::Type{VS}, lm::TableRegressionModel{<:LinearModel}; kwargs...) where VS<:VolatilitySpec
+		function fit(vs::Type{VS}, lm::TableRegressionModel{<:LinearModel}; kwargs...) where VS<:UnivariateVolatilitySpec
 			fit(vs, response(lm.model); meanspec=Regression(modelmatrix(lm.model); coefnames=coefnames(lm)), kwargs...)
 		end
-		function fit(vs::Type{VS}, lm::LinearModel; kwargs...) where VS<:VolatilitySpec
+		function fit(vs::Type{VS}, lm::LinearModel; kwargs...) where VS<:UnivariateVolatilitySpec
 			fit(vs, response(lm); meanspec=Regression(modelmatrix(lm)), kwargs...)
 		end
 	end

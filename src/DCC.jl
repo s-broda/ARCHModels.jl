@@ -1,9 +1,9 @@
-struct DCC{p, q, VS<:VolatilitySpec, T<:AbstractFloat, d} <: MultivariateVolatilitySpec{T, d}
+struct DCC{p, q, VS<:UnivariateVolatilitySpec, T<:AbstractFloat, d} <: MultivariateUnivariateVolatilitySpec{T, d}
     R::Matrix{T}
     coefs::Vector{T}
     univariatespecs::Vector{VS}
     method::Symbol
-    function DCC{p, q, VS, T, d}(R::Array{T}, coefs::Vector{T}, univariatespecs:: Vector{VS}, method::Symbol) where {p, q, T, VS<:VolatilitySpec, d}
+    function DCC{p, q, VS, T, d}(R::Array{T}, coefs::Vector{T}, univariatespecs:: Vector{VS}, method::Symbol) where {p, q, T, VS<:UnivariateVolatilitySpec, d}
         length(coefs) == nparams(DCC{p, q})  || throw(NumParamError(nparams(DCC{p, q}), length(coefs)))
         @assert d == length(univariatespecs)
         @assert method==:twostep || method==:largescale
@@ -13,7 +13,7 @@ end
 
 const CCC = DCC{0, 0}
 
-DCC{p, q}(R::Matrix{T}, coefs::Vector{T}, univariatespecs::Vector{VS}; method::Symbol=:largescale) where {p, q, T, VS<:VolatilitySpec{T}} = DCC{p, q, VS, T, length(univariatespecs)}(R, coefs, univariatespecs, method)
+DCC{p, q}(R::Matrix{T}, coefs::Vector{T}, univariatespecs::Vector{VS}; method::Symbol=:largescale) where {p, q, T, VS<:UnivariateVolatilitySpec{T}} = DCC{p, q, VS, T, length(univariatespecs)}(R, coefs, univariatespecs, method)
 
 nparams(::Type{DCC{p, q}}) where {p, q} = p+q
 
@@ -31,7 +31,7 @@ fit(::Type{<:DCC}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale, a
 fit(DCCspec::Type{<:DCC{p, q}}, data::Matrix{T}; meanspec=Intercept{T},  method=:largescale, algorithm=BFGS(), autodiff=:forward, kwargs...) where {p, q, T} = fit(DCC{p, q, GARCH{1, 1}}, data; meanspec=meanspec, method=method, algorithm=algorithm, autodiff=autodiff, kwargs...)
 
 """
-    fit(DCCspec::Type{<:DCC{p, q, VS<:VolatilitySpec}}, data::Matrix;
+    fit(DCCspec::Type{<:DCC{p, q, VS<:UnivariateVolatilitySpec}}, data::Matrix;
         method=:largescale,  dist=MultivariateStdNormal, meanspec=Intercept,
         algorithm=BFGS(), autodiff=:forward, kwargs...)
 
@@ -61,7 +61,7 @@ Calculating standard errors is expensive. To show them, use
 `show(IOContext(stdout, :se=>true), <model>)`
 ```
 """
-function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale, algorithm=BFGS(), autodiff=:forward, dist::Type{<:MultivariateStandardizedDistribution}=MultivariateStdNormal{T}) where {p, q, VS<: VolatilitySpec, T, d}
+function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale, algorithm=BFGS(), autodiff=:forward, dist::Type{<:MultivariateStandardizedDistribution}=MultivariateStdNormal{T}) where {p, q, VS<: UnivariateVolatilitySpec, T, d}
     n, dim = size(data)
     resids = similar(data)
     if n<12 && method == :largescale
@@ -331,7 +331,7 @@ end
 #     LL2step(coef[1:2], R, resids, p, q)
 # end
 
-function LL2step_pairs_full(DCCspec::Type{<:DCC{p, q}}, VS::Type{<:VolatilitySpec}, meanspec, coef::Array{T}, R, data) where {T, T2, p, q}
+function LL2step_pairs_full(DCCspec::Type{<:DCC{p, q}}, VS::Type{<:UnivariateVolatilitySpec}, meanspec, coef::Array{T}, R, data) where {T, T2, p, q}
     dcccoef = coef[1:p+q]
     garchcoef = coef[p+q+1:end]
     n, dims = size(data)
