@@ -22,7 +22,7 @@ end
     R = (R + R') / 2
 end
 
-"""
+#=
     analytical_shrinkage(X::Matrix)
 Analytical nonlinear shrinkage estimator of the covariance matrix. Based on the
 Matlab code from [1]. Translated to Julia and used here under MIT license by
@@ -31,7 +31,7 @@ permission from the authors.
 [1] Ledoit, O., and Wolf, M. (2018), "Analytical Nonlinear Shrinkage of
 Large-Dimensional Covariance Matrices", University of Zurich Econ WP 264.
 https://www.econ.uzh.ch/static/workingpapers_iframe.php?id=943
-"""
+=#
 function analytical_shrinkage(X)
 n, p = size(X)
 @assert n >= 12 # important: sample size n must be >= 12

@@ -1,4 +1,3 @@
-# rename volaspec univariatevolaspec and make it and MultivariateUnivariateVolatilitySpec subtypes? saves us show method
 # can consolidate the remaining simulate method if we have default meanspecs for univariate/multivariate
 # proper multivariate meanspec, include return prediction in predict
 # implement correlations, covariances, residuals in terms of update!, and move them from DCC to multivariate
