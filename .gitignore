@@ -5,7 +5,7 @@
 *.log
 docs/build/
 docs/site
-src/data
+src/data/bollerslev_ghysels.txt
 docs/Manifest.toml
 Manifest.toml
 make-require.jl
