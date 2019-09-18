@@ -17,23 +17,23 @@ Abstract supertype that multivariate standardized distributions inherit from.
 abstract type MultivariateStandardizedDistribution{T, d} <: Distribution{Multivariate, Continuous} end
 
 """
-    MultivariateUnivariateVolatilitySpec{T, d} <: VolatilitySpec{T}
+    MultivariateVolatilitySpec{T, d} <: VolatilitySpec{T}
 
 Abstract supertype that multivariate volatility specifications inherit from.
 """
-abstract type MultivariateUnivariateVolatilitySpec{T, d} end
+abstract type MultivariateVolatilitySpec{T, d} <: VolatilitySpec{T} end
 
 """
 	MultivariateARCHModel{T<:AbstractFloat,
 	     				  d,
-						  VS<:MultivariateUnivariateVolatilitySpec{T, d},
+						  VS<:MultivariateVolatilitySpec{T, d},
 						  SD<:MultivariateStandardizedDistribution{T, d},
 						  MS<:MeanSpec{T}
 						 } <: ARCHModel
 """
 mutable struct MultivariateARCHModel{T<:AbstractFloat,
 									 d,
-                 				     VS<:MultivariateUnivariateVolatilitySpec{T, d},
+                 				     VS<:MultivariateVolatilitySpec{T, d},
                  		  	  	     SD<:MultivariateStandardizedDistribution{T, d},
                  				     MS<:MeanSpec{T}
                  				   	} <: ARCHModel
@@ -55,7 +55,7 @@ function loglikelihood(am::MultivariateARCHModel)
 end
 
 """
-	MultivariateARCHModel(spec::MultivariateUnivariateVolatilitySpec, data::Matrix;
+	MultivariateARCHModel(spec::MultivariateVolatilitySpec, data::Matrix;
           			  	  dist=MultivariateStdNormal,
 					  	  meanspec::[NoIntercept{T}() for _ in 1:d]
 		  			  	  fitted::Bool=false
@@ -69,7 +69,7 @@ function MultivariateARCHModel(spec::VS,
 		  			 		   fitted::Bool=false
           					  ) where {T<:AbstractFloat,
 							   		   d,
-                    			 	   VS<:MultivariateUnivariateVolatilitySpec{T, d},
+                    			 	   VS<:MultivariateVolatilitySpec{T, d},
                    					   SD<:MultivariateStandardizedDistribution,
                    					   MS<:MeanSpec
                    			 		  }
@@ -115,7 +115,7 @@ function fit!(am::MultivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kw
 end
 
 # documented in general
-function simulate(spec::MultivariateUnivariateVolatilitySpec{T2, d}, nobs;
+function simulate(spec::MultivariateVolatilitySpec{T2, d}, nobs;
                   warmup=100,
                   dist::MultivariateStandardizedDistribution{T2}=MultivariateStdNormal{T2, d}(),
                   meanspec::Vector{<:MeanSpec{T2}}=[NoIntercept{T2}() for i = 1:d]
@@ -129,7 +129,7 @@ end
 
 
 
-function _simulate!(data::Matrix{T2}, spec::MultivariateUnivariateVolatilitySpec{T2, d};
+function _simulate!(data::Matrix{T2}, spec::MultivariateVolatilitySpec{T2, d};
                   warmup=100,
                   dist::MultivariateStandardizedDistribution{T2}=MultivariateStdNormal{T2, d}(),
                   meanspec::Vector{<:MeanSpec{T2}}=[NoIntercept{T2}() for i = 1:d]

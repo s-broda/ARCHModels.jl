@@ -53,6 +53,10 @@ function vcov(am::ARCHModel)
     v
 end
 
+function show(io::IO, spec::VolatilitySpec)
+    println(io, modname(typeof(spec)), " specification.\n\n", length(spec.coefs) > 0 ? CoefTable(spec.coefs, coefnames(typeof(spec)), ["Parameters:"]) : "No estimable parameters.")
+end
+
 stderror(am::ARCHModel) = sqrt.(abs.(diag(vcov(am))))
 
 """
@@ -82,7 +86,7 @@ function simulate! end
 	simulate(am::ARCHModel, nobs; warmup=100)
     simulate(spec::UnivariateVolatilitySpec, nobs; warmup=100, dist=StdNormal(), meanspec=NoIntercept())
 Simulate a UnivariateARCHModel.
-	simulate(spec::MultivariateUnivariateVolatilitySpec, nobs; warmup=100, dist=MultivariateStdNormal(), meanspec=[NoIntercept() for i = 1:d])
+	simulate(spec::MultivariateVolatilitySpec, nobs; warmup=100, dist=MultivariateStdNormal(), meanspec=[NoIntercept() for i = 1:d])
 Simulate a MultivariateARCHModel.
 """
 function simulate end

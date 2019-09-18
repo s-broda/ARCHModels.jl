@@ -491,9 +491,6 @@ function coeftable(am::UnivariateARCHModel)
               coefnames(am), 4)
 end
 
-function show(io::IO, spec::UnivariateVolatilitySpec)
-    println(io, modname(typeof(spec)), " specification.\n\n", CoefTable(spec.coefs, coefnames(typeof(spec)), ["Parameters:"]))
-end
 function show(io::IO, am::UnivariateARCHModel)
 	if isfitted(am)
 		cc = coef(am)

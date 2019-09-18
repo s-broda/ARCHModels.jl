@@ -1,4 +1,4 @@
-struct DCC{p, q, VS<:UnivariateVolatilitySpec, T<:AbstractFloat, d} <: MultivariateUnivariateVolatilitySpec{T, d}
+struct DCC{p, q, VS<:UnivariateVolatilitySpec, T<:AbstractFloat, d} <: MultivariateVolatilitySpec{T, d}
     R::Matrix{T}
     coefs::Vector{T}
     univariatespecs::Vector{VS}
@@ -375,13 +375,7 @@ function coefnames(am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, 
     return names
 end
 
-function show(io::IO, spec::DCC{p, q, VS}) where {p, q, VS}
-    println(io, "DCC{$p, $q} - $(modname(VS)) specification.")
-    if p + q > 0
-        println("\n\n", CoefTable(spec.coefs, coefnames(typeof(spec))[1:p+q], ["DCC parameters:"]))
-    end
-end
-
+modname(::Type{DCC{p, q, VS, T, d}})  where {p, q, VS, T, d} = "DCC{$p, $q, $(modname(VS))}"
 
 function show(io::IO, am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, MVS<:DCC{p, q, VS}}
     r = p + q

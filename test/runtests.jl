@@ -411,7 +411,7 @@ end
     str = sprint(io -> show(io, am3))
     @test startswith(str, "\n2-dim")
     str = sprint(io -> show(io, am3.spec))
-    @test startswith(str, "DCC{1, 1}")
+    @test startswith(str, "DCC{1, 1")
     str = sprint(io -> show(IOContext(io, :se=>true), am1))
     @test occursin("Std.Error", str)
     @test_throws ErrorException fit(DCC, DOW29[1:11, :]) # shrinkage requires n>=12
@@ -464,5 +464,5 @@ end
     @test startswith(str, "\n4-dim")
     io = IOBuffer()
     str = sprint(io -> show(io, ccc.spec))
-    @test startswith(str, "DCC{0, 0}")
+    @test startswith(str, "DCC{0, 0")
 end
