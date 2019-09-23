@@ -1,7 +1,7 @@
 """
-    EGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}
+    EGARCH{o, p, q, T<:AbstractFloat} <: UnivariateVolatilitySpec{T}
 """
-struct EGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}
+struct EGARCH{o, p, q, T<:AbstractFloat} <: UnivariateVolatilitySpec{T}
     coefs::Vector{T}
     function EGARCH{o, p, q, T}(coefs::Vector{T}) where {o, p, q, T}
         length(coefs) == nparams(EGARCH{o, p, q})  || throw(NumParamError(nparams(EGARCH{o, p, q}), length(coefs)))
@@ -10,7 +10,7 @@ struct EGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}
 end
 
 """
-    EGARCH{o, p, q}(coefs) -> VolatilitySpec
+    EGARCH{o, p, q}(coefs) -> UnivariateVolatilitySpec
 
 Construct an EGARCH specification with the given parameters.
 
@@ -33,8 +33,7 @@ EGARCH{o, p, q}(coefs::Vector{T}) where {o, p, q, T}  = EGARCH{o, p, q, T}(coefs
 @inline presample(::Type{<:EGARCH{o, p, q}}) where {o, p, q} = max(o, p, q)
 
 Base.@propagate_inbounds @inline function update!(
-            ht, lht, zt, at, ::Type{<:EGARCH{o, p ,q}}, meanspec::MeanSpec,
-            data, garchcoefs, meancoefs
+            ht, lht, zt, at, ::Type{<:EGARCH{o, p ,q}}, garchcoefs
             ) where {o, p, q}
     mlht = garchcoefs[1]
     for i = 1:o

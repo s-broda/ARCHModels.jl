@@ -35,5 +35,5 @@ jobs:
                                     Pkg.develop(PackageSpec(path=pwd()));
                                     Pkg.instantiate();
                                     Pkg.build("ARCHModels")' #https://github.com/JuliaLang/Pkg.jl/issues/862
-        - julia --project=docs/ docs/make.jl
+        - julia --depwarn=no --project=docs/ docs/make.jl
       after_success: skip

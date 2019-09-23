@@ -33,12 +33,6 @@ add ARCHModels
 
 in the Pkg REPL mode (which is entered by pressing `]` at the prompt).
 
-## Contents
-```@contents
-Pages = ["types.md", "manual.md", "reference.md"]
-Depth = 2
-```
-
 ## Acknowledgements
 
 This project has received funding from the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (grant agreement No. 750559).

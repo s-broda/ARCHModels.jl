@@ -1,4 +1,4 @@
-# Introduction and type hierarchy
+# Introduction
 Consider a sample of daily asset returns ``\{r_t\}_{t\in\{1,\ldots,T\}}``. All models covered in this package share the same basic structure, in that they decompose the return into a conditional mean and a mean-zero innovation:
 ```math
 r_t=\mu_t+\sigma_tz_t,\quad \mu_t\equiv\mathbb{E}[r_t\mid\mathcal{F}_{t-1}],\quad \sigma_t^2\equiv\mathbb{E}[(r_t-\mu_t)^2\mid\mathcal{F}_{t-1}],
@@ -7,8 +7,9 @@ where ``z_t`` is identically and independently distributed according to some law
 
 This package represents a univariate (G)ARCH model as an instance of [`UnivariateARCHModel`](@ref), which implements the interface of `StatisticalModel` from [`StatsBase`](http://juliastats.github.io/StatsBase.jl/stable/statmodels.html). An instance of this type contains a vector of data (such as equity returns), and encapsulates information about the [volatility specification](@ref volaspec) (e.g., [GARCH](@ref) or [EGARCH](@ref)), the [mean specification](@ref meanspec) (e.g., whether an intercept is included), and the [error distribution](@ref Distributions).
 
+# Type hierarchy
 ## [Volatility specifications](@id volaspec)
-Volatility specifications describe the evolution of ``\sigma_t``. They are modelled as subtypes of [`VolatilitySpec`](@ref). There is one type for each class of (G)ARCH model, parameterized by the number(s) of lags (e.g., ``p``, ``q`` for a GARCH(p, q) model). For each volatility specification, the order of the parameters in the coefficient vector is such that all parameters pertaining to the first type parameter (``p``) appear before those pertaining to the second (``q``).
+Volatility specifications describe the evolution of ``\sigma_t``. They are modelled as subtypes of [`UnivariateVolatilitySpec`](@ref). There is one type for each class of (G)ARCH model, parameterized by the number(s) of lags (e.g., ``p``, ``q`` for a GARCH(p, q) model). For each volatility specification, the order of the parameters in the coefficient vector is such that all parameters pertaining to the first type parameter (``p``) appear before those pertaining to the second (``q``).
 ### ARCH
 With ``a_t\equiv r_t-\mu_t``, the ARCH(q) volatility specification, due to [Engle (1982)](https://doi.org/10.2307/1912773 ), is
 ```math
@@ -160,7 +161,7 @@ julia> const MyStdT = Standardized{TDist};
 julia> ARCHModels.startingvals(::Type{<:MyStdT}, data::Vector{T}) where T = T[3.]
 ```
 ## Working with UnivariateARCHModels
-The constructor for [`UnivariateARCHModel`](@ref) takes two mandatory arguments: an instance of a subtype of [`VolatilitySpec`](@ref), and a vector of returns. The mean specification and error distribution can be changed via the keyword arguments `meanspec` and `dist`, which respectively default to `NoIntercept` and `StdNormal`.
+The constructor for [`UnivariateARCHModel`](@ref) takes two mandatory arguments: an instance of a subtype of [`UnivariateVolatilitySpec`](@ref), and a vector of returns. The mean specification and error distribution can be changed via the keyword arguments `meanspec` and `dist`, which respectively default to `NoIntercept` and `StdNormal`.
 
 For example, to construct a GARCH(1, 1) model with an intercept and ``t``-distributed errors, one would do
 ```jldoctest TYPES
@@ -232,3 +233,11 @@ julia> nobs(am)
 ```
 
 Other useful methods include [`means`](@ref), [`volatilities`](@ref) and [`residuals`](@ref).
+
+```@meta
+DocTestSetup = quote
+    using Random
+    Random.seed!(1)
+end
+DocTestFilters = r".*[0-9\.]"
+```

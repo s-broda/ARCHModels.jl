@@ -5,11 +5,11 @@ Data from [Bollerslev and Ghysels (JBES 1996)](https://doi.org/10.2307/1392425).
 const BG96 = readdlm(joinpath(dirname(pathof(ARCHModels)), "data", "bollerslev_ghysels.txt"), skipstart=1)[:, 1];
 
 """
-    VolatilitySpec{T}
+    UnivariateVolatilitySpec{T} <: VolatilitySpec{T} end
 
-Abstract supertype that volatility specifications inherit from.
+Abstract supertype that univariate volatility specifications inherit from.
 """
-abstract type VolatilitySpec{T} end
+abstract type UnivariateVolatilitySpec{T} <: VolatilitySpec{T} end
 
 """
     StandardizedDistribution{T} <: Distributions.Distribution{Univariate, Continuous}
@@ -21,13 +21,13 @@ abstract type StandardizedDistribution{T} <: Distribution{Univariate, Continuous
 
 """
     UnivariateARCHModel{T<:AbstractFloat,
-              		    VS<:VolatilitySpec,
+              		    VS<:UnivariateVolatilitySpec,
               			SD<:StandardizedDistribution{T},
               			MS<:MeanSpec{T}
-              			} <: StatisticalModel
+              			} <: ARCHModel
 """
 mutable struct UnivariateARCHModel{T<:AbstractFloat,
-                 				   VS<:VolatilitySpec,
+                 				   VS<:UnivariateVolatilitySpec,
                  		  	  	   SD<:StandardizedDistribution{T},
                  				   MS<:MeanSpec{T}
                  				   } <: ARCHModel
@@ -42,7 +42,7 @@ mutable struct UnivariateARCHModel{T<:AbstractFloat,
 end
 
 """
-    UnivariateARCHModel(spec::VolatilitySpec, data::Vector; dist=StdNormal(),
+    UnivariateARCHModel(spec::UnivariateVolatilitySpec, data::Vector; dist=StdNormal(),
 	          			meanspec=NoIntercept(), fitted=false
               			)
 
@@ -68,7 +68,7 @@ function UnivariateARCHModel(spec::VS,
           				 	 meanspec::MS=NoIntercept{T}(),
 		  			 		 fitted::Bool=false
           					 ) where {T<:AbstractFloat,
-                    			 	  VS<:VolatilitySpec,
+                    			 	  VS<:UnivariateVolatilitySpec,
                    					  SD<:StandardizedDistribution,
                    					  MS<:MeanSpec
                    			 		  }
@@ -90,22 +90,8 @@ coefnames(am::UnivariateARCHModel) = vcat(coefnames(typeof(am.spec)),
                                 )
 
 
-"""
-    simulate(am::UnivariateARCHModel; warmup=100)
-	simulate(am::UnivariateARCHModel, nobs; warmup=100)
-    simulate(spec::VolatilitySpec, nobs; warmup=100, dist=StdNormal(), meanspec=NoIntercept())
-Simulate a UnivariateARCHModel.
-"""
-function simulate end
-
-simulate(am::UnivariateARCHModel; warmup=100) = simulate(am, nobs(am); warmup=warmup)
-
-function simulate(am::UnivariateARCHModel, nobs; warmup=100)
-	am2 = deepcopy(am)
-    simulate(am2.spec, nobs; warmup=warmup, dist=am2.dist, meanspec=am2.meanspec)
-end
-
-function simulate(spec::VolatilitySpec{T2}, nobs; warmup=100, dist::StandardizedDistribution{T2}=StdNormal{T2}(),
+# documented in general
+function simulate(spec::UnivariateVolatilitySpec{T2}, nobs; warmup=100, dist::StandardizedDistribution{T2}=StdNormal{T2}(),
                   meanspec::MeanSpec{T2}=NoIntercept{T2}()
                   ) where {T2<:AbstractFloat}
     data = zeros(T2, nobs)
@@ -113,17 +99,7 @@ function simulate(spec::VolatilitySpec{T2}, nobs; warmup=100, dist::Standardized
     UnivariateARCHModel(spec, data; dist=dist, meanspec=meanspec, fitted=false)
 end
 
-"""
-    simulate!(am::UnivariateARCHModel; warmup=100)
-Simulate a UnivariateARCHModel, modifying `am` in place.
-"""
-function simulate!(am::UnivariateARCHModel; warmup=100)
-	am.fitted = false
-    _simulate!(am.data, am.spec; warmup=warmup, dist=am.dist, meanspec=am.meanspec)
-    am
-end
-
-function _simulate!(data::Vector{T2}, spec::VolatilitySpec{T2};
+function _simulate!(data::Vector{T2}, spec::UnivariateVolatilitySpec{T2};
                   warmup=100,
                   dist::StandardizedDistribution{T2}=StdNormal{T2}(),
                   meanspec::MeanSpec{T2}=NoIntercept{T2}()
@@ -150,9 +126,7 @@ function _simulate!(data::Vector{T2}, spec::VolatilitySpec{T2};
 				themean = m0
 			end
 			if t>r1
-                update!(ht, lht, zt, at, typeof(spec), meanspec,
-                        data, spec.coefs, meanspec.coefs
-                        )
+                update!(ht, lht, zt, at, typeof(spec), spec.coefs)
             else
 				push!(ht, h0)
                 push!(lht, log(h0))
@@ -204,7 +178,7 @@ function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility; level=0.0
 	if what == :return || what == :VaR
 		themean = mean(at, ht, lht, am.data, am.meanspec, am.meanspec.coefs, t)
 	end
-	update!(ht, lht, zt, at, VS, am.meanspec, am.data, am.spec.coefs, am.meanspec.coefs)
+	update!(ht, lht, zt, at, VS, am.spec.coefs)
 	if what == :return
 		return themean
 	elseif what == :volatility
@@ -253,9 +227,9 @@ end
 #dimensional array of the right type.
 @inline function loglik!(ht::AbstractVector{T2}, lht::AbstractVector{T2},
                          zt::AbstractVector{T2}, at::AbstractVector{T2}, ::Type{VS}, ::Type{SD}, meanspec::MS,
-                         data::Vector{T1}, coefs::AbstractVector{T2}
-                         ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
-                                  MS<:MeanSpec, T1<:AbstractFloat, T2
+                         data::Vector{T1}, coefs::AbstractVector{T3}
+                         ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
+                                  MS<:MeanSpec, T1<:AbstractFloat, T2, T3
                                   }
     garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, meanspec)
     #the below 6 lines can be removed when using Fminbox
@@ -284,7 +258,7 @@ end
 				themean = m0
 			end
 			if t > r1
-                update!(ht, lht, zt, at, VS, meanspec, data, garchcoefs, meancoefs)
+                update!(ht, lht, zt, at, VS, garchcoefs)
             else
 				push!(ht, h0)
                 push!(lht, log(h0))
@@ -301,7 +275,7 @@ end#function
 
 function loglik(spec::Type{VS}, dist::Type{SD}, meanspec::MS,
                    data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}
-                   ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
+                   ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
                             MS<:MeanSpec, T2
                             }
     r = max(presample(VS), presample(meanspec))
@@ -340,7 +314,7 @@ end
 function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
               meancoefs::Vector{T}, ::Type{VS}, ::Type{SD}, meanspec::MS,
               data::Vector{T}; algorithm=BFGS(), autodiff=:forward, kwargs...
-              ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
+              ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
                        MS<:MeanSpec, T<:AbstractFloat
                        }
     obj = x -> -loglik(VS, SD, meanspec, data, x)
@@ -365,11 +339,11 @@ function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
 end
 
 """
-    fit(VS::Type{<:VolatilitySpec}, data; dist=StdNormal, meanspec=Intercept,
+    fit(VS::Type{<:UnivariateVolatilitySpec}, data; dist=StdNormal, meanspec=Intercept,
         algorithm=BFGS(), autodiff=:forward, kwargs...)
 
 Fit the ARCH model specified by `VS` to `data`. `data` can be a vector or a
-GLM.LinearModel (or GLM.DataFrameRegressionModel).
+GLM.LinearModel (or GLM.TableRegressionModel).
 
 # Keyword arguments:
 - `dist=StdNormal`: the error distribution.
@@ -401,12 +375,10 @@ Distribution parameters:
 ─────────────────────────────────────────
 ```
 """
-function fit end
-
 function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
              meanspec::Union{MS, Type{MS}}=Intercept{T}(T[0]), algorithm=BFGS(),
              autodiff=:forward, kwargs...
-             ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
+             ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
                       MS<:MeanSpec, T<:AbstractFloat
                       }
 	#can't use dispatch for this b/c meanspec is a kwarg
@@ -418,12 +390,6 @@ function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
 	return UnivariateARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=ms, fitted=true)
 end
 
-"""
-    fit!(am::UnivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
-
-Fit the UnivariateARCHModel specified by `am`, modifying `am` in place. Keyword arguments
-are passed on to the optimizer.
-"""
 function fit!(am::UnivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
     am.spec.coefs.=startingvals(typeof(am.spec), am.data)
     am.dist.coefs.=startingvals(typeof(am.dist), am.data)
@@ -436,12 +402,6 @@ function fit!(am::UnivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwar
     am
 end
 
-"""
-    fit(am::UnivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
-
-Fit the UnivariateARCHModel specified by `am` and return the result in a new instance of
-UnivariateARCHModel. Keyword arguments are passed on to the optimizer.
-"""
 function fit(am::UnivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
     am2=deepcopy(am)
     fit!(am2; algorithm=algorithm, autodiff=autodiff, kwargs...)
@@ -491,7 +451,7 @@ function selectmodel(::Type{VS}, data::Vector{T};
                      dist::Type{SD}=StdNormal{T}, meanspec::Union{MS, Type{MS}}=Intercept{T},
                      maxlags=3, criterion=bic, show_trace=false, algorithm=BFGS(),
                      autodiff=:forward, kwargs...
-                     ) where {VS<:VolatilitySpec, T<:AbstractFloat,
+                     ) where {VS<:UnivariateVolatilitySpec, T<:AbstractFloat,
                               SD<:StandardizedDistribution, MS<:MeanSpec
                               }
 	#threading sometimes segfaults in tests locally. possibly https://github.com/JuliaLang/julia/issues/29934
@@ -499,20 +459,21 @@ function selectmodel(::Type{VS}, data::Vector{T};
     ndims = max(my_unwrap_unionall(VS)-1, 0)#e.g., two (p and q) for GARCH{p, q, T}
 	ndims2 = max(my_unwrap_unionall(MS)-1, 0)#e.g., two (p and q) for ARMA{p, q, T}
     res = Array{UnivariateARCHModel, ndims+ndims2}(undef, ntuple(i->maxlags, ndims+ndims2))
-    Threads.@threads for ind in collect(CartesianIndices(size(res)))
+    #Threads.@threads
+	for ind in collect(CartesianIndices(size(res)))
 		VSi = VS{ind.I[1:ndims]...}
 		MSi = (ndims2==0 ? meanspec : meanspec{ind.I[ndims+1:end]...})
 		res[ind] = fit(VSi, data; dist=dist, meanspec=MSi,
                        algorithm=algorithm, autodiff=autodiff, kwargs...)
         if show_trace
-            lock(mylock)
+            # lock(mylock)
             Core.print(modname(VSi))
 			ndims2>0 && Core.print("-", modname(MSi))
 			Core.println(" model has ",
                               uppercase(split("$criterion", ".")[end]), " ",
                               criterion(res[ind]), "."
                               )
-            unlock(mylock)
+            # unlock(mylock)
         end
     end
     crits = criterion.(res)
@@ -530,9 +491,6 @@ function coeftable(am::UnivariateARCHModel)
               coefnames(am), 4)
 end
 
-function show(io::IO, spec::VolatilitySpec)
-    println(io, modname(typeof(spec)), " specification.\n\n", CoefTable(spec.coefs, coefnames(typeof(spec)), ["Parameters:"]))
-end
 function show(io::IO, am::UnivariateARCHModel)
 	if isfitted(am)
 		cc = coef(am)
@@ -577,7 +535,7 @@ function show(io::IO, am::UnivariateARCHModel)
    end
 end
 
-function modname(::Type{S}) where S<:Union{VolatilitySpec, MeanSpec}
+function modname(::Type{S}) where S<:Union{UnivariateVolatilitySpec, MeanSpec}
     s = "$(S)"
 	lastcomma = findlast(isequal(','), s)
     lastcomma == nothing || (s = s[1:lastcomma-1] * '}')

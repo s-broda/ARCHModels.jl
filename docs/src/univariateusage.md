@@ -1,10 +1,3 @@
-```@meta
-DocTestSetup = quote
-    using Random
-    Random.seed!(1)
-end
-DocTestFilters = r".*[0-9\.]"
-```
 # Usage
 We will be using the data from [Bollerslev and Ghysels (1986)](https://doi.org/10.2307/1392425), available as the constant [`BG96`](@ref). The data consist of daily German mark/British pound exchange rates (1974 observations) and are often used in evaluating
 implementations of (G)ARCH models (see, e.g., [Brooks et.al. (2001)](https://doi.org/10.1016/S0169-2070(00)00070-4). We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:
@@ -81,7 +74,7 @@ This returns an instance of [`UnivariateARCHModel`](@ref), as described in the s
 
 The [`fit`](@ref) method supports a number of keyword arguments; the full signature is
 ```julia
-fit(::Type{<:VolatilitySpec}, data::Vector; dist=StdNormal, meanspec=Intercept, algorithm=BFGS(), autodiff=:forward, kwargs...)
+fit(::Type{<:UnivariateVolatilitySpec}, data::Vector; dist=StdNormal, meanspec=Intercept, algorithm=BFGS(), autodiff=:forward, kwargs...)
 ```
 
 Their meaning is as follows:
@@ -141,7 +134,7 @@ Distribution parameters:
 ─────────────────────────────────────────
 ```
 
-An alternative approach to fitting a [`VolatilitySpec`](@ref) to `BG96` is to first construct
+An alternative approach to fitting a [`UnivariateVolatilitySpec`](@ref) to `BG96` is to first construct
 a [`UnivariateARCHModel`](@ref) containing the data, and then using [`fit!`](@ref) to modify it in place:
 
 ```jldoctest MANUAL
@@ -231,7 +224,7 @@ Volatility parameters:
 ```
 ## Model selection
 The function [`selectmodel`](@ref) can be used for automatic model selection, based on an information crititerion. Given
-a class of model (i.e., a subtype of [`VolatilitySpec`](@ref)), it will return a fitted [`UnivariateARCHModel`](@ref), with the lag length
+a class of model (i.e., a subtype of [`UnivariateVolatilitySpec`](@ref)), it will return a fitted [`UnivariateARCHModel`](@ref), with the lag length
 parameters (i.e., ``p`` and ``q`` in the case of [`GARCH`](@ref)) chosen to minimize the desired criterion. The [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion) is used by default.
 
 Eg., the following selects the optimal (minimum AIC) EGARCH(o, p, q) model, where o, p, q < 2,  assuming ``t`` distributed errors.
@@ -410,7 +403,7 @@ Details:
 ```
 By default, the number of lags is chosen as the maximum order of the volatility specification (e.g., ``\max(p, q)`` for a GARCH(p, q) model). Here, the test does not reject, indicating that a GARCH(1, 1) specification is sufficient for modelling the volatility clustering (a common finding).
 ## Simulation
-To simulate from a [`UnivariateARCHModel`](@ref), use [`simulate`](@ref). You can either specify the [`VolatilitySpec`](@ref) (and optionally the distribution and mean specification) and desired number of observations, or pass an existing [`UnivariateARCHModel`](@ref). Use [`simulate!`](@ref) to modify the data in place. Example:
+To simulate from a [`UnivariateARCHModel`](@ref), use [`simulate`](@ref). You can either specify the [`UnivariateVolatilitySpec`](@ref) (and optionally the distribution and mean specification) and desired number of observations, or pass an existing [`UnivariateARCHModel`](@ref). Use [`simulate!`](@ref) to modify the data in place. Example:
 ```jldoctest MANUAL
 julia> am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=500, meanspec=Intercept(5.), dist=StdT(3.))
 

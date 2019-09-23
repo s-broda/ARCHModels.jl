@@ -1,7 +1,7 @@
 """
-    TGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}
+    TGARCH{o, p, q, T<:AbstractFloat} <: UnivariateVolatilitySpec{T}
 """
-struct TGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}
+struct TGARCH{o, p, q, T<:AbstractFloat} <: UnivariateVolatilitySpec{T}
     coefs::Vector{T}
     function TGARCH{o, p, q, T}(coefs::Vector{T}) where {o, p, q, T}
         length(coefs) == nparams(TGARCH{o, p, q})  || throw(NumParamError(nparams(TGARCH{o, p, q}), length(coefs)))
@@ -10,7 +10,7 @@ struct TGARCH{o, p, q, T<:AbstractFloat} <: VolatilitySpec{T}
 end
 
 """
-    TGARCH{o, p, q}(coefs) -> VolatilitySpec
+    TGARCH{o, p, q}(coefs) -> UnivariateVolatilitySpec
 Construct a TGARCH specification with the given parameters.
 
 # Example:
@@ -28,9 +28,9 @@ Parameters:  1.0  0.04  0.9  0.01
 TGARCH{o, p, q}(coefs::Vector{T}) where {o, p, q, T}  = TGARCH{o, p, q, T}(coefs)
 
 """
-    GARCH{p, q, T<:AbstractFloat} <: VolatilitySpec{T}
+    GARCH{p, q, T<:AbstractFloat} <: UnivariateVolatilitySpec{T}
 ---
-    GARCH{p, q}(coefs) -> VolatilitySpec
+    GARCH{p, q}(coefs) -> UnivariateVolatilitySpec
 
 Construct a GARCH specification with the given parameters.
 
@@ -50,9 +50,9 @@ Parameters:  1.0  0.3  0.4  0.05
 const GARCH = TGARCH{0}
 
 """
-    ARCH{q, T<:AbstractFloat} <: VolatilitySpec{T}
+    ARCH{q, T<:AbstractFloat} <: UnivariateVolatilitySpec{T}
 ---
-    ARCH{q}(coefs) -> VolatilitySpec
+    ARCH{q}(coefs) -> UnivariateVolatilitySpec
 
 Construct an ARCH specification with the given parameters.
 
@@ -75,8 +75,7 @@ const ARCH = GARCH{0}
 @inline presample(::Type{<:TGARCH{o, p, q}}) where {o, p, q} = max(o, p, q)
 
 Base.@propagate_inbounds @inline function update!(
-        ht, lht, zt, at, ::Type{<:TGARCH{o, p, q}}, meanspec::MeanSpec,
-        data, garchcoefs, meancoefs
+        ht, lht, zt, at, ::Type{<:TGARCH{o, p, q}}, garchcoefs
         ) where {o, p, q}
     mht = garchcoefs[1]
     for i = 1:o

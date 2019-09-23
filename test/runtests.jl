@@ -6,6 +6,7 @@ using GLM
 using DataFrames
 
 T = 10^4;
+
 @testset "TGARCH" begin
     @test ARCHModels.nparams(TGARCH{1, 2, 3}) == 7
     @test ARCHModels.presample(TGARCH{1, 2, 3}) == 3
@@ -382,4 +383,86 @@ end
     str = sprint(show, DQ)
     @test startswith(str, "Engle and Manganelli's (2004) DQ test (out of sample)")
     @test ARCHModels.testname(DQ) == "Engle and Manganelli's (2004) DQ test (out of sample)"
+end
+@testset "multivariate" begin
+    am1 = fit(DCC, DOW29[:, 1:2])
+    am2 = fit(DCC, DOW29[:, 1:2]; method=:twostep)
+    am3 = MultivariateARCHModel(DCC{1, 1}([1. 0.; 0. 1.], [0., 0.], [GARCH{1, 1}([1., 0., 0.]), GARCH{1, 1}([1., 0., 0.])]), DOW29[:, 1:2]) # not fitted
+    am4 = fit(DCC, DOW29[1:20, 1:29]) # shrinkage n<p
+    @test all(fit(am1).spec.coefs .== am1.spec.coefs)
+    @test all(isapprox(am1.spec.coefs, [0.8912884521017908, 0.05515419379547665], rtol=1e-4))
+    @test all(isapprox(am2.spec.coefs,    [0.8912161306136979, 0.055139392936998946], rtol=1e-4))
+    @test all(isapprox(am4.spec.coefs, [0.8935938309400944, 6.938893903907228e-18], rtol=1e-4))
+    @test all(isapprox(stderror(am1)[1:2], [0.0434344187103969, 0.020778846682313102], rtol=1e-4))
+    @test all(isapprox(stderror(am2)[1:2], [0.030405542205923865, 0.014782869078355866], rtol=1e-4))
+    @test all(isapprox(predict(am1; what=:correlation)[:], [1.0, 0.4365129466277069, 0.4365129466277069, 1.0], rtol=1e-4))
+    @test all(isapprox(predict(am1; what=:covariance)[:], [6.916591739333349, 1.329392154000225, 1.329392154000225,  1.340972349032465], rtol=1e-4))
+    @test_throws ErrorException predict(am1; what=:bla)
+    @test residuals(am1)[1, 1] ≈ 0.5107042609407892
+    @test_throws ErrorException fit(DCC, DOW29; method=:bla)
+    @test_throws ARCHModels.NumParamError DCC{1, 1}([1. 0.; 0. 1.], [1., 0., 0.], [GARCH{1, 1}([1., 0., 0.]), GARCH{1, 1}([1., 0., 0.])])
+    @test_throws AssertionError DCC{1, 1}([1. 0.; 0. 1.], [0., 0.], [GARCH{1, 1}([1., 0., 0.]), GARCH{1, 1}([1., 0., 0.])]; method=:bla)
+    @test coefnames(am1) == ["β₁", "α₁", "ω₁", "β₁₁", "α₁₁", "μ₁", "ω₂", "β₁₂", "α₁₂", "μ₂"]
+    @test ARCHModels.nparams(DCC{1, 1}) == 2
+    @test ARCHModels.presample(DCC{1, 2, GARCH{3, 4}}) == 4
+    io = IOBuffer()
+    str = sprint(io -> show(io, am1))
+    @test startswith(str, "\n2-dim")
+    str = sprint(io -> show(io, am3))
+    @test startswith(str, "\n2-dim")
+    str = sprint(io -> show(io, am3.spec))
+    @test startswith(str, "DCC{1, 1")
+    str = sprint(io -> show(IOContext(io, :se=>true), am1))
+    @test occursin("Std.Error", str)
+    @test_throws ErrorException fit(DCC, DOW29[1:11, :]) # shrinkage requires n>=12
+    @test loglikelihood(am1) ≈ -9810.905799585276
+
+    @test ARCHModels.nparams(MultivariateStdNormal) == 0
+    @test typeof(MultivariateStdNormal{Float64, 3}()) == typeof(MultivariateStdNormal{Float64, 3}(Float64[]))
+    @test typeof(MultivariateStdNormal(Float64, 3)) == typeof(MultivariateStdNormal{Float64, 3}(Float64[]))
+    @test typeof(MultivariateStdNormal(Float64[], 3)) == typeof(MultivariateStdNormal{Float64, 3}(Float64[]))
+    @test typeof(MultivariateStdNormal{Float64}(3)) == typeof(MultivariateStdNormal{Float64, 3}(Float64[]))
+    @test typeof(MultivariateStdNormal(3)) == typeof(MultivariateStdNormal{Float64, 3}(Float64[]))
+    Random.seed!(1)
+    @test all(isapprox(rand(MultivariateStdNormal(2)), [0.2972879845354616, 0.3823959677906078], rtol=1e-6))
+    @test coefnames(MultivariateStdNormal) == String[]
+    @test ARCHModels.distname(MultivariateStdNormal) == "Multivariate Normal"
+
+    Random.seed!(1)
+    am = am1
+    am.spec.coefs .= [.7, .2]
+    ams  = simulate(am)
+    @test isfitted(ams) == false
+    fit!(ams)
+    @test isfitted(ams) == true
+    @test all(isapprox(ams.spec.coefs, [0.7122483516102956, 0.19156028421431875], rtol=1e-4))
+    Random.seed!(2)
+    simulate!(ams)
+    @test ams.fitted == false
+    fit!(ams)
+    @test all(isapprox(ams.spec.coefs, [0.6630049669013613, 0.22885770926598498], rtol=1e-4))
+    Random.seed!(1)
+    amc = fit(DCC{1, 2, GARCH{3, 2}}, DOW29[:, 1:4]; meanspec=AR{3})
+    ams = simulate(amc, T)
+    fit!(ams)
+    @test all(isapprox(ams.meanspec[1].coefs, [-0.09394176323811071, 0.05159711352207107, 0.011348428433666473, -0.020175913191330077], rtol=1e-4))
+    Random.seed!(1)
+    ame = fit(DCC{1, 2, EGARCH{1, 1, 1}}, DOW29[:, 1:4])
+    ams = simulate(ame, T)
+    fit!(ams)
+    @test all(isapprox(ams.spec.univariatespecs[1].coefs, [0.046700648921491957, -0.07258062140595305, 0.9664860227494515, 0.22051944930571496], rtol=1e-4))
+
+    Random.seed!(1)
+    ccc = fit(CCC, DOW29[:, 1:4])
+    @test ccc.spec.R[1, 2] ≈ 0.37095654552885643
+    @test stderror(ccc)[1] ≈ 0.06298215515406534
+    cccs = simulate(ccc, T)
+    @test  cccs.data[end, 1] ≈ -1.5061782364569236
+    @test coefnames(ccc) == ["ω₁", "β₁₁", "α₁₁", "μ₁", "ω₂", "β₁₂", "α₁₂", "μ₂", "ω₃", "β₁₃", "α₁₃", "μ₃", "ω₄", "β₁₄", "α₁₄", "μ₄"]
+    io = IOBuffer()
+    str = sprint(io -> show(io, ccc))
+    @test startswith(str, "\n4-dim")
+    io = IOBuffer()
+    str = sprint(io -> show(io, ccc.spec))
+    @test startswith(str, "DCC{0, 0")
 end
