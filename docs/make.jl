@@ -5,10 +5,12 @@ makedocs(modules=[ARCHModels],
         sitename="ARCHModels.jl",
         format = Documenter.HTML(assets=["assets/invenia.css"]),
         doctest=true,
-        strict=true,
+        strict=false,
         pages = ["Home" => "index.md",
-                 "Univariate ARCH Models" => Any["univariateintro.md", "univariateusage.md"],
-                 "Multivariate ARCH Models" => Any["multivariateintro.md", "multivariateusage.md"],
+                 "introduction.md",
+                 "univariatetypehierarchy.md",
+                 "multivariatetypehierarchy.md",
+                 "usage.md",
                  "reference.md"
                  ]
         )
