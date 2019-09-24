@@ -1,5 +1,6 @@
-# Type hierarchy
-## [Univariate volatility specifications](@id volaspec)
+# Type hierarchy: Univariate
+An instance of [`UnivariateARCHModel`](@ref) contains a vector of data (such as equity returns), and encapsulates information about the [volatility specification](@ref volaspec) (e.g., [GARCH](@ref) or [EGARCH](@ref)), the [mean specification](@ref meanspec) (e.g., whether an intercept is included), and the [error distribution](@ref Distributions).
+## [Volatility specifications](@id volaspec)
 Volatility specifications describe the evolution of ``\sigma_t``. They are modelled as subtypes of [`UnivariateVolatilitySpec`](@ref). There is one type for each class of (G)ARCH model, parameterized by the number(s) of lags (e.g., ``p``, ``q`` for a GARCH(p, q) model). For each volatility specification, the order of the parameters in the coefficient vector is such that all parameters pertaining to the first type parameter (``p``) appear before those pertaining to the second (``q``).
 ### ARCH
 With ``a_t\equiv r_t-\mu_t``, the ARCH(q) volatility specification, due to [Engle (1982)](https://doi.org/10.2307/1912773 ), is
@@ -27,8 +28,6 @@ The GARCH(p, q) model, due to [Bollerslev (1986)](https://doi.org/10.1016/0304-4
 ```
 It is available as [`GARCH{p, q}`](@ref):
 ```jldoctest TYPES
-julia> using ARCHModels
-
 julia> GARCH{1, 1}([1., .9, .05])
 TGARCH{0,1,1} specification.
 
@@ -41,7 +40,7 @@ Parameters:  1.0  0.9  0.05
 This creates a GARCH(1, 1) specification with ``ω=1``, ``β=.9``, and ``α=.05``.
 
 ### TGARCH
-As may have been guessed from the output above, the ARCH and GARCH models are actually special cases of a more general class of models, known as TGARCH (Threshold GARCH), due to [Glosten, Jagannathan, and Runkle](https://doi.org/10.1111/j.1540-6261.1993.tb05128.x). The TGARCH{o, p, q} model takes the form
+As may have been guessed from the output above, the ARCH and GARCH models are actually special cases of a more general class of models, known as TGARCH (Threshold GARCH), due to [Glosten, Jagannathan, and Runkle (1993)](https://doi.org/10.1111/j.1540-6261.1993.tb05128.x). The TGARCH{o, p, q} model takes the form
 
 ```math
 \sigma_t^2=\omega+\sum_{i=1}^o\gamma_i  a_{t-i}^2 1_{a_{t-i}<0}+\sum_{i=1}^p\beta_i \sigma_{t-i}^2+\sum_{i=1}^q\alpha_i a_{t-i}^2, \quad \omega, \alpha_i, \beta_i, \gamma_i>0, \sum_{i=1}^{\max o,p,q} \alpha_i+\beta_i+\gamma_i/2<1.
@@ -50,8 +49,6 @@ As may have been guessed from the output above, the ARCH and GARCH models are ac
 The TGARCH model allows the volatility to react differently (typically more strongly) to negative shocks, a feature known as the (statistical) leverage effect. Is available as [`TGARCH{o, p, q}`](@ref):
 
 ```jldoctest TYPES
-julia> using ARCHModels
-
 julia> TGARCH{1, 1, 1}([1., .04, .9, .01])
 TGARCH{1,1,1} specification.
 
@@ -79,36 +76,8 @@ EGARCH{1,1,1} specification.
 Parameters:  -0.1  0.1  0.9  0.04
 ─────────────────────────────────
 ```
-## [Multivariate volatility and covariance specifications](@id covspec)
-The main challenge in multivariate ARCH modelling is the _curse of dimensionality_: allowing each of the ``(d)(d+1)/2`` elements of ``\Sigma_t`` to depend on the past returns of all ``d`` other assets requires ``O(d^4)`` parameters without imposing additional structure. Multivariate ARCH models differ in which structure they impose.
-
-The dynamics of ``\Sigma_t``  are modelled as subtypes of [`MultivariateVolatilitySpec`](@ref). These may be combined with different mean specifications as in the univariate case, and (in principle) with different specifications for the joint distribution of the standardized returns, although at present, only the multivariate standard normal is supported.
-### CCC
-The CCC (constant conditional correlation) model of [Bollerslev (1990)](https://doi.org/10.2307/2109358) decomposes
-``\Sigma_t`` as
-```math
-\Sigma_t=D_t R_t D_t,
-```
-where ``R_t`` is the conditional correlation matrix and ``D_t`` is a diagonal matrix containing the volatilities of the individual assets, which are modelled as univariate ARCH processes. In the constant conditional correlation (CCC) model, ``R_t=R`` is assumed constant. The model is typically, including in this package, estimated in a two-step procedure: first, univariate ARCH models are fitted to the $d$ asset returns, and then ``R`` is estimated as the sample correlation matrix of the standardized residuals.
-
-### DCC
-The DCC model of [Engle (2002)](https://doi.org/10.1198/073500102288618487) extends the CCC model by making the ``R_t`` dynamic (hence the name, dynamic conditional correlation model). In particular, for a DCC(p, q) model (with covariance targeting),
-
-```math
-R_{ij, t} = \frac{Q_{ij,t}}{\sqrt{Q_{ii,t}Q_{jj,t}}},
-```
-where
-```math
-Q_{t} \equiv\bar{Q}(1-\bar\alpha-\bar\beta)+\sum_{i=1}^{p} \beta_iQ_{t-i}+\sum_{i=1}^{q}\alpha_i\epsilon_{t-i}\epsilon_{t-i}^\mathrm{\scriptsize T},
-```
-``\bar{\alpha}\equiv\sum_{i=1}^q\alpha_i``, ``\bar{\beta}\equiv\sum_{i=1}^q\beta_i``, ``\epsilon_{t}\equiv D_t^{-1}a_t$, $Q_{t}=\mathrm{cov}
-(\epsilon_t|F_{t-1})``, and ``\bar{Q}=\mathrm{cov}(\epsilon_{t})``.
-
-Like the CCC model, the DCC model can be estimated in two steps, by first fitting univariate ARCH models to the individual assets and saving the standardized residuals ``\{\epsilon_t\}``, and then estimating the DCC parameters from those. [Engle (2002)](https://doi.org/10.1198/073500102288618487) provides the details and expressions for the standard errors. By default, this package employs an alternative estimator due to [Engle, Ledoit, and Wolf (2019)](https://doi.org/10.1080/07350015.2017.1345683) which is better suited to large-dimensional problems. It achieves this by i) estimating ``\bar{Q}`` with a nonlinear shrinkage estimator instead of the sample covariance of $\epsilon_t$, and ii) estimating the DCC parameters by maximizing the sum of the pairwise log-likelihoods, rather than the joint log-likelihood over all assets, thereby avoiding the inversion of large matrices during the optimization.
-
-
 ## [Mean specifications](@id meanspec)
-Mean specifications serve to specify ``\mu_t``. They are modelled as subtypes of [`MeanSpec`](@ref). They contain their parameters as (possibly empty) vectors, but convenience constructors are provided where appropriate. Currently, three specifications are available:
+Mean specifications serve to specify ``\mu_t``. They are modelled as subtypes of [`MeanSpec`](@ref). They contain their parameters as (possibly empty) vectors, but convenience constructors are provided where appropriate. The following specifications are available:
 * A zero mean: ``\mu_t=0``. Available as [`NoIntercept`](@ref):
 ```jldoctest TYPES
 julia> NoIntercept() # convenience constructor, eltype defaults to Float64
@@ -145,7 +114,7 @@ ARMA{0,1,Float64}([1.0, -0.1])
 
 ## Distributions
 ### Built-in distributions
-Different standardized (mean zero, variance one) distributions for ``z_t`` are available as subtypes of [`StandardizedDistribution`](@ref). `StandardizedDistribution` in turn subtypes `Distribution{Univariate, Continuous}` from [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), though not the entire interface must necessarily be implemented. `StandardizedDistribution`s again hold their parameters as vectors, but convenience constructors are provided. The following are currently available:
+Different standardized (mean zero, variance one) distributions for ``z_t`` are available as subtypes of [`StandardizedDistribution`](@ref). `StandardizedDistribution` in turn subtypes `Distribution{Univariate, Continuous}` from [Distributions.jl](https://github.com/JuliaStats/Distributions.jl), though not the entire interface need necessarily be implemented. `StandardizedDistribution`s again hold their parameters as vectors, but convenience constructors are provided. The following are currently available:
 * [`StdNormal`](@ref), the standard [normal distribution](https://en.wikipedia.org/wiki/Normal_distribution):
 ```jldoctest TYPES
 julia> StdNormal() # convenience constructor
@@ -179,8 +148,7 @@ julia> const MyStdT = Standardized{TDist};
 
 julia> ARCHModels.startingvals(::Type{<:MyStdT}, data::Vector{T}) where T = T[3.]
 ```
-## Working with ARCHModels
-### Univariate
+## Working with UnivariateARCHModels
 The constructor for [`UnivariateARCHModel`](@ref) takes two mandatory arguments: an instance of a subtype of [`UnivariateVolatilitySpec`](@ref), and a vector of returns. The mean specification and error distribution can be changed via the keyword arguments `meanspec` and `dist`, which respectively default to `NoIntercept` and `StdNormal`.
 
 For example, to construct a GARCH(1, 1) model with an intercept and ``t``-distributed errors, one would do
@@ -253,5 +221,3 @@ julia> nobs(am)
 ```
 
 Other useful methods include [`means`](@ref), [`volatilities`](@ref) and [`residuals`](@ref).
-
-### Multivariate

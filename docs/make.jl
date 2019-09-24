@@ -5,10 +5,11 @@ makedocs(modules=[ARCHModels],
         sitename="ARCHModels.jl",
         format = Documenter.HTML(assets=["assets/invenia.css"]),
         doctest=true,
-        strict=true,
+        strict=false,
         pages = ["Home" => "index.md",
                  "introduction.md",
-                 "typehierarchy.md",
+                 "univariatetypehierarchy.md",
+                 "multivariatetypehierarchy.md",
                  "usage.md",
                  "reference.md"
                  ]
