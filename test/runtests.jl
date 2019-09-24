@@ -405,6 +405,7 @@ end
     @test coefnames(am1) == ["β₁", "α₁", "ω₁", "β₁₁", "α₁₁", "μ₁", "ω₂", "β₁₂", "α₁₂", "μ₂"]
     @test ARCHModels.nparams(DCC{1, 1}) == 2
     @test ARCHModels.presample(DCC{1, 2, GARCH{3, 4}}) == 4
+    @test ARCHModels.presample(DCC{1, 2, GARCH{3, 4, Float64}, Float64, 2}) == 4
     io = IOBuffer()
     str = sprint(io -> show(io, am1))
     @test startswith(str, "\n2-dim")
