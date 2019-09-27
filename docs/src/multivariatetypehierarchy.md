@@ -6,6 +6,8 @@ end
 # Type hierarchy: Multivariate
 Analogously to the univariate case, an instance of [`MultivariateARCHModel`](@ref) contains a matrix of data (with observations in rows and assets in columns), and encapsulates information about the [covariance specification](@ref covspec) (e.g., [CCC](@ref) or [DCC](@ref)), the [mean specification](@ref mvmeanspec), and the [error distribution](@ref mvdistspec).
 
+[`MultivariateARCHModel`](@ref)s support many of the same methods as [`UnivariateARCHModel`](@ref)s, with a few noteworthy differences: the prediction targets for [`predict`](@ref) are `:covariances` and `:correlations` for predicting ``\Sigma_t`` and ``R_t``, respectively, and the new functions [`covariances`](@ref) and [`correlations`](@ref) respectively return the in-sample estimates of ``\Sigma_t`` and ``R_t``.
+
 ## [Covariance specifications](@id covspec)
 The dynamics of ``\Sigma_t``  are modelled as subtypes of [`MultivariateVolatilitySpec`](@ref).
 ### Conditional correlation models
@@ -42,7 +44,7 @@ Parameters:  0.9  0.05
 ──────────────────────
 ```
 
-The DCC model is typically estimated in two steps, by first fitting univariate ARCH models to the individual assets and saving the standardized residuals ``\{\epsilon_t\}``, and then estimating the DCC parameters from those. [Engle (2002)](https://doi.org/10.1198/073500102288618487) provides the details and expressions for the standard errors. By default, this package employs an alternative estimator due to [Engle, Ledoit, and Wolf (2019)](https://doi.org/10.1080/07350015.2017.1345683) which is better suited to large-dimensional problems. It achieves this by i) estimating ``\bar{Q}`` with a nonlinear shrinkage estimator instead of the sample covariance of $\epsilon_t$, and ii) estimating the DCC parameters by maximizing the sum of the pairwise log-likelihoods, rather than the joint log-likelihood over all assets, thereby avoiding the inversion of large matrices during the optimization. The estimation method is controlled by passing the `method` keyword to the constructor. Possible values are `:largescale` (the default), and `:twostep`).
+The DCC model is typically estimated in two steps, by first fitting univariate ARCH models to the individual assets and saving the standardized residuals ``\{\epsilon_t\}``, and then estimating the DCC parameters from those. [Engle (2002)](https://doi.org/10.1198/073500102288618487) provides the details and expressions for the standard errors. By default, this package employs an alternative estimator due to [Engle, Ledoit, and Wolf (2019)](https://doi.org/10.1080/07350015.2017.1345683) which is better suited to large-dimensional problems. It achieves this by i) estimating ``\bar{Q}`` with a nonlinear shrinkage estimator instead of the sample covariance of $\epsilon_t$, and ii) estimating the DCC parameters by maximizing the sum of the pairwise log-likelihoods, rather than the joint log-likelihood over all assets, thereby avoiding the inversion of large matrices during the optimization. The estimation method is controlled by passing the `method` keyword to the constructor. Possible values are `:largescale` (the default), and `:twostep`.
 
 #### CCC
 The CCC (constant conditional correlation) model of [Bollerslev (1990)](https://doi.org/10.2307/2109358) models ``R_t=R`` as constant. It is the special case of the DCC model in which ``p=q=0``:
@@ -60,10 +62,13 @@ DCC{0, 0, TGARCH{0,1,1}} specification.
 No estimable parameters.
 ```
 
+As for the DCC model, the constructor accepts a `method` keyword argument with possible values `:largescale` (default) or `:twostep` that determines whether ``R`` will be estimated by nonlinear shrinkage or the sample correlation of the ``\epsilon_t``.
+
 ## [Mean Specifications](@id mvmeanspec)
+ The conditional mean of a `MultivariateARCHModel` is specified by a vector of [`MeanSpec`](@ref)s as described under [Mean specifications](@ref meanspec)
 
 ## [Multivariate Standardized Distributions](@id mvdistspec)
-
+Multivariate standardized distributions subtype [`MultivariateStandardizedDistribution`](@ref). Currently, only [`MultivariateStdNormal`](@ref) is available. Note that under mild assumptions, the Gaussian (quasi-)MLE consistently estimates the (multivariate) ARCH parameters even if Gaussianity is violated.
 
 ```@meta
 DocTestSetup = nothing

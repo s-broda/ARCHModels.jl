@@ -1,3 +1,7 @@
+"""
+    MultivariateStdNormal{T, d} <: MultivariateStandardizedDistribution{T, d}
+The multivariate standard normal distribution.
+"""
 struct MultivariateStdNormal{T, d} <: MultivariateStandardizedDistribution{T, d}
     coefs::Vector{T}
 end
