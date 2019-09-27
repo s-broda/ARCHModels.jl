@@ -329,6 +329,7 @@ This section details the relevant functionality provided in this package.
 Basic in-sample estimates for the Value at Risk implied by an estimated [`UnivariateARCHModel`](@ref) can be obtained using [`VaRs`](@ref):
 ```@setup PLOT
 using ARCHModels
+isdir("assets") || mkdir("assets")
 ```
 ```@repl PLOT
 am = fit(GARCH{1, 1}, BG96);
