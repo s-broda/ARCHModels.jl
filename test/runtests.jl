@@ -163,7 +163,7 @@ end
     @test predict(am, :VaR) ≈ 10.146614544578197
 end
 
-@testset "MeanSpecs" begin
+@testset "UnivariateMeanSpecs" begin
     Random.seed!(1);
     spec = GARCH{1, 1}([1., .9, .05])
     am = simulate(spec, T; meanspec=Intercept(0.))
@@ -404,6 +404,7 @@ end
     @test_throws AssertionError DCC{1, 1}([1. 0.; 0. 1.], [0., 0.], [GARCH{1, 1}([1., 0., 0.]), GARCH{1, 1}([1., 0., 0.])]; method=:bla)
     @test coefnames(am1) == ["β₁", "α₁", "ω₁", "β₁₁", "α₁₁", "μ₁", "ω₂", "β₁₂", "α₁₂", "μ₂"]
     @test ARCHModels.nparams(DCC{1, 1}) == 2
+    @test ARCHModels.nparams(DCC{1,1,TGARCH{0,1,1,Float64},Float64,29}) == 89
     @test ARCHModels.presample(DCC{1, 2, GARCH{3, 4}}) == 4
     @test ARCHModels.presample(DCC{1, 2, GARCH{3, 4, Float64}, Float64, 2}) == 4
     io = IOBuffer()

@@ -11,9 +11,11 @@ abstract type VolatilitySpec{T} end
 
 """
     MeanSpec{T}
-Abstract supertype that mean specifications inherit from.
+Abstract supertype of UnivariateMeanSpec{T} and MultivariateMeanSpec{T}
 """
 abstract type MeanSpec{T} end
+
+
 
 struct NumParamError <: Exception
     expected::Int
@@ -56,6 +58,8 @@ end
 function show(io::IO, spec::VolatilitySpec)
     println(io, modname(typeof(spec)), " specification.\n\n", length(spec.coefs) > 0 ? CoefTable(spec.coefs, coefnames(typeof(spec)), ["Parameters:"]) : "No estimable parameters.")
 end
+
+dof(am::ARCHModel) = nparams(typeof(am.spec)) + nparams(typeof(am.dist)) + nparams(typeof(am.meanspec))
 
 stderror(am::ARCHModel) = sqrt.(abs.(diag(vcov(am))))
 

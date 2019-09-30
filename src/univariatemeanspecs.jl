@@ -1,11 +1,11 @@
 ################################################################################
 #NoIntercept
 """
-    NoIntercept{T} <: MeanSpec{T}
+    NoIntercept{T} <: UnivariateMeanSpec{T}
 
 A mean specification without an intercept (i.e., the mean is zero).
 """
-struct NoIntercept{T} <: MeanSpec{T}
+struct NoIntercept{T} <: UnivariateMeanSpec{T}
     coefs::Vector{T}
     function NoIntercept{T}(coefs::Vector) where {T}
         length(coefs) == 0 || throw(NumParamError(0, length(coefs)))
@@ -51,11 +51,11 @@ end
 ################################################################################
 #Intercept
 """
-    Intercept{T} <: MeanSpec{T}
+    Intercept{T} <: UnivariateMeanSpec{T}
 
 A mean specification with just an intercept.
 """
-struct Intercept{T} <: MeanSpec{T}
+struct Intercept{T} <: UnivariateMeanSpec{T}
     coefs::Vector{T}
     function Intercept{T}(coefs::Vector) where {T}
         length(coefs) == 1 || throw(NumParamError(1, length(coefs)))
@@ -98,11 +98,11 @@ end
 ################################################################################
 #ARMA
 """
-    ARMA{p, q, T} <: MeanSpec{T}
+    ARMA{p, q, T} <: UnivariateMeanSpec{T}
 An ARMA(p, q) mean specification.
 """
 
-struct ARMA{p, q, T} <: MeanSpec{T}
+struct ARMA{p, q, T} <: UnivariateMeanSpec{T}
     coefs::Vector{T}
     function ARMA{p, q, T}(coefs::Vector) where {p, q, T}
         length(coefs) == nparams(ARMA{p, q}) || throw(NumParamError(nparams(ARMA{p, q}), length(coefs)))
@@ -170,10 +170,10 @@ end
 ################################################################################
 #regression
 """
-    Regression{k, T} <: MeanSpec{T}
+    Regression{k, T} <: UnivariateMeanSpec{T}
 A linear regression as mean specification.
 """
-struct Regression{k, T} <: MeanSpec{T}
+struct Regression{k, T} <: UnivariateMeanSpec{T}
     coefs::Vector{T}
     X::Matrix{T}
     coefnames::Vector{String}

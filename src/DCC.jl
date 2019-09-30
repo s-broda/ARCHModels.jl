@@ -29,7 +29,9 @@ Construct a DCC(p, q) specification with the given parameters.
 """
 DCC{p, q}(R::Matrix{T}, coefs::Vector{T}, univariatespecs::Vector{VS}; method::Symbol=:largescale) where {p, q, T, VS<:UnivariateVolatilitySpec{T}} = DCC{p, q, VS, T, length(univariatespecs)}(R, coefs, univariatespecs, method)
 
-nparams(::Type{DCC{p, q}}) where {p, q} = p+q
+nparams(::Type{DCC{p, q}}) where {p, q} = p + q
+
+nparams(::Type{DCC{p, q, VS, T, d}}) where {p, q, VS, T, d} = p + q + d * nparams(VS)
 
 # strange dispatch behavior. to me these methods look the same, but they aren't.
 

@@ -65,7 +65,7 @@ No estimable parameters.
 As for the DCC model, the constructor accepts a `method` keyword argument with possible values `:largescale` (default) or `:twostep` that determines whether ``R`` will be estimated by nonlinear shrinkage or the sample correlation of the ``\epsilon_t``.
 
 ## [Mean Specifications](@id mvmeanspec)
- The conditional mean of a [`MultivariateARCHModel`](@ref) is specified by a vector of [`MeanSpec`](@ref)s as described under [Mean specifications](@ref meanspec).
+ The conditional mean of a [`MultivariateARCHModel`](@ref) is specified by a vector of [`UnivariateMeanSpec`](@ref)s as described under [Mean specifications](@ref meanspec).
 
 ## [Multivariate Standardized Distributions](@id mvdistspec)
 Multivariate standardized distributions subtype [`MultivariateStandardizedDistribution`](@ref). Currently, only [`MultivariateStdNormal`](@ref) is available. Note that under mild assumptions, the Gaussian (quasi-)MLE consistently estimates the (multivariate) ARCH parameters even if Gaussianity is violated.

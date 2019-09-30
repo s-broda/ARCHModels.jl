@@ -10,6 +10,20 @@ TRV, WMT, MMM, UTX, UNH, NKE, HD, BA, AXP, MCD, CAT, GS, JPM, CVX, DIS.
 const DOW29 = readdlm(joinpath(dirname(pathof(ARCHModels)), "data", "dow29.csv"), ',')
 
 """
+    MultivariateMeanSpec{T}
+Abstract supertype that multivariate mean specifications inherit from.
+"""
+abstract type MultivariateMeanSpec{T} <: MeanSpec{T} end
+
+"""
+    Multivariate{MS, T, d} where {MS<:UnivariateMeanSpec} <: MultivariateMeanSpec{T}
+Wrapper type for UnivariateMeanSpecs.
+"""
+struct MV{MS<:UnivariateMeanSpec, T, d} <: MultivariateMeanSpec{T}
+	univariatespecs::Vector{MS}
+end
+
+"""
     MultivariateStandardizedDistribution{T, d} <: Distribution{Multivariate, Continuous}
 
 Abstract supertype that multivariate standardized distributions inherit from.
@@ -28,14 +42,14 @@ abstract type MultivariateVolatilitySpec{T, d} <: VolatilitySpec{T} end
 	     				  d,
 						  VS<:MultivariateVolatilitySpec{T, d},
 						  SD<:MultivariateStandardizedDistribution{T, d},
-						  MS<:MeanSpec{T}
+						  MS<:UnivariateMeanSpec{T}
 						 } <: ARCHModel
 """
 mutable struct MultivariateARCHModel{T<:AbstractFloat,
 									 d,
                  				     VS<:MultivariateVolatilitySpec{T, d},
                  		  	  	     SD<:MultivariateStandardizedDistribution{T, d},
-                 				     MS<:MeanSpec{T}
+                 				     MS<:UnivariateMeanSpec{T}
                  				   	} <: ARCHModel
     spec::VS
     data::Matrix{T}
@@ -71,7 +85,7 @@ function MultivariateARCHModel(spec::VS,
 							   		   d,
                     			 	   VS<:MultivariateVolatilitySpec{T, d},
                    					   SD<:MultivariateStandardizedDistribution,
-                   					   MS<:MeanSpec
+                   					   MS<:UnivariateMeanSpec
                    			 		  }
     MultivariateARCHModel{T, d, VS, SD, MS}(spec, data, dist, meanspec, fitted)
 end
@@ -101,6 +115,8 @@ function predict(am::MultivariateARCHModel; what=:covariance)
     end
 end
 
+nparams(v::Type{Vector{ms}}) where {ms<:UnivariateMeanSpec} = length(v) * nparams(ms)
+
 # documented in general
 fit(am::MultivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...) = fit(typeof(am.spec), am.data; dist=typeof(am.dist), meanspec=am.meanspec[1], algorithm=algorithm, autodiff=autodiff, kwargs...) # hacky. need multivariate version
 
@@ -118,7 +134,7 @@ end
 function simulate(spec::MultivariateVolatilitySpec{T2, d}, nobs;
                   warmup=100,
                   dist::MultivariateStandardizedDistribution{T2}=MultivariateStdNormal{T2, d}(),
-                  meanspec::Vector{<:MeanSpec{T2}}=[NoIntercept{T2}() for i = 1:d]
+                  meanspec::Vector{<:UnivariateMeanSpec{T2}}=[NoIntercept{T2}() for i = 1:d]
                   ) where {T2<:AbstractFloat, d}
     data = zeros(T2, nobs, d)
 	_simulate!(data, spec; warmup=warmup, dist=dist, meanspec=meanspec)
@@ -132,7 +148,7 @@ end
 function _simulate!(data::Matrix{T2}, spec::MultivariateVolatilitySpec{T2, d};
                   warmup=100,
                   dist::MultivariateStandardizedDistribution{T2}=MultivariateStdNormal{T2, d}(),
-                  meanspec::Vector{<:MeanSpec{T2}}=[NoIntercept{T2}() for i = 1:d]
+                  meanspec::Vector{<:UnivariateMeanSpec{T2}}=[NoIntercept{T2}() for i = 1:d]
                   ) where {T2<:AbstractFloat, d}
 	@assert warmup >= 0
 

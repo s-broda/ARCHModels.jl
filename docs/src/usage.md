@@ -86,7 +86,7 @@ fit(::Type{<:UnivariateVolatilitySpec}, data::Vector; dist=StdNormal, meanspec=I
 
 Their meaning is as follows:
 - `dist`: the error distribution. A subtype (*not instance*) of [`StandardizedDistribution`](@ref); see Section [Distributions](@ref).
-- `meanspec=Intercept`: the mean specification. Either a subtype of [`MeanSpec`](@ref) or an instance thereof (for specifications that require additional data, such as [`Regression`](@ref); see the [section on mean specification](@ref meanspec)). If the mean specification in question has a notion of sample size (like [`Regression`](@ref)), then the sample size should match that of the data, or an error will be thrown. As an example,
+- `meanspec=Intercept`: the mean specification. Either a subtype of [`UnivariateMeanSpec`](@ref) or an instance thereof (for specifications that require additional data, such as [`Regression`](@ref); see the [section on mean specification](@ref meanspec)). If the mean specification in question has a notion of sample size (like [`Regression`](@ref)), then the sample size should match that of the data, or an error will be thrown. As an example,
 ```jldoctest MANUAL
 julia> X = ones(length(BG96), 1);
 

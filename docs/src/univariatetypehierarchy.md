@@ -77,7 +77,7 @@ Parameters:  -0.1  0.1  0.9  0.04
 ─────────────────────────────────
 ```
 ## [Mean specifications](@id meanspec)
-Mean specifications serve to specify ``\mu_t``. They are modelled as subtypes of [`MeanSpec`](@ref). They contain their parameters as (possibly empty) vectors, but convenience constructors are provided where appropriate. The following specifications are available:
+Mean specifications serve to specify ``\mu_t``. They are modelled as subtypes of [`UnivariateMeanSpec`](@ref). They contain their parameters as (possibly empty) vectors, but convenience constructors are provided where appropriate. The following specifications are available:
 * A zero mean: ``\mu_t=0``. Available as [`NoIntercept`](@ref):
 ```jldoctest TYPES
 julia> NoIntercept() # convenience constructor, eltype defaults to Float64

@@ -9,7 +9,7 @@
 #a simulated AM should probably contain a (zero) intercept, so that fit! is consistent with fit.
 #the constructor for UnivariateARCHModel should make a copy of its args
 #implement lrtest
-#allow uninititalized constructors for UnivariateVolatilitySpec, MeanSpec and StandardizedDistribution? If so, then be consistent with how they are defined
+#allow uninititalized constructors for UnivariateVolatilitySpec, UnivariateMeanSpec and StandardizedDistribution? If so, then be consistent with how they are defined
 #  (change for meanspec and dist ), document, and test. Also, NaN is prob. safer than undef.
 #logconst needs to return the correct type
 """
@@ -39,8 +39,8 @@ import HypothesisTests: HypothesisTest, testname, population_param_of_interest, 
 import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, confint, aic,
                   bic, aicc, dof, coef, coefnames, coeftable, CoefTable,
 				  informationmatrix, islinear, score, vcov, residuals, predict
-export ARCHModel, UnivariateARCHModel, UnivariateVolatilitySpec, StandardizedDistribution, Standardized, MeanSpec,
-       simulate, simulate!, selectmodel, StdNormal, StdT, StdGED, Intercept, Regression,
+export ARCHModel, MeanSpec, UnivariateARCHModel, UnivariateVolatilitySpec, StandardizedDistribution, Standardized, UnivariateMeanSpec,
+       MultivariateMeanSpec, simulate, simulate!, selectmodel, StdNormal, StdT, StdGED, Intercept, Regression,
        NoIntercept, ARMA, AR, MA, BG96, volatilities, mean, quantile, VaRs, pvalue, means, VolatilitySpec,
 	   MultivariateVolatilitySpec, MultivariateStandardizedDistribution, MultivariateARCHModel, MultivariateStdNormal,
 	   EGARCH, ARCH, GARCH, TGARCH, ARCHLMTest, DQTest,
@@ -50,7 +50,7 @@ export ARCHModel, UnivariateARCHModel, UnivariateVolatilitySpec, StandardizedDis
 include("utils.jl")
 include("general.jl")
 include("univariatearchmodel.jl")
-include("meanspecs.jl")
+include("univariatemeanspecs.jl")
 include("univariatestandardizeddistributions.jl")
 include("EGARCH.jl")
 include("TGARCH.jl")
