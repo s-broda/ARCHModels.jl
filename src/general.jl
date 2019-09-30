@@ -24,7 +24,7 @@ function showerror(io::IO, e::NumParamError)
     print(io, "incorrect number of parameters: expected $(e.expected), got $(e.got).")
 end
 
-nobs(am::ARCHModel) = size(am.data)[1]
+nobs(am::ARCHModel) = length(am.data)
 islinear(am::ARCHModel) = false
 isfitted(am::ARCHModel) = am.fitted
 
@@ -83,11 +83,11 @@ function simulate! end
 
 """
     simulate(am::ARCHModel; warmup=100)
-	simulate(am::ARCHModel, nobs; warmup=100)
-    simulate(spec::UnivariateVolatilitySpec, nobs; warmup=100, dist=StdNormal(), meanspec=NoIntercept())
-Simulate a UnivariateARCHModel.
-	simulate(spec::MultivariateVolatilitySpec, nobs; warmup=100, dist=MultivariateStdNormal(), meanspec=[NoIntercept() for i = 1:d])
-Simulate a MultivariateARCHModel.
+	simulate(am::ARCHModel, T; warmup=100)
+    simulate(spec::UnivariateVolatilitySpec, T; warmup=100, dist=StdNormal(), meanspec=NoIntercept())
+Simulate a length-T time series from a UnivariateARCHModel.
+	simulate(spec::MultivariateVolatilitySpec, T; warmup=100, dist=MultivariateStdNormal(), meanspec=[NoIntercept() for i = 1:d])
+Simulate a length-T time series from a MultivariateARCHModel.
 """
 function simulate end
 
@@ -102,4 +102,4 @@ function simulate(am::ARCHModel, nobs; warmup=100)
 	simulate(am2.spec, nobs; warmup=warmup, dist=am2.dist, meanspec=am2.meanspec)
 end
 
-simulate(am::ARCHModel; warmup=100) = simulate(am, nobs(am); warmup=warmup)
+simulate(am::ARCHModel; warmup=100) = simulate(am, size(am.data)[1]; warmup=warmup)

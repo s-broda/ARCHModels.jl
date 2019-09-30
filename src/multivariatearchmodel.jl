@@ -47,6 +47,8 @@ mutable struct MultivariateARCHModel{T<:AbstractFloat,
     end
 end
 
+dof(am::MultivariateARCHModel{T, d}) where {T, d} = nparams(typeof(am.spec)) + nparams(typeof(am.dist)) + d * nparams(eltype(am.meanspec))
+
 function loglikelihood(am::MultivariateARCHModel)
 	sigs = covariances(am)
 	z = residuals(am; standardized=true, decorrelated=true)
@@ -88,7 +90,7 @@ function predict(am::MultivariateARCHModel; what=:covariance)
     R = to_corr(H)
     zt = residuals(am; decorrelated=false)
     at = residuals(am; standardized=false, decorrelated=false)
-	T = nobs(am)
+	T = size(am.data)[1]
 	zt = [zt[t, :] for t in 1:T]
 	at = [at[t, :] for t in 1:T]
     update!(Ht, Rt, H, R, zt, at, typeof(am.spec), coef(am.spec))

@@ -31,6 +31,8 @@ DCC{p, q}(R::Matrix{T}, coefs::Vector{T}, univariatespecs::Vector{VS}; method::S
 
 nparams(::Type{DCC{p, q}}) where {p, q} = p+q
 
+nparams(::Type{DCC{p, q, VS, T, d}}) where {p, q, VS, T, d}= p + q + d * nparams(VS)
+
 # strange dispatch behavior. to me these methods look the same, but they aren't.
 
 # this matches ARCHModels.presample(DCC{1,1,TGARCH{0,1,1,Float64}})
@@ -394,7 +396,7 @@ modname(::Type{DCC{p, q, VS, T, d}})  where {p, q, VS, T, d} = "DCC{$p, $q, $(mo
 function show(io::IO, am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, MVS<:DCC{p, q, VS}}
     r = p + q
     cc = coef(am)[1:r]
-    println(io, "\n", "$d-dimensional DCC{$p, $q} - $(modname(VS)) - $(modname(typeof(am.meanspec[1]))) specification, T=", nobs(am), ".\n")
+    println(io, "\n", "$d-dimensional DCC{$p, $q} - $(modname(VS)) - $(modname(typeof(am.meanspec[1]))) specification, T=", size(am.data)[1], ".\n")
     if isfitted(am) && (:se=>true) in io
         se = stderror(am)[1:r]
         z = cc ./ se
@@ -421,7 +423,7 @@ end
 
 """
     correlations(am::MultivariateARCHModel)
-Return the `nobs(am)`` estimated conditional correlation matrices.
+Return the estimated conditional correlation matrices.
 """
 function correlations(am::MultivariateARCHModel{T, d, MVS}) where {T, d, MVS<:DCC}
     resids = residuals(am; decorrelated=false)
@@ -433,7 +435,7 @@ end
 
 """
     covariances(am::MultivariateARCHModel)
-Return the `nobs(am)`` estimated conditional covariance matrices.
+Return the estimated conditional covariance matrices.
 """
 function covariances(am::MultivariateARCHModel{T, d, MVS}) where {T, d, MVS<:DCC}
     n, dims = size(am.data)
