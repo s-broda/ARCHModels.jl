@@ -3,7 +3,7 @@ DocTestSetup = quote
     using ARCHModels    
 end
 ```
-# Type hierarchy: Multivariate
+# Multivariate
 Analogously to the univariate case, an instance of [`MultivariateARCHModel`](@ref) contains a matrix of data (with observations in rows and assets in columns), and encapsulates information about the [covariance specification](@ref covspec) (e.g., [CCC](@ref) or [DCC](@ref)), the [mean specification](@ref mvmeanspec), and the [error distribution](@ref mvdistspec).
 
 [`MultivariateARCHModel`](@ref)s support many of the same methods as [`UnivariateARCHModel`](@ref)s, with a few noteworthy differences: the prediction targets for [`predict`](@ref) are `:covariances` and `:correlations` for predicting ``\Sigma_t`` and ``R_t``, respectively, and the new functions [`covariances`](@ref) and [`correlations`](@ref) respectively return the in-sample estimates of ``\Sigma_t`` and ``R_t``.

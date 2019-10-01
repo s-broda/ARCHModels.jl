@@ -8,8 +8,10 @@ makedocs(modules=[ARCHModels],
         strict=true,
         pages = ["Home" => "index.md",
                  "introduction.md",
-                 "univariatetypehierarchy.md",
-                 "multivariatetypehierarchy.md",
+                 "Type Hierarchy" => Any[
+                        "univariatetypehierarchy.md",
+                        "multivariatetypehierarchy.md"
+                        ],
                  "usage.md",
                  "reference.md"
                  ]

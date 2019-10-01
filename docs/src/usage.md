@@ -6,6 +6,8 @@ end
 DocTestFilters = r".*[0-9\.]"
 ```
 # Usage
+## Preliminaries
+We focus on univariate ARCH models for most of this section. Multivariata models work quite similarly; the few differences are discussed in [Multivariate models](@ref).
 We will be using the data from [Bollerslev and Ghysels (1986)](https://doi.org/10.2307/1392425), available as the constant [`BG96`](@ref). The data consist of daily German mark/British pound exchange rates (1974 observations) and are often used in evaluating
 implementations of (G)ARCH models (see, e.g., [Brooks et.al. (2001)](https://doi.org/10.1016/S0169-2070(00)00070-4). We begin by convincing ourselves that the data exhibit ARCH effects; a quick and dirty way of doing this is to look at the sample autocorrelation function of the squared returns:
 
@@ -461,6 +463,66 @@ Volatility parameters:     1.0  0.9  0.05
 Distribution parameters:   3.0
 ──────────────────────────────
 ```
+
+## Multivariate models
+
+In this section, we will be using the percentage returns on 29 stocks from the DJIA from 03/19/2008 through 04/11/2019, available as [`DOW29`](@ref).
+
+Fitting a multivariate ARCH model proceeds similarly to the univariate case, by passing the type of the
+multivariate ARCH specification to [`fit`](@ref). If the lag length (and in the case of the DCC model, the univariate specification) is left unspecified, then these default to 1 (and [GARCH](@ref)); i.e., the following is equivalent to both `fit(DCC{1, 1}, DOW29)` and `fit(DCC{1, 1, GARCH{1, 1}}, DOW29)`:
+
+```jldoctest MANUAL
+julia> m = fit(DCC, DOW29[:, 1:2])
+
+2-dimensional DCC{1, 1} - TGARCH{0,1,1} - Intercept{Float64} specification, T=2785.
+
+DCC parameters, estimated by largescale procedure:
+─────────────────────
+        β₁         α₁
+─────────────────────
+  0.891288  0.0551542
+─────────────────────
+
+Calculating standard errors is expensive. To show them, use
+`show(IOContext(stdout, :se=>true), <model>)`
+```
+The returned object is of type [`MultivariateARCHModel`](@ref). Like [`UnivariateARCHModel`](@ref), it implements most of the interface of `StatisticalModel` and hence behaves similarly, so this section documents only the major differences.
+
+The standard errors are not calculated by default. As stated in the output, they can be shown as follows:
+
+```jldoctest MANUAL
+julia> show(IOContext(stdout, :se=>true), m)
+
+2-dimensional DCC{1, 1} - TGARCH{0,1,1} - Intercept{Float64} specification, T=2785.
+
+DCC parameters, estimated by largescale procedure:
+────────────────────────────────────────────
+     Estimate  Std.Error   z value  Pr(>|z|)
+────────────────────────────────────────────
+β₁  0.891288   0.0434344  20.5203     <1e-92
+α₁  0.0551542  0.0207788   2.65434    0.0079
+────────────────────────────────────────────
+```
+Alternatively, `stderror(m)` can be used. As in the univariate case, [`fit`](@ref) supports a number of keyword arguments. The full signature is
+```julia
+fit(spec, data: method=:largescale,  dist=MultivariateStdNormal, meanspec=Intercept,
+      algorithm=BFGS(), autodiff=:forward, kwargs...)
+```
+Their meaning is similar to the univariate case. In particular, `meanspec` can be any univariate mean specification, as described in under [mean specification](@ref meanspec). Certain models support different estimation methods; in the case of the DCC model, these are `:twostep` and `:largescale`, which respectively refer to the methods of [Engle (2002)](https://doi.org/10.1198/073500102288618487) and [Engle, Ledoit, and Wolf (2019)](https://doi.org/10.1080/07350015.2017.1345683). The latter sacrifices some amount of statistical efficiency for much-improved computational speed and is the default.
+
+Again paralleling the univariate case, one may also construct a [`MultivariateARCHModel`](@ref) by hand, and then call [`fit`](@ref) or [`fit!`](@ref) on it, but this is rather cumbersome, as it requires specifying all parameters of the covariance specification.
+
+One-step ahead forecasts of the covariance or correlation matrix are obtained by respectively passing `what=:covariance` (the default) or `what=:correlation` to [`predict`](@ref):
+
+```jldoctest MANUAL
+julia> predict(m, what=:correlation)
+2×2 Array{Float64,2}:
+ 1.0       0.436513
+ 0.436513  1.0  
+```
+
+In the multivariate case, there are three types of residuals that can be considered: the unstandardized residuals, ``a_t``; the devolatized residuals, ``\epsilon_t``, where ``\epsilon_{it}\equiv a_{it}/\sigma_{it}``; and the decorrelated residuals ``z_t\equiv \Sigma^{-1/2}_ta_t``. When called on a [`MultivariateARCHModel`](@ref), [`residuals`](@ref) returns ``\{z_t\}`` by default. Passing `decorrelated=false` returns ``\{\epsilon_t\}``, and passing `standardized=false` returns  ``\{a_t\}`` (note that `decorrelated=true` implies `standardized=true`).
+
 ```@meta
 DocTestSetup = nothing
 DocTestFilters = nothing
