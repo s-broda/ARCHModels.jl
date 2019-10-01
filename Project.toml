@@ -1,7 +1,7 @@
 name = "ARCHModels"
 uuid = "6d3278bc-c23a-5105-85e5-0d57d2bf684f"
 authors = ["Simon Broda <simon.broda@uzh.ch>"]
-version = "0.4.0"
+version = "0.5.0"
 
 [deps]
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
