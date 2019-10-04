@@ -120,7 +120,7 @@ Different standardized (mean zero, variance one) distributions for ``z_t`` are a
 julia> StdNormal() # convenience constructor
 StdNormal{Float64}(coefs=Float64[])
 ```
-* [`StdT`](@ref), the standardized [Student's `t` distribution](https://en.wikipedia.org/wiki/Student%27s_t-distribution):
+* [`StdT`](@ref), the standardized [Student's ``t`` distribution](https://en.wikipedia.org/wiki/Student%27s_t-distribution):
 ```jldoctest TYPES
 julia> StdT(3) # convenience constructor
 StdT{Float64}(coefs=[3.0])
