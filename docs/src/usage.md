@@ -324,10 +324,8 @@ Volatility parameters:
 ─────────────────────────────────────────
 ```
 In this case, an ARMA(1, 1) specification was selected.
-## Risk measures
-One of the primary uses of ARCH models is for estimating and forecasting risk measures, such as [Value at Risk](https://en.wikipedia.org/wiki/Value_at_risk) and [Expected Shortfall](https://en.wikipedia.org/wiki/Expected_shortfall).
-This section details the relevant functionality provided in this package.
-
+## Value at Risk
+One of the primary uses of ARCH models is for estimating and forecasting [Value at Risk](https://en.wikipedia.org/wiki/Value_at_risk).
 Basic in-sample estimates for the Value at Risk implied by an estimated [`UnivariateARCHModel`](@ref) can be obtained using [`VaRs`](@ref):
 ```@setup PLOT
 using ARCHModels
