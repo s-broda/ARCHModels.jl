@@ -28,7 +28,7 @@ where
 ```math
 Q_{t} \equiv\bar{Q}(1-\bar\alpha-\bar\beta)+\sum_{i=1}^{p} \beta_iQ_{t-i}+\sum_{i=1}^{q}\alpha_i\epsilon_{t-i}\epsilon_{t-i}^\mathrm{\scriptsize T},
 ```
-``\bar{\alpha}\equiv\sum_{i=1}^q\alpha_i``, ``\bar{\beta}\equiv\sum_{i=1}^q\beta_i``, ``\epsilon_{t}\equiv D_t^{-1}a_t$, $Q_{t}=\mathrm{cov}
+``\bar{\alpha}\equiv\sum_{i=1}^q\alpha_i``, ``\bar{\beta}\equiv\sum_{i=1}^q\beta_i``, ``\epsilon_{t}\equiv D_t^{-1}a_t$``, ``Q_{t}=\mathrm{cov}
 (\epsilon_t|F_{t-1})``, and ``\bar{Q}=\mathrm{cov}(\epsilon_{t})``.
 
 It is available as `DCC{p, q}`. The constructor takes as inputs ``\bar{Q}``, a vector of coefficients, and a vector of `UnivariateARCHModel`s:
