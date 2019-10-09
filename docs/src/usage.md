@@ -236,7 +236,7 @@ The function [`selectmodel`](@ref) can be used for automatic model selection, ba
 a class of model (i.e., a subtype of [`UnivariateVolatilitySpec`](@ref)), it will return a fitted [`UnivariateARCHModel`](@ref), with the lag length
 parameters (i.e., ``p`` and ``q`` in the case of [`GARCH`](@ref)) chosen to minimize the desired criterion. The [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion) is used by default.
 
-Eg., the following selects the optimal (minimum AIC) EGARCH(o, p, q) model, where o, p, q < 2,  assuming ``t`` distributed errors.
+As an example, the following selects the optimal (minimum AIC) EGARCH(o, p, q) model, where o, p, q < 2,  assuming ``t`` distributed errors.
 
 ```jldoctest MANUAL
 julia> selectmodel(EGARCH, BG96; criterion=aic, maxlags=2, dist=StdT)
