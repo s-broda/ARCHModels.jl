@@ -38,7 +38,7 @@ function ARCHLMTest(u::Vector{T}, p::Integer) where T<:Real
 end
 
 testname(::ARCHLMTest) = "ARCH LM test for conditional heteroskedasticity"
-population_param_of_interest(x::ARCHLMTest) = ("T⋅R² in auxiliary regression of rₜ² on an intercept and its own lags", 0, x.LM)
+population_param_of_interest(x::ARCHLMTest) = ("T⋅R² in auxiliary regression", 0, x.LM)
 function show_params(io::IO, x::ARCHLMTest, ident)
     println(io, ident, "sample size:                    ", x.n)
     println(io, ident, "number of lags:                 ", x.p)
