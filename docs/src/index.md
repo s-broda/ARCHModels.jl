@@ -24,10 +24,10 @@ As for error distributions, the user may choose among the following:
   * Standardized Student's ``t``
   * Standardized Generalized Error Distribution
 
-  In addition, the following multivariate models are supported:
+In addition, the following multivariate models are supported:
 
-    * CCC
-    * DCC(p, q)
+  * CCC
+  * DCC(p, q)
 
 ## Installation
 
