@@ -1,7 +1,7 @@
 name = "ARCHModels"
 uuid = "6d3278bc-c23a-5105-85e5-0d57d2bf684f"
 authors = ["Simon Broda <simon.broda@uzh.ch>"]
-version = "0.5.2"
+version = "0.5.3"
 
 [deps]
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
@@ -30,7 +30,7 @@ Reexport = "0.2.0"
 Requires = "0.5.2"
 Roots = "0.8.3"
 SpecialFunctions = "0.7.2"
-StatsBase = "0.31, 0.32, 0.33"
+StatsBase = "0.31, 0.32"
 StatsFuns = "0.8.0"
 StatsModels = "0.6.3"
 julia = "1.0.0"
