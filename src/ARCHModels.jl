@@ -20,7 +20,7 @@ using Reexport
 using Requires
 @reexport using StatsBase
 using StatsFuns: normcdf, normccdf, normlogpdf, norminvcdf, log2π, logtwo, RFunctions.tdistrand, RFunctions.tdistinvcdf, RFunctions.gammarand, RFunctions.gammainvcdf
-using SpecialFunctions: beta, lgamma, gamma
+using SpecialFunctions: beta, logabsgamma, gamma
 using Optim
 using ForwardDiff
 using Distributions
