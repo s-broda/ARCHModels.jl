@@ -17,7 +17,7 @@ using Reexport
 using Requires
 @reexport using StatsBase
 using StatsFuns: normcdf, normccdf, normlogpdf, norminvcdf, log2π, logtwo, RFunctions.tdistrand, RFunctions.tdistinvcdf, RFunctions.gammarand, RFunctions.gammainvcdf
-using SpecialFunctions: beta, gamma, digamma, # lgamma
+using SpecialFunctions: beta, gamma, digamma #, lgamma
 
 # work around https://github.com/JuliaMath/SpecialFunctions.jl/issues/186
 # until https://github.com/JuliaDiff/ForwardDiff.jl/pull/419/ is merged
