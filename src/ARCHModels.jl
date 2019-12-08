@@ -1,9 +1,6 @@
 #Todo:
-#plotting via timeseries
 #PkgBenchmark
 #HAC s.e.s from CovariancesMatrices.jl?
-#how to export arch?
-#Forecasting
 #Float16/32 don't seem to work anymore. Problem in Optim?
 #support missing data? timeseries?
 #a simulated AM should probably contain a (zero) intercept, so that fit! is consistent with fit.
@@ -20,7 +17,17 @@ using Reexport
 using Requires
 @reexport using StatsBase
 using StatsFuns: normcdf, normccdf, normlogpdf, norminvcdf, log2π, logtwo, RFunctions.tdistrand, RFunctions.tdistinvcdf, RFunctions.gammarand, RFunctions.gammainvcdf
-using SpecialFunctions: beta, lgamma, gamma
+using SpecialFunctions: beta, gamma, digamma, # lgamma
+
+# work around https://github.com/JuliaMath/SpecialFunctions.jl/issues/186
+# until https://github.com/JuliaDiff/ForwardDiff.jl/pull/419/ is merged
+using Base.Math: libm
+using ForwardDiff: Dual, value, partials
+@inline lgamma(x::Float64) = ccall((:lgamma, libm), Float64, (Float64,), x)
+@inline lgamma(x::Float32) = ccall((:lgammaf, libm), Float32, (Float32,), x)
+@inline lgamma(d::Dual{T}) where T = Dual{T}(lgamma(value(d)), digamma(value(d)) * partials(d))
+
+
 using Optim
 using ForwardDiff
 using Distributions
