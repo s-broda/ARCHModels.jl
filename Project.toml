@@ -22,7 +22,7 @@ StatsFuns = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 
 [compat]
 DataStructures = "0.17.5"
-Distributions = "0.21.5"
+Distributions = "0.21.5, 0.22"
 ForwardDiff = "0.10.4"
 HypothesisTests = "0.8.0"
 Optim = "0.19.3"
