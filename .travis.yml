@@ -8,18 +8,9 @@ julia:
   - 1.0
   - nightly
 
-matrix:
+jobs:
   allow_failures:
     - julia: nightly
-notifications:
-  email: false
-
-after_success:
-  # push coverage results to Coveralls
-  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
-  # push coverage results to Codecov
-  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
-jobs:
   include:
     - stage: "Documentation"
       os: linux
@@ -37,3 +28,12 @@ jobs:
                                     Pkg.build("ARCHModels")' #https://github.com/JuliaLang/Pkg.jl/issues/862
         - julia --depwarn=no --project=docs/ docs/make.jl
       after_success: skip
+
+notifications:
+  email: false
+
+after_success:
+  # push coverage results to Coveralls
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  # push coverage results to Codecov
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
