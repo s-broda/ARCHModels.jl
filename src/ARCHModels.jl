@@ -3,8 +3,6 @@
 #HAC s.e.s from CovariancesMatrices.jl?
 #Float16/32 don't seem to work anymore. Problem in Optim?
 #support missing data? timeseries?
-#a simulated AM should probably contain a (zero) intercept, so that fit! is consistent with fit.
-#the constructor for UnivariateARCHModel should make a copy of its args
 #implement lrtest
 #allow uninititalized constructors for UnivariateVolatilitySpec, MeanSpec and StandardizedDistribution? If so, then be consistent with how they are defined
 #  (change for meanspec and dist ), document, and test. Also, NaN is prob. safer than undef.

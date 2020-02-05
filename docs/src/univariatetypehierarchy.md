@@ -212,6 +212,19 @@ Distribution parameters:
 
 It should, however, rarely be necessary to construct a `UnivariateARCHModel` manually via its constructor; typically, instances of it are created by calling [`fit`](@ref), [`selectmodel`](@ref), or [`simulate`](@ref).
 
+!!! note
+    If you *do* manually construct a `UnivariateARCHModel`, be aware that the constructor does not create copies of its arguments. This means that, e.g., calling `simulate!` on the constructed model will modify your data vector:
+    ```jldoctest TYPES
+    julia> mydata = copy(BG96); mydata[end]
+    0.528047
+
+    julia> am = UnivariateARCHModel(ARCH{0}([1.]), mydata);
+
+    julia> simulate!(am);
+
+    julia> mydata[end] ≈ 0.528047
+    false
+    ```
 As discussed earlier, [`UnivariateARCHModel`](@ref) implements the interface of `StatisticalModel` from [`StatsBase`](http://juliastats.github.io/StatsBase.jl/stable/statmodels.html), so you
 can call `coef`, `coefnames`, `confint`, `dof`, `informationmatrix`, `isfitted`, `loglikelihood`, `nobs`,  `score`, `stderror`, `vcov`, etc. on its instances:
 
