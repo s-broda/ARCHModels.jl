@@ -408,6 +408,14 @@ function fit(am::UnivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwarg
     return am2
 end
 
+function fit(vs::Type{VS}, lm::TableRegressionModel{<:LinearModel}; kwargs...) where VS<:UnivariateVolatilitySpec
+	fit(vs, response(lm.model); meanspec=Regression(modelmatrix(lm.model); coefnames=coefnames(lm)), kwargs...)
+end
+
+function fit(vs::Type{VS}, lm::LinearModel; kwargs...) where VS<:UnivariateVolatilitySpec
+	fit(vs, response(lm); meanspec=Regression(modelmatrix(lm)), kwargs...)
+end
+
 """
     selectmodel(::Type{VS}, data; kwargs...) -> UnivariateARCHModel
 

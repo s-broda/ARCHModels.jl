@@ -14,10 +14,11 @@ The ARCHModels package for Julia. For documentation, see https://s-broda.github.
 """
 module ARCHModels
 using Reexport
-using Requires
 @reexport using StatsBase
 using StatsFuns: normcdf, normccdf, normlogpdf, norminvcdf, log2π, logtwo, RFunctions.tdistrand, RFunctions.tdistinvcdf, RFunctions.gammarand, RFunctions.gammainvcdf
+using GLM: modelmatrix, response, LinearModel
 using SpecialFunctions: beta, gamma, digamma #, lgamma
+
 
 # work around https://github.com/JuliaMath/SpecialFunctions.jl/issues/186
 # until https://github.com/JuliaDiff/ForwardDiff.jl/pull/419/ is merged
@@ -46,6 +47,7 @@ import HypothesisTests: HypothesisTest, testname, population_param_of_interest, 
 import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, confint, aic,
                   bic, aicc, dof, coef, coefnames, coeftable, CoefTable,
 				  informationmatrix, islinear, score, vcov, residuals, predict
+import StatsModels: TableRegressionModel
 export ARCHModel, UnivariateARCHModel, UnivariateVolatilitySpec, StandardizedDistribution, Standardized, MeanSpec,
        simulate, simulate!, selectmodel, StdNormal, StdT, StdGED, Intercept, Regression,
        NoIntercept, ARMA, AR, MA, BG96, volatilities, mean, quantile, VaRs, pvalue, means, VolatilitySpec,
@@ -65,16 +67,4 @@ include("tests.jl")
 include("multivariatearchmodel.jl")
 include("multivariatestandardizeddistributions.jl")
 include("DCC.jl")
-function __init__()
-	@require GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a" begin
-		using .GLM
-		import .StatsModels: TableRegressionModel
-		function fit(vs::Type{VS}, lm::TableRegressionModel{<:LinearModel}; kwargs...) where VS<:UnivariateVolatilitySpec
-			fit(vs, response(lm.model); meanspec=Regression(modelmatrix(lm.model); coefnames=coefnames(lm)), kwargs...)
-		end
-		function fit(vs::Type{VS}, lm::LinearModel; kwargs...) where VS<:UnivariateVolatilitySpec
-			fit(vs, response(lm); meanspec=Regression(modelmatrix(lm)), kwargs...)
-		end
-	end
-end
 end#module
