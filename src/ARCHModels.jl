@@ -22,6 +22,7 @@ using SpecialFunctions: beta, gamma, digamma #, lgamma
 
 # work around https://github.com/JuliaMath/SpecialFunctions.jl/issues/186
 # until https://github.com/JuliaDiff/ForwardDiff.jl/pull/419/ is merged
+# remove test in runtests.jl as well when this gets fixed
 using Base.Math: libm
 using ForwardDiff: Dual, value, partials
 @inline lgamma(x::Float64) = ccall((:lgamma, libm), Float64, (Float64,), x)

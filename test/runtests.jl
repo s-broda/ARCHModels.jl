@@ -7,6 +7,10 @@ using DataFrames
 
 T = 10^4;
 
+@testset "lgamma" begin
+    @test ARCHModels.lgamma(1.0f0) == 0.0f0
+end
+
 @testset "TGARCH" begin
     @test ARCHModels.nparams(TGARCH{1, 2, 3}) == 7
     @test ARCHModels.presample(TGARCH{1, 2, 3}) == 3
@@ -404,6 +408,7 @@ end
     @test_throws AssertionError DCC{1, 1}([1. 0.; 0. 1.], [0., 0.], [GARCH{1, 1}([1., 0., 0.]), GARCH{1, 1}([1., 0., 0.])]; method=:bla)
     @test coefnames(am1) == ["β₁", "α₁", "ω₁", "β₁₁", "α₁₁", "μ₁", "ω₂", "β₁₂", "α₁₂", "μ₂"]
     @test ARCHModels.nparams(DCC{1, 1}) == 2
+    ARCHModels.nparams(DCC{1, 1, GARCH{1, 1}, Float64, 2}) == 8
     @test ARCHModels.presample(DCC{1, 2, GARCH{3, 4}}) == 4
     @test ARCHModels.presample(DCC{1, 2, GARCH{3, 4, Float64}, Float64, 2}) == 4
     io = IOBuffer()
@@ -455,6 +460,7 @@ end
 
     Random.seed!(1)
     ccc = fit(CCC, DOW29[:, 1:4])
+    @test dof(ccc) == 16
     @test ccc.spec.R[1, 2] ≈ 0.37095654552885643
     @test stderror(ccc)[1] ≈ 0.06298215515406534
     cccs = simulate(ccc, T)
