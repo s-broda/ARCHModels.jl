@@ -8,4 +8,4 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 StatsBase = ">=0.30.0"
-Documenter = ">=0.23.0"
+Documenter = "=0.23.4"
