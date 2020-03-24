@@ -274,11 +274,11 @@ function stderror(am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, M
     if p + q > 0
         if am.spec.method == :twostep
             f = x -> LL2step(MVS, x, am.spec.R, resids)
-            Hpp = ForwardDiff.hessian(x->sum(f(x)), coefs[1:r])/n
+            Hpp = FiniteDiff.finite_difference_hessian(x->sum(f(x)), coefs[1:r])/n
             dp = ForwardDiff.jacobian(f, coefs[1:r])
 
             # g = x -> sum(LL2step_full(x, R, data, p, q))
-            # Hpt = ForwardDiff.hessian(g, coefs)[1:2, 3:end]/n
+            # Hpt = FiniteDiff.finite_difference_hessian(g, coefs)[1:2, 3:end]/n
             # use finite differences instead, because we don't need the whole
             # Hessian, and I couldn't figure out how to do this with ForwardDiff
             g = (x, y) -> sum(LL2step_full(MVS, VS, am.meanspec, x, y, am.spec.R, am.data))
@@ -299,7 +299,7 @@ function stderror(am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, M
             sc = ForwardDiff.jacobian(g, coefs[1:r])
             I = sc'*sc/n/dim
             h = x-> LL2step_pairs_full(MVS, VS, am.meanspec, x, am.spec.R, am.data)
-            H = ForwardDiff.hessian(x->sum(h(x)), coefs)/n/dim
+            H = FiniteDiff.finite_difference_hessian(x->sum(h(x)), coefs)/n/dim
             #J = H[1:r, 1:r] - H[1:r, r+1:end] * inv(H[1+r:end, 1+r:end]) * H[1:r, 1+r:end]'
             #std = sqrt.(diag(inv(J)*I*inv(J))/n) # from the 2014 version of the paper
             as = hcat(dt, sc) # all scores
