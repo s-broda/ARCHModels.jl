@@ -75,23 +75,23 @@ Mean equation parameters:
 ─────────────────────────────────────────────
      Estimate   Std.Error   z value  Pr(&gt;|z|)
 ─────────────────────────────────────────────
-μ  0.00227251  0.00686802  0.330882    0.7407
+μ  0.00227251  0.00686797  0.330885    0.7407
 ─────────────────────────────────────────────
 
 Volatility parameters:
 ──────────────────────────────────────────────
       Estimate   Std.Error   z value  Pr(&gt;|z|)
 ──────────────────────────────────────────────
-ω   0.00232225  0.00163909   1.41679    0.1565
-β₁  0.884488    0.036963    23.929      &lt;1e-99
-α₁  0.124866    0.0405471    3.07952    0.0021
+ω   0.00232225  0.00163588   1.41958    0.1557
+β₁  0.884488    0.0369039   23.9673     &lt;1e-99
+α₁  0.124866    0.0404843    3.08429    0.0020
 ──────────────────────────────────────────────
 
 Distribution parameters:
 ─────────────────────────────────────────
    Estimate  Std.Error  z value  Pr(&gt;|z|)
 ─────────────────────────────────────────
-ν   4.11211   0.400384  10.2704    &lt;1e-24
+ν   4.11211   0.400396  10.2701    &lt;1e-24
 ─────────────────────────────────────────</code></pre><p>It should, however, rarely be necessary to construct a <code>UnivariateARCHModel</code> manually via its constructor; typically, instances of it are created by calling <a href="../reference/#StatsBase.fit-Tuple{ARCHModel}"><code>fit</code></a>, <a href="../reference/#ARCHModels.selectmodel-Union{Tuple{MS}, Tuple{SD}, Tuple{T}, Tuple{VS}, Tuple{Type{VS},Array{T,1}}} where MS&lt;:MeanSpec where SD&lt;:StandardizedDistribution where T&lt;:AbstractFloat where VS&lt;:UnivariateVolatilitySpec"><code>selectmodel</code></a>, or <a href="../reference/#ARCHModels.simulate"><code>simulate</code></a>.</p><div class="admonition note"><div class="admonition-title">Note</div><div class="admonition-text"><p>If you <em>do</em> manually construct a <code>UnivariateARCHModel</code>, be aware that the constructor does not create copies of its arguments. This means that, e.g., calling <code>simulate!</code> on the constructed model will modify your data vector:</p><pre><code class="language-julia-repl">julia&gt; mydata = copy(BG96); mydata[end]
 0.528047
 
