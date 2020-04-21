@@ -3,6 +3,7 @@
 *.jl.mem
 *.bak
 *.log
+.DS_Store
 docs/build/
 docs/site
 src/data/bollerslev_ghysels.txt
