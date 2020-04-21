@@ -21,6 +21,6 @@ If you use this package in your research, please consider citing [our paper](htt
 
 # Acknowledgements
 
-This project has received funding from the European Research Council (ERC) under the European Union's Horizon 2020 research and innovation program (grant agreement No. 750559).
+This project has received funding from the European Union’s Horizon 2020 research and innovation programme under the Marie Skłodowska-Curie grant agreement No 750559.
 
 <img src="docs/src/assets/EULOGO.jpg" width="240">
