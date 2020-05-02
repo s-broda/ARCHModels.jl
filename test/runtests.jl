@@ -4,7 +4,9 @@ using ARCHModels
 using Random
 using GLM
 using DataFrames
+using StableRNGs
 
+rng = StableRNG(1)
 T = 10^4;
 
 @testset "lgamma" begin
@@ -225,30 +227,30 @@ end
     @test typeof(Regression([1, 2, 3, 4.0f0])) ==  Regression{1, Float32}
     @test ARCHModels.nparams(Regression{2, Float64}) == 2
 
-    Random.seed!(1)
+    rng = StableRNG(1)
     beta = [1, 2]
-    reg = Regression(beta, rand(2000, 2))
-    u = randn(2000)*.1
+    reg = Regression(beta, rand(rng, 2000, 2))
+    u = randn(rng, 2000)*.1
     y = reg.X*reg.coefs+u
     @test ARCHModels.coefnames(reg) == ["β₀", "β₁"]
     @test ARCHModels.presample(reg) == 0
     @test ARCHModels.constraints(typeof(reg), Float64) == ([-Inf, -Inf], [Inf, Inf])
     @test all(isapprox(ARCHModels.startingvals(reg, y),
-        [1.0129824114578263, 1.9885835817762578], rtol=1e-4))
+        [0.9923610899808355, 2.0036469645073303], rtol=1e-4))
     @test ARCHModels.uncond(reg) === 0.
     Random.seed!(1)
     am = simulate(GARCH{1, 1}([1., .9, .05]), 2000; meanspec=reg, warmup=0)
     fit!(am)
     @test_throws Base.ErrorException predict(am, :return)
 
-    @test all(isapprox(coef(am), [1.5240432453558923,
-                                 0.869016093356202,
-                                 0.06125683693937313,
-                                 1.1773425168044198,
-                                 1.7290964605805756], rtol=1e-4))
+    @test all(isapprox(coef(am), [1.522147151343697,
+                                  0.869732130237804,
+                                  0.060598935466617924,
+                                  0.7992856525779547,
+                                  2.0369823982928796], rtol=1e-4))
     Random.seed!(1)
     am = simulate(GARCH{1, 1}([1., .9, .05]), 1999; meanspec=reg, warmup=0)
-    @test predict(am, :return) ≈ 1.2174653422550268
+    @test predict(am, :return) ≈ 2.1435094119979254
     data = DataFrame(X=ones(1974), Y=BG96)
     model = lm(@formula(Y ~ -1 + X), data)
     am = fit(GARCH{1, 1}, model)
