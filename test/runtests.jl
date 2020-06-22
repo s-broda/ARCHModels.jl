@@ -167,6 +167,8 @@ end
     @test predict(am, :variance) ≈ 19.023613270332767
     @test predict(am, :return) == 0.0
     @test predict(am, :VaR) ≈ 10.146614544578197
+    @test predict.(am, :variance, 1:3) == [predict(am, :variance, h) for h in 1:3]
+    @test_throws Base.ErrorException predict.(am, :VaR, 1:3)
 end
 
 @testset "MeanSpecs" begin

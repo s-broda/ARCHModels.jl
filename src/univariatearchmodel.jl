@@ -163,22 +163,28 @@ function volatilities(am::UnivariateARCHModel{T, VS, SD}) where {T, VS, SD}
 end
 
 """
-    predict(am::UnivariateARCHModel, what=:volatility; level=0.01)
+    predict(am::UnivariateARCHModel, what=:volatility; level=0.01, horizon=1)
 Form a 1-step ahead prediction from `am`. `what` controls which object is predicted.
 The choices are `:volatility` (the default), `:variance`, `:return`, and `:VaR`. The VaR
 level can be controlled with the keyword argument `level`.
 """
-function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility; level=0.01) where {T, VS, SD, MS}
+function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility, horizon=1; level=0.01) where {T, VS, SD, MS}
 	ht = volatilities(am).^2
 	lht = log.(ht)
 	zt = residuals(am)
 	at = residuals(am, standardized=false)
-	t = length(am.data) + 1
-
-	if what == :return || what == :VaR
-		themean = mean(at, ht, lht, am.data, am.meanspec, am.meanspec.coefs, t)
+	themean = T(0)
+	if horizon > 1 && what == :VaR
+		error("Predicting VaR more than one period ahead is not implemented. Consider predicting one period ahead and scaling by `sqrt(horizon)`.")
 	end
-	update!(ht, lht, zt, at, VS, am.spec.coefs)
+	for t = length(am.data) .+ (1 : horizon)
+		if what == :return || what == :VaR
+			themean = mean(at, ht, lht, am.data, am.meanspec, am.meanspec.coefs, t)
+		end
+		update!(ht, lht, zt, at, VS, am.spec.coefs)
+		push!(zt, 0.)
+		push!(at, 0.)
+	end
 	if what == :return
 		return themean
 	elseif what == :volatility
@@ -425,6 +431,7 @@ minimizes the [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion
 # Keyword arguments:
 - `dist=StdNormal`: the error distribution.
 - `meanspec=Intercept`: the mean specification, either as a type or instance of that type.
+- `minlags=1`: minimum lag length to try in each parameter of `VS`.
 - `maxlags=3`: maximum lag length to try in each parameter of `VS`.
 - `criterion=bic`: function that takes a `UnivariateARCHModel` and returns the criterion to minimize.
 - `show_trace=false`: print `criterion` to screen for each estimated model.
@@ -457,19 +464,21 @@ Volatility parameters:
 """
 function selectmodel(::Type{VS}, data::Vector{T};
                      dist::Type{SD}=StdNormal{T}, meanspec::Union{MS, Type{MS}}=Intercept{T},
-                     maxlags=3, criterion=bic, show_trace=false, algorithm=BFGS(),
+                     maxlags::Integer=3, minlags::Integer=1, criterion=bic, show_trace=false, algorithm=BFGS(),
                      autodiff=:forward, kwargs...
                      ) where {VS<:UnivariateVolatilitySpec, T<:AbstractFloat,
                               SD<:StandardizedDistribution, MS<:MeanSpec
                               }
+	@assert maxlags >= minlags >= 0
+
 	#threading sometimes segfaults in tests locally. possibly https://github.com/JuliaLang/julia/issues/29934
 	mylock=Threads.ReentrantLock()
-    ndims = max(my_unwrap_unionall(VS)-1, 0)#e.g., two (p and q) for GARCH{p, q, T}
-	ndims2 = max(my_unwrap_unionall(MS)-1, 0)#e.g., two (p and q) for ARMA{p, q, T}
-    res = Array{UnivariateARCHModel, ndims+ndims2}(undef, ntuple(i->maxlags, ndims+ndims2))
+    ndims = max(my_unwrap_unionall(VS)-1, 0) # e.g., two (p and q) for GARCH{p, q, T}
+	ndims2 = max(my_unwrap_unionall(MS)-1, 0 )# e.g., two (p and q) for ARMA{p, q, T}
+    res = Array{UnivariateARCHModel, ndims+ndims2}(undef, ntuple(i->maxlags - minlags + 1, ndims+ndims2))
     Threads.@threads for ind in collect(CartesianIndices(size(res)))
-		VSi = VS{ind.I[1:ndims]...}
-		MSi = (ndims2==0 ? meanspec : meanspec{ind.I[ndims+1:end]...})
+		VSi = VS{ind.I[1:ndims] .+ minlags .-1...}
+		MSi = (ndims2==0 ? meanspec : meanspec{ind.I[ndims+1:end] .+ minlags .- 1...})
 		res[ind] = fit(VSi, data; dist=dist, meanspec=MSi,
                        algorithm=algorithm, autodiff=autodiff, kwargs...)
         if show_trace

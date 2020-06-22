@@ -2,6 +2,7 @@
 DocTestSetup = quote
     using Random
     Random.seed!(1)
+    using InteractiveUtils: subtypes
 end
 DocTestFilters = r".*[0-9\.]"
 ```
@@ -274,31 +275,31 @@ Passing the keyword argument `show_trace=true` will show the criterion for each 
 Any unspecified lag length parameters in the mean specification (e.g., ``p`` and ``q`` for [`ARMA`](@ref)) will be optimized over as well:
 
 ```jldoctest MANUAL
-julia>  am = selectmodel(ARCH, BG96;  meanspec=AR, maxlags=2)
+julia> selectmodel(ARCH, BG96;  meanspec=AR, maxlags=2, minlags=0)
 
 TGARCH{0,0,2} model with Gaussian errors, T=1974.
 
 Mean equation parameters:
 ───────────────────────────────────────────────
-       Estimate   Std.Error   z value  Pr(>|z|)
+      Estimate   Std.Error    z value  Pr(>|z|)
 ───────────────────────────────────────────────
-c   -0.00685701  0.00966961  -0.70913    0.4782
-φ₁   0.0358363   0.0334292    1.072      0.2837
+c  -0.00681363  0.00979192  -0.695843    0.4865
 ───────────────────────────────────────────────
 
 Volatility parameters:
-────────────────────────────────────────────
-    Estimate   Std.Error   z value  Pr(>|z|)
-────────────────────────────────────────────
-ω   0.119163  0.00995106  11.9749     <1e-32
-α₁  0.315686  0.0576413    5.47674    <1e-7
-α₂  0.183318  0.0444875    4.12066    <1e-4
-────────────────────────────────────────────
+───────────────────────────────────────────
+    Estimate   Std.Error  z value  Pr(>|z|)
+───────────────────────────────────────────
+ω   0.119455  0.00995804  11.9959    <1e-32
+α₁  0.314089  0.0578241    5.4318    <1e-7
+α₂  0.183502  0.0455194    4.0313    <1e-4
+───────────────────────────────────────────
 ```
 
-Here, an ARCH(2)-AR(1) model was selected. Note that this can result in an explosion of the number of models that must be estimated;
+Here, an ARCH(2) without AR terms model was selected; this is possible because we specified `minlags=0` (the default is 1). Note that jointly optimizing over the lag lengths of both the mean and volatility specification can result in an explosion of the number of models that must be estimated;
 e.g., selecting the best model from the class of [`TGARCH{o, p, q}`](@ref)-[`ARMA{p, q}`](@ref) models results in ``5^\mathbf{maxlags}`` models being estimated.
-It may be preferable to fix the lag length of the mean specification: `am = selectmodel(ARCH, BG96;  meanspec=AR{1})` considers only ARCH(q)-AR(1) models.
+It may be preferable to fix the lag length of the mean specification: `am = selectmodel(ARCH, BG96;  meanspec=AR{1})` considers only ARCH(q)-AR(1) models. The number of models to be estimated can also be reduced by specifying a value for `minlags` that is greater than the default of 1.
+
 Similarly, one may restrict the lag length of the volatility specification and select only among different mean specifications.
 E.g., the following will select the best [`ARMA{p, q}`](@ref) specification with constant variance:
 
@@ -324,6 +325,39 @@ Volatility parameters:
 ─────────────────────────────────────────
 ```
 In this case, an ARMA(1, 1) specification was selected.
+
+As a final example, a construction like the following can be used to automatically select not just the lag length, but also the class of GARCH model and the error distribution:
+
+```jldoctest MANUAL
+julia> models = [selectmodel(VS, BG96; dist=D, minlags=0, maxlags=1) for VS in subtypes(UnivariateVolatilitySpec), D in setdiff(subtypes(StandardizedDistribution), [Standardized])];
+
+julia> best_model = models[findmin(bic.(models))[2]]
+
+EGARCH{0,1,1} model with Student's t errors, T=1974.
+
+Mean equation parameters:
+────────────────────────────────────────────
+    Estimate   Std.Error   z value  Pr(>|z|)
+────────────────────────────────────────────
+μ  0.0023979  0.00676726  0.354338    0.7231
+────────────────────────────────────────────
+
+Volatility parameters:
+──────────────────────────────────────────────
+      Estimate  Std.Error    z value  Pr(>|z|)
+──────────────────────────────────────────────
+ω   -0.0134947  0.0184732  -0.730505    0.4651
+β₁   0.978003   0.0125042  78.2141      <1e-99
+α₁   0.265674   0.0624712   4.25274     <1e-4
+──────────────────────────────────────────────
+
+Distribution parameters:
+─────────────────────────────────────────
+   Estimate  Std.Error  z value  Pr(>|z|)
+─────────────────────────────────────────
+ν   4.12683   0.403878   10.218    <1e-23
+─────────────────────────────────────────
+```
 ## Value at Risk
 One of the primary uses of ARCH models is for estimating and forecasting [Value at Risk](https://en.wikipedia.org/wiki/Value_at_risk).
 Basic in-sample estimates for the Value at Risk implied by an estimated [`UnivariateARCHModel`](@ref) can be obtained using [`VaRs`](@ref):
@@ -346,10 +380,19 @@ ENV["GKSwstype"]="svg"; savefig(joinpath("assets", "VaRplot.svg")); nothing # hi
 ## Forecasting
 The [`predict(am::UnivariateARCHModel)`](@ref) method can be used to construct one-step ahead forecasts for a number of quantities. Its signature is
 ```
-    predict(am::UnivariateARCHModel, what=:volatility; level=0.01)
+    predict(am::UnivariateARCHModel, what=:volatility, horizon=1; level=0.01)
 ```
-The keyword argument `what` controls which object is predicted;
-the choices are `:volatility` (the default), `:variance`, `:return`, and `:VaR`. The VaR level can be controlled with the keyword argument `level`.
+The optional argument `what` controls which object is predicted;
+the choices are `:volatility` (the default), `:variance`, `:return`, and `:VaR`. The forecast horizon is controlled by the optional argument `horizon`, and the VaR level with the keyword argument `level`. Note that when `horizon` is greater than 1, only the value *at* the horizon is returned, not the intermediate predictions; if you need those, use broadcasting:
+```jldoctest MANUAL
+julia> am = fit(GARCH{1, 1}, BG96);
+
+julia> predict.(am, :volatility, 1:3)
+3-element Array{Float64,1}:
+ 0.3835202691483884
+ 0.3595760033430932
+ 0.33905170921321015
+```
 
 One way to use `predict` is in a backtesting exercise. The following code snippet constructs out-of-sample VaR forecasts for the `BG96` data by re-estimating the model
 in a rolling window fashion, and then tests the correctness of the VaR specification with `DQTest`.

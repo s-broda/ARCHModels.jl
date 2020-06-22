@@ -3,6 +3,9 @@
 """
 abstract type ARCHModel <: StatisticalModel end
 
+# this makes predict.(am, :variance, 1:3) work
+Base.Broadcast.broadcastable(am::ARCHModel) = Ref(am)
+
 """
 	VolatilitySpec{T}
 Abstract supertype of UnivariateVolatilitySpec{T} and MultivariateVolatilitySpec{T} .
