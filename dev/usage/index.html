@@ -180,26 +180,25 @@ Distribution parameters:
    Estimate  Std.Error  z value  Pr(&gt;|z|)
 ─────────────────────────────────────────
 ν   4.18795   0.418698  10.0023    &lt;1e-22
-─────────────────────────────────────────</code></pre><p>Passing the keyword argument <code>show_trace=true</code> will show the criterion for each model after it is estimated.</p><p>Any unspecified lag length parameters in the mean specification (e.g., <span>$p$</span> and <span>$q$</span> for <a href="../reference/#ARCHModels.ARMA-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}} where T where q where p"><code>ARMA</code></a>) will be optimized over as well:</p><pre><code class="language-julia-repl">julia&gt;  am = selectmodel(ARCH, BG96;  meanspec=AR, maxlags=2)
+─────────────────────────────────────────</code></pre><p>Passing the keyword argument <code>show_trace=true</code> will show the criterion for each model after it is estimated.</p><p>Any unspecified lag length parameters in the mean specification (e.g., <span>$p$</span> and <span>$q$</span> for <a href="../reference/#ARCHModels.ARMA-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}} where T where q where p"><code>ARMA</code></a>) will be optimized over as well:</p><pre><code class="language-julia-repl">julia&gt; selectmodel(ARCH, BG96;  meanspec=AR, maxlags=2, minlags=0)
 
 TGARCH{0,0,2} model with Gaussian errors, T=1974.
 
 Mean equation parameters:
 ───────────────────────────────────────────────
-       Estimate   Std.Error   z value  Pr(&gt;|z|)
+      Estimate   Std.Error    z value  Pr(&gt;|z|)
 ───────────────────────────────────────────────
-c   -0.00685701  0.00966961  -0.70913    0.4782
-φ₁   0.0358363   0.0334292    1.072      0.2837
+c  -0.00681363  0.00979192  -0.695843    0.4865
 ───────────────────────────────────────────────
 
 Volatility parameters:
-────────────────────────────────────────────
-    Estimate   Std.Error   z value  Pr(&gt;|z|)
-────────────────────────────────────────────
-ω   0.119163  0.00995106  11.9749     &lt;1e-32
-α₁  0.315686  0.0576413    5.47674    &lt;1e-7
-α₂  0.183318  0.0444875    4.12066    &lt;1e-4
-────────────────────────────────────────────</code></pre><p>Here, an ARCH(2)-AR(1) model was selected. Note that this can result in an explosion of the number of models that must be estimated; e.g., selecting the best model from the class of <a href="../reference/#ARCHModels.TGARCH"><code>TGARCH{o, p, q}</code></a>-<a href="../reference/#ARCHModels.ARMA-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}} where T where q where p"><code>ARMA{p, q}</code></a> models results in <span>$5^\mathbf{maxlags}$</span> models being estimated. It may be preferable to fix the lag length of the mean specification: <code>am = selectmodel(ARCH, BG96;  meanspec=AR{1})</code> considers only ARCH(q)-AR(1) models. Similarly, one may restrict the lag length of the volatility specification and select only among different mean specifications. E.g., the following will select the best <a href="../reference/#ARCHModels.ARMA-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}} where T where q where p"><code>ARMA{p, q}</code></a> specification with constant variance:</p><pre><code class="language-julia-repl">julia&gt; am = selectmodel(ARCH{0}, BG96;  meanspec=ARMA)
+───────────────────────────────────────────
+    Estimate   Std.Error  z value  Pr(&gt;|z|)
+───────────────────────────────────────────
+ω   0.119455  0.00995804  11.9959    &lt;1e-32
+α₁  0.314089  0.0578241    5.4318    &lt;1e-7
+α₂  0.183502  0.0455194    4.0313    &lt;1e-4
+───────────────────────────────────────────</code></pre><p>Here, an ARCH(2) without AR terms model was selected; this is possible because we specified <code>minlags=0</code> (the default is 1). Note that jointly optimizing over the lag lengths of both the mean and volatility specification can result in an explosion of the number of models that must be estimated; e.g., selecting the best model from the class of <a href="../reference/#ARCHModels.TGARCH"><code>TGARCH{o, p, q}</code></a>-<a href="../reference/#ARCHModels.ARMA-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}} where T where q where p"><code>ARMA{p, q}</code></a> models results in <span>$5^\mathbf{maxlags}$</span> models being estimated. It may be preferable to fix the lag length of the mean specification: <code>am = selectmodel(ARCH, BG96;  meanspec=AR{1})</code> considers only ARCH(q)-AR(1) models. The number of models to be estimated can also be reduced by specifying a value for <code>minlags</code> that is greater than the default of 1.</p><p>Similarly, one may restrict the lag length of the volatility specification and select only among different mean specifications. E.g., the following will select the best <a href="../reference/#ARCHModels.ARMA-Union{Tuple{Array{T,1}}, Tuple{T}, Tuple{q}, Tuple{p}} where T where q where p"><code>ARMA{p, q}</code></a> specification with constant variance:</p><pre><code class="language-julia-repl">julia&gt; am = selectmodel(ARCH{0}, BG96;  meanspec=ARMA)
 
 TGARCH{0,0,0} model with Gaussian errors, T=1974.
 
@@ -217,7 +216,34 @@ Volatility parameters:
    Estimate  Std.Error  z value  Pr(&gt;|z|)
 ─────────────────────────────────────────
 ω  0.220848  0.0118061  18.7063    &lt;1e-77
-─────────────────────────────────────────</code></pre><p>In this case, an ARMA(1, 1) specification was selected.</p><h2><a class="nav-anchor" id="Value-at-Risk-1" href="#Value-at-Risk-1">Value at Risk</a></h2><p>One of the primary uses of ARCH models is for estimating and forecasting <a href="https://en.wikipedia.org/wiki/Value_at_risk">Value at Risk</a>. Basic in-sample estimates for the Value at Risk implied by an estimated <a href="../reference/#ARCHModels.UnivariateARCHModel"><code>UnivariateARCHModel</code></a> can be obtained using <a href="../reference/#ARCHModels.VaRs"><code>VaRs</code></a>:</p><div></div><pre><code class="language-julia-repl">julia&gt; am = fit(GARCH{1, 1}, BG96);
+─────────────────────────────────────────</code></pre><p>In this case, an ARMA(1, 1) specification was selected.</p><p>As a final example, a construction like the following can be used to automatically select not just the lag length, but also the class of GARCH model and the error distribution:</p><pre><code class="language-julia-repl">julia&gt; models = [selectmodel(VS, BG96; dist=D, minlags=0, maxlags=1) for VS in subtypes(UnivariateVolatilitySpec), D in setdiff(subtypes(StandardizedDistribution), [Standardized])];
+
+julia&gt; best_model = models[findmin(bic.(models))[2]]
+
+EGARCH{0,1,1} model with Student&#39;s t errors, T=1974.
+
+Mean equation parameters:
+────────────────────────────────────────────
+    Estimate   Std.Error   z value  Pr(&gt;|z|)
+────────────────────────────────────────────
+μ  0.0023979  0.00676726  0.354338    0.7231
+────────────────────────────────────────────
+
+Volatility parameters:
+──────────────────────────────────────────────
+      Estimate  Std.Error    z value  Pr(&gt;|z|)
+──────────────────────────────────────────────
+ω   -0.0134947  0.0184732  -0.730505    0.4651
+β₁   0.978003   0.0125042  78.2141      &lt;1e-99
+α₁   0.265674   0.0624712   4.25274     &lt;1e-4
+──────────────────────────────────────────────
+
+Distribution parameters:
+─────────────────────────────────────────
+   Estimate  Std.Error  z value  Pr(&gt;|z|)
+─────────────────────────────────────────
+ν   4.12683   0.403878   10.218    &lt;1e-23
+─────────────────────────────────────────</code></pre><h2><a class="nav-anchor" id="Value-at-Risk-1" href="#Value-at-Risk-1">Value at Risk</a></h2><p>One of the primary uses of ARCH models is for estimating and forecasting <a href="https://en.wikipedia.org/wiki/Value_at_risk">Value at Risk</a>. Basic in-sample estimates for the Value at Risk implied by an estimated <a href="../reference/#ARCHModels.UnivariateARCHModel"><code>UnivariateARCHModel</code></a> can be obtained using <a href="../reference/#ARCHModels.VaRs"><code>VaRs</code></a>:</p><div></div><pre><code class="language-julia-repl">julia&gt; am = fit(GARCH{1, 1}, BG96);
 
 julia&gt; vars = VaRs(am, 0.05);
 
@@ -225,7 +251,13 @@ julia&gt; using Plots
 
 julia&gt; plot(-BG96, legend=:none, xlabel=&quot;\$t\$&quot;, ylabel=&quot;\$-r_t\$&quot;);
 
-julia&gt; plot!(vars, color=:purple);</code></pre><p><img src="../assets/VaRplot.svg" alt="VaR Plot"/></p><h2><a class="nav-anchor" id="Forecasting-1" href="#Forecasting-1">Forecasting</a></h2><p>The <a href="../reference/#StatsBase.predict-Tuple{MultivariateARCHModel}"><code>predict(am::UnivariateARCHModel)</code></a> method can be used to construct one-step ahead forecasts for a number of quantities. Its signature is</p><pre><code class="language-none">    predict(am::UnivariateARCHModel, what=:volatility; level=0.01)</code></pre><p>The keyword argument <code>what</code> controls which object is predicted; the choices are <code>:volatility</code> (the default), <code>:variance</code>, <code>:return</code>, and <code>:VaR</code>. The VaR level can be controlled with the keyword argument <code>level</code>.</p><p>One way to use <code>predict</code> is in a backtesting exercise. The following code snippet constructs out-of-sample VaR forecasts for the <code>BG96</code> data by re-estimating the model in a rolling window fashion, and then tests the correctness of the VaR specification with <code>DQTest</code>.</p><pre><code class="language-julia">T = length(BG96);
+julia&gt; plot!(vars, color=:purple);</code></pre><p><img src="../assets/VaRplot.svg" alt="VaR Plot"/></p><h2><a class="nav-anchor" id="Forecasting-1" href="#Forecasting-1">Forecasting</a></h2><p>The <a href="../reference/#StatsBase.predict-Tuple{MultivariateARCHModel}"><code>predict(am::UnivariateARCHModel)</code></a> method can be used to construct one-step ahead forecasts for a number of quantities. Its signature is</p><pre><code class="language-none">    predict(am::UnivariateARCHModel, what=:volatility, horizon=1; level=0.01)</code></pre><p>The optional argument <code>what</code> controls which object is predicted; the choices are <code>:volatility</code> (the default), <code>:variance</code>, <code>:return</code>, and <code>:VaR</code>. The forecast horizon is controlled by the optional argument <code>horizon</code>, and the VaR level with the keyword argument <code>level</code>. Note that when <code>horizon</code> is greater than 1, only the value <em>at</em> the horizon is returned, not the intermediate predictions; if you need those, use broadcasting:</p><pre><code class="language-julia-repl">julia&gt; am = fit(GARCH{1, 1}, BG96);
+
+julia&gt; predict.(am, :volatility, 1:3)
+3-element Array{Float64,1}:
+ 0.3835202691483884
+ 0.3595760033430932
+ 0.33905170921321015</code></pre><p>One way to use <code>predict</code> is in a backtesting exercise. The following code snippet constructs out-of-sample VaR forecasts for the <code>BG96</code> data by re-estimating the model in a rolling window fashion, and then tests the correctness of the VaR specification with <code>DQTest</code>.</p><pre><code class="language-julia">T = length(BG96);
 windowsize = 1000;
 vars = similar(BG96);
 for t = windowsize+1:T-1
