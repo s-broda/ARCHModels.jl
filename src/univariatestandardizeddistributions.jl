@@ -21,7 +21,8 @@ rand(s::Standardized{D, T}) where {D, T} = (rand(D(s.coefs...))-mean(D(s.coefs..
 @inline logconst(S::Type{<:Standardized{D, T1} where T1}, coefs::Vector{T}) where {D, T} = zero(T)
 nparams(S::Type{<:Standardized{D, T} where T}) where {D} = length(fieldnames(D))
 coefnames(S::Type{<:Standardized{D, T}}) where {D, T} = [string.(fieldnames(D))...]
-distname(S::Type{<:Standardized{D, T}}) where {D, T} = string(D{T}.name)
+distname(S::Type{<:Standardized{D, T}}) where {D, T} = (io = IOBuffer(); sprint(io->Base.show_type_name(io, Base.typename(TDist{Float64}))))
+
 function quantile(s::Standardized{D, T}, q::Real) where {D, T}
     (quantile(D(s.coefs...), q)-mean(D(s.coefs...)))./std(D(s.coefs...))
 end
