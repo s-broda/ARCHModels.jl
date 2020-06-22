@@ -80,7 +80,7 @@ Volatility parameters:
 ─────────────────────────────────────────────
 ```
 
-This returns an instance of [`UnivariateARCHModel`](@ref), as described in the section [Working with UnivariateARCHModels](@ref). The parameters ``\alpha_1`` and ``\beta_1`` in the volatility equation are highly significant, again confirming the presence of volatility clustering. Note also that the fitted values are the same as those found by [Bollerslev and Ghysels (1986)](https://doi.org/10.2307/1392425) and [Brooks et.al. (2001)](https://doi.org/10.1016/S0169-2070(00)00070-4) for the same dataset.
+This returns an instance of [`UnivariateARCHModel`](@ref), as described in the section [Working with UnivariateARCHModels](@ref). The parameters ``\alpha_1`` and ``\beta_1`` in the volatility equation are highly significant, again confirming the presence of volatility clustering. The standard errors are from a robust (sandwich) estimator of the variance-covariance matrix. Note also that the fitted values are the same as those found by [Bollerslev and Ghysels (1986)](https://doi.org/10.2307/1392425) and [Brooks et.al. (2001)](https://doi.org/10.1016/S0169-2070(00)00070-4) for the same dataset.
 
 The [`fit`](@ref) method supports a number of keyword arguments; the full signature is
 ```julia
