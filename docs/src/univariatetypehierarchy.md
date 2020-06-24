@@ -5,9 +5,11 @@ In general a univariate model can be written:
 ```math
 r_t = \mu_t + \sigma_t z_t, \quad z_t \sim_{\text{iid}} F
 ```
-Hence, a univariate model is a triple of functions: ``\left(\mu_t, \sigma_t, F \right)``
-The table below lists current options for the conditional mean, conditional variance, and the error distribution.
-| ``\mu_t`` 	| ``\sigma_t`` 	| `F`: Error Distribution 	|
+Hence, a univariate model is a triple of functions: ``\left(\mu_t, \sigma_t^2, F \right)`` with up 
+to three types of parameters to estimate ``\left(\theta_\mu, \theta_\sigma, \theta_F \right)``.
+The table below lists current models for the conditional mean, conditional variance, and error distribution.
+
+| ``\mu_t``: conditional mean 	| ``\sigma_t^2``: conditional variance 	| `F`: Error Distribution 	|
 |-	|-	|-	|
 | `NoIntercept` 	| `ARCH{0}`: Homoscedastic 	| `StdNormal` 	|
 | `Intercept` 	| `ARCH{q}` 	| `StdT` 	|
