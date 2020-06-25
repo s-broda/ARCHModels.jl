@@ -1,5 +1,22 @@
 # Univariate
 An instance of [`UnivariateARCHModel`](@ref) contains a vector of data (such as equity returns), and encapsulates information about the [volatility specification](@ref volaspec) (e.g., [GARCH](@ref) or [EGARCH](@ref)), the [mean specification](@ref meanspec) (e.g., whether an intercept is included), and the [error distribution](@ref Distributions).
+
+In general a univariate model can be written: 
+```math
+r_t = \mu_t + \sigma_t z_t, \quad z_t \sim_{\text{iid}} F
+```
+Hence, a univariate model is a triple of functions: ``\left(\mu_t, \sigma_t^2, F \right)`` with up 
+to three types of parameters to estimate ``\left(\theta_\mu, \theta_\sigma, \theta_F \right)``.
+The table below lists current models for the conditional mean, conditional variance, and error distribution.
+
+| ``\mu_t``: conditional mean 	| ``\sigma_t^2``: conditional variance 	| `F`: Error Distribution 	|
+|-	|-	|-	|
+| `NoIntercept` 	| `ARCH{0}`: Homoscedastic 	| `StdNormal` 	|
+| `Intercept` 	| `ARCH{q}` 	| `StdT` 	|
+| `ARMA{p,q}` 	| `GARCH{p,q}` 	| `StdGED` 	|
+| `Regression(x)` 	| `TGARCH{o,p,q}` 	| Std User-Defined 	|
+|  	| `EGARCH{o,p,q}` 	|  	|
+
 ## [Volatility specifications](@id volaspec)
 Volatility specifications describe the evolution of ``\sigma_t``. They are modelled as subtypes of [`UnivariateVolatilitySpec`](@ref). There is one type for each class of (G)ARCH model, parameterized by the number(s) of lags (e.g., ``p``, ``q`` for a GARCH(p, q) model). For each volatility specification, the order of the parameters in the coefficient vector is such that all parameters pertaining to the first type parameter (``p``) appear before those pertaining to the second (``q``).
 ### ARCH
