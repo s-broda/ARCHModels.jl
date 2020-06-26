@@ -169,7 +169,7 @@ end
     ng = nparams(VS)
     nd = nparams(SD)
     nm = nparams(typeof(meanspec))
-    length(coefs) == ng+nd+nm || throw(NumParamError(ng+nd+nm, length(coefs)))
+    #length(coefs) == ng+nd+nm || throw(NumParamError(ng+nd+nm, length(coefs)))
     garchcoefs = coefs[1:ng]
     distcoefs = coefs[ng+1:ng+nd]
     meancoefs = coefs[ng+nd+1:ng+nd+nm]
@@ -180,7 +180,7 @@ end
     ng = nparams(specinst)
     nd = nparams(SD)
     nm = nparams(typeof(meanspec))
-    length(coefs) == ng+nd+nm || throw(NumParamError(ng+nd+nm, length(coefs)))
+    # length(coefs) == ng+nd+nm || throw(NumParamError(ng+nd+nm, length(coefs)))
     garchcoefs = coefs[1:ng]
     distcoefs = coefs[ng+1:ng+nd]
     meancoefs = coefs[ng+nd+1:ng+nd+nm]
@@ -270,13 +270,14 @@ end
                                   MS<:MeanSpec, T1<:AbstractFloat, T2
                                   }
     garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, meanspec)
+	np = length(garchcoefs) + length(distcoefs) + length(meancoefs)
     #the below 6 lines can be removed when using Fminbox
     lowergarch, uppergarch = constraints(VS, T1)
     lowerdist, upperdist = constraints(SD, T1)
     lowermean, uppermean = constraints(MS, T1)
     lower = vcat(lowergarch, lowerdist, lowermean)
     upper = vcat(uppergarch, upperdist, uppermean)
-    all(lower.<coefs.<upper) || return T2(-Inf)
+    all(lower.<coefs[1:np].<upper) || return T2(-Inf)
     T = length(data)
 	r1 = presample(VS)
 	r2 = presample(meanspec)
@@ -318,13 +319,14 @@ end#function
                                   MS<:MeanSpec, T1<:AbstractFloat, T2
                                   }
     garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, specinst, SD, meanspec)
+	np = length(garchcoefs) + length(distcoefs) + length(meancoefs)
     #the below 6 lines can be removed when using Fminbox
     lowergarch, uppergarch = constraints(specinst, T1)
     lowerdist, upperdist = constraints(SD, T1)
     lowermean, uppermean = constraints(MS, T1)
     lower = vcat(lowergarch, lowerdist, lowermean)
     upper = vcat(uppergarch, upperdist, uppermean)
-    all(lower.<coefs.<upper) || return T2(-Inf)
+    all(lower.<coefs[1:np].<upper) || return T2(-Inf)
     T = length(data)
 	r1 = presample(specinst)
 	r2 = presample(meanspec)
@@ -412,15 +414,19 @@ function scores(am::UnivariateARCHModel)
 end
 
 
+
+
 function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
               meancoefs::Vector{T}, ::Type{VS}, ::Type{SD}, meanspec::MS,
               data::Vector{T}; algorithm=BFGS(), autodiff=:forward, kwargs...
               ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
                        MS<:MeanSpec, T<:AbstractFloat
                        }
-    obj = x -> -loglik(VS, SD, meanspec, data, x)
+
+	obj = x -> -loglik(VS, SD, meanspec, data, x)
     coefs = vcat(garchcoefs, distcoefs, meancoefs)
-    #for fminbox:
+
+	#for fminbox:
     # lowergarch, uppergarch = constraints(VS, T)
     # lowerdist, upperdist = constraints(SD, T)
     # lowermean, uppermean = constraints(MS, T)
@@ -428,14 +434,51 @@ function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
     # upper = vcat(uppergarch, upperdist, uppermean)
     # res = optimize(obj, lower, upper, coefs, Fminbox(algorithm); autodiff=autodiff, kwargs...)
     res = optimize(obj, coefs, algorithm; autodiff=autodiff, kwargs...)
-    coefs .= Optim.minimizer(res)
+	coefs .= Optim.minimizer(res)
+
     ng = nparams(VS)
     ns = nparams(SD)
     nm = nparams(typeof(meanspec))
+
+	garchcoefs .= coefs[1:ng]
+	distcoefs .= coefs[ng+1:ng+ns]
+    meancoefs .= coefs[ng+ns+1:ng+ns+nm]
+	meanspec.coefs .= meancoefs
+end
+
+struct myclosure{VS, MS, T}
+	specinst::VS
+	meanspec::MS
+	data::Vector{T}
+end
+function (mc::myclosure)(x)
+  -loglik(mc.specinst, StdNormal, mc.meanspec, mc.data, x)
+end
+function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
+              meancoefs::Vector{T}, mc::myclosure{VS, MS, T}; algorithm=BFGS(), autodiff=:forward, kwargs...
+              ) where {VS<:VolatilitySpec,
+                       MS<:MeanSpec, T<:AbstractFloat
+                       }
+
+
+    coefs = vcat(garchcoefs, distcoefs, meancoefs)
+	#for fminbox:
+    # lowergarch, uppergarch = constraints(VS, T)
+    # lowerdist, upperdist = constraints(SD, T)
+    # lowermean, uppermean = constraints(MS, T)
+    # lower = vcat(lowergarch, lowerdist, lowermean)
+    # upper = vcat(uppergarch, upperdist, uppermean)
+    # res = optimize(obj, lower, upper, coefs, Fminbox(algorithm); autodiff=autodiff, kwargs...)
+
+	res = optimize(mc, coefs, algorithm; autodiff=autodiff, kwargs...)
+    coefs .= Optim.minimizer(res)
+    ng = nparams(mc.specinst)
+    ns = nparams(StdNormal)
+    nm = nparams(typeof(mc.meanspec))
     garchcoefs .= coefs[1:ng]
     distcoefs .= coefs[ng+1:ng+ns]
     meancoefs .= coefs[ng+ns+1:ng+ns+nm]
-	meanspec.coefs .= meancoefs
+	mc.meanspec.coefs .= meancoefs
     return nothing
 end
 
@@ -447,21 +490,28 @@ function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
                        }
     obj = x -> -loglik(specinst, SD, meanspec, data, x)
     coefs = vcat(garchcoefs, distcoefs, meancoefs)
-    #for fminbox:
+	lc = length(coefs)
+	longcoefs=zeros(T, min(27, lc)) # this is so we don't get new gradients if # params changes
+	longcoefs[1:length(coefs)] .= coefs
+	#for fminbox:
     # lowergarch, uppergarch = constraints(VS, T)
     # lowerdist, upperdist = constraints(SD, T)
     # lowermean, uppermean = constraints(MS, T)
     # lower = vcat(lowergarch, lowerdist, lowermean)
     # upper = vcat(uppergarch, upperdist, uppermean)
     # res = optimize(obj, lower, upper, coefs, Fminbox(algorithm); autodiff=autodiff, kwargs...)
-    res = optimize(obj, coefs, algorithm; autodiff=autodiff, kwargs...)
-    coefs .= Optim.minimizer(res)
+    res = optimize(obj, longcoefs, algorithm; autodiff=autodiff, kwargs...)
+    longcoefs .= Optim.minimizer(res)
+
     ng = nparams(specinst)
     ns = nparams(SD)
     nm = nparams(typeof(meanspec))
-    garchcoefs .= coefs[1:ng]
-    distcoefs .= coefs[ng+1:ng+ns]
-    meancoefs .= coefs[ng+ns+1:ng+ns+nm]
+	garchcoefs
+	longcoefs[1:ng]
+
+	garchcoefs .= longcoefs[1:ng]
+	distcoefs .= longcoefs[ng+1:ng+ns]
+    meancoefs .= longcoefs[ng+ns+1:ng+ns+nm]
 	meanspec.coefs .= meancoefs
     return nothing
 end
@@ -511,13 +561,15 @@ function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
              ) where {VS<:VolatilitySpec, SD<:StandardizedDistribution,
                       MS<:MeanSpec, T<:AbstractFloat
                       }
-	#can't use dispatch for this b/c meanspec is a kwarg
-	meanspec isa Type ? ms = meanspec(zeros(T, nparams(meanspec))) : ms = deepcopy(meanspec)
-    coefs = startingvals(VS, data)
-    distcoefs = startingvals(SD, data)
-    meancoefs = startingvals(ms, data)
-	_fit!(coefs, distcoefs, meancoefs, VS, SD, ms, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
-	return UnivariateARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=ms, fitted=true)
+	par = getparams(VS)::Tuple{Int, Int, Int}
+	fit(TGARCHn(par...), data; dist=dist, meanspec=meanspec, algorithm=algorithm, autodiff=autodiff, kwargs...)
+	# #can't use dispatch for this b/c meanspec is a kwarg
+	# meanspec isa Type ? ms = meanspec(zeros(T, nparams(meanspec))) : ms = deepcopy(meanspec)
+    # coefs = startingvals(VS, data)
+    # distcoefs = startingvals(SD, data)
+    # meancoefs = startingvals(ms, data)
+	# _fit!(coefs, distcoefs, meancoefs, VS, SD, ms, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
+	# return UnivariateARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=ms, fitted=true)
 end
 
 function fit(specinst::VS, data::Vector{T}; dist::Type{SD}=StdNormal{T},
@@ -533,7 +585,7 @@ function fit(specinst::VS, data::Vector{T}; dist::Type{SD}=StdNormal{T},
     meancoefs = startingvals(ms, data)
 	_fit!(coefs, distcoefs, meancoefs, specinst, SD, ms, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
 	specinst.coefs .= coefs
-	return UnivariateARCHModel(specinst, data; dist=SD(distcoefs), meanspec=ms, fitted=true)
+	return UnivariateARCHModel(VS(), data; dist=SD(distcoefs), meanspec=ms, fitted=true)
 end
 
 """
@@ -618,6 +670,7 @@ function selectmodel(::Type{VS}, data::Vector{T};
 	ndims2 = max(my_unwrap_unionall(MS)-1, 0)#e.g., two (p and q) for ARMA{p, q, T}
     res = Array{UnivariateARCHModel, ndims+ndims2}(undef, ntuple(i->maxlags, ndims+ndims2))
     Threads.@threads for ind in collect(CartesianIndices(size(res)))
+		@show[ind.I[1:ndims]...]
 		VSi = VS{ind.I[1:ndims]...}
 		MSi = (ndims2==0 ? meanspec : meanspec{ind.I[ndims+1:end]...})
 		res[ind] = fit(VSi, data; dist=dist, meanspec=MSi,
@@ -633,9 +686,43 @@ function selectmodel(::Type{VS}, data::Vector{T};
             unlock(mylock)
         end
     end
-    crits = criterion.(res)
-    _, ind = findmin(crits)
-    return res[ind]
+    #crits = criterion.(res)
+    #_, ind = findmin(crits)
+    return res
+end
+
+function selectmodel2(::Type{VS}, data::Vector{T};
+                     dist::Type{SD}=StdNormal{T}, meanspec::Union{MS, Type{MS}}=Intercept{T},
+                     maxlags=3, criterion=bic, show_trace=false, algorithm=BFGS(),
+                     autodiff=:forward, kwargs...
+                     ) where {VS<:VolatilitySpec, T<:AbstractFloat,
+                              SD<:StandardizedDistribution, MS<:MeanSpec
+                              }
+	#threading sometimes segfaults in tests locally. possibly https://github.com/JuliaLang/julia/issues/29934
+	mylock=Threads.SpinLock()
+    ndims = 3# max(my_unwrap_unionall(VS)-1, 0)#e.g., two (p and q) for GARCH{p, q, T}
+	ndims2 = max(my_unwrap_unionall(MS)-1, 0)#e.g., two (p and q) for ARMA{p, q, T}
+    res = Array{UnivariateARCHModel, ndims+ndims2}(undef, ntuple(i->maxlags, ndims+ndims2))
+    Threads.@threads for ind in collect(CartesianIndices(size(res)))
+		@show[ind.I[1:ndims]...]
+		VSi = VS(ind.I[1:ndims]...)
+		MSi = (ndims2==0 ? meanspec : meanspec{ind.I[ndims+1:end]...})
+		res[ind] = fit(VSi, data; dist=dist, meanspec=MSi,
+                       algorithm=algorithm, autodiff=autodiff, kwargs...)
+        if show_trace
+            lock(mylock)
+            Core.print(modname(VSi))
+			ndims2>0 && Core.print("-", modname(MSi))
+			Core.println(" model has ",
+                              uppercase(split("$criterion", ".")[end]), " ",
+                              criterion(res[ind]), "."
+                              )
+            unlock(mylock)
+        end
+    end
+    #crits = criterion.(res)
+    #_, ind = findmin(crits)
+    return res
 end
 
 

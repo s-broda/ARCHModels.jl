@@ -206,3 +206,7 @@ function coefnames(specinst::TGARCHn)
     names[o+p+2:o+p+q+1] .= (i -> "α"*subscript(i)).([1:q...])
     return names
 end
+
+function getparams(@nospecialize VS::Type{TGARCH{o, p, q}})::Tuple{Int64, Int64, Int64} where {o, p, q}
+	(o, p, q)
+end
