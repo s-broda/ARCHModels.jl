@@ -139,11 +139,13 @@ function _simulate!(data::Vector{T2}, spec::UnivariateVolatilitySpec{T2};
     deleteat!(data, 1:warmup)
 end
 
-@inline function splitcoefs(coefs, VS, SD, meanspec)
-    ng = nparams(VS)
+@inline function splitcoefs(coefs, VS, SD, meanspec, opq...)
+    ng = nparams(VS, opq...)
     nd = nparams(SD)
     nm = nparams(typeof(meanspec))
-    length(coefs) == ng+nd+nm || throw(NumParamError(ng+nd+nm, length(coefs)))
+	if ~selecting(opq...)
+		length(coefs) == ng+nd+nm || throw(NumParamError(ng+nd+nm, length(coefs)))
+	end
     garchcoefs = coefs[1:ng]
     distcoefs = coefs[ng+1:ng+nd]
     meancoefs = coefs[ng+nd+1:ng+nd+nm]
@@ -233,20 +235,21 @@ end
 #dimensional array of the right type.
 @inline function loglik!(ht::AbstractVector{T2}, lht::AbstractVector{T2},
                          zt::AbstractVector{T2}, at::AbstractVector{T2}, ::Type{VS}, ::Type{SD}, meanspec::MS,
-                         data::Vector{T1}, coefs::AbstractVector{T3}
+                         data::Vector{T1}, coefs::AbstractVector{T3}, opq...
                          ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
                                   MS<:MeanSpec, T1<:AbstractFloat, T2, T3
                                   }
-    garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, meanspec)
+    garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, meanspec, opq...)
+	coefs = vcat(garchcoefs, distcoefs, meancoefs)
     #the below 6 lines can be removed when using Fminbox
-    lowergarch, uppergarch = constraints(VS, T1)
+    lowergarch, uppergarch = constraints(VS, T1, opq...)
     lowerdist, upperdist = constraints(SD, T1)
     lowermean, uppermean = constraints(MS, T1)
     lower = vcat(lowergarch, lowerdist, lowermean)
     upper = vcat(uppergarch, upperdist, uppermean)
-    all(lower.<coefs.<upper) || return T2(-Inf)
+	all(lower.<coefs.<upper) || return T2(-Inf)
     T = length(data)
-	r1 = presample(VS)
+	r1 = presample(VS, opq...)
 	r2 = presample(meanspec)
     r = max(r1, r2)
     T > r || error("Sample too small.")
@@ -264,7 +267,7 @@ end
 				themean = m0
 			end
 			if t > r1
-                update!(ht, lht, zt, at, VS, garchcoefs)
+                update!(ht, lht, zt, at, VS, garchcoefs, opq...)
             else
 				push!(ht, h0)
                 push!(lht, log(h0))
@@ -280,17 +283,17 @@ end
 end#function
 
 function loglik(spec::Type{VS}, dist::Type{SD}, meanspec::MS,
-                   data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}
+                   data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}, opq...
                    ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
                             MS<:MeanSpec, T2
                             }
-    r = max(presample(VS), presample(meanspec))
+    r = max(presample(VS, opq...), presample(meanspec))
 	r = max(r, 1) # make sure this works for, e.g., ARCH{0}; CircularBuffer requires at least a length of 1
     ht = CircularBuffer{T2}(r)
     lht = CircularBuffer{T2}(r)
     zt = CircularBuffer{T2}(r)
 	at = CircularBuffer{T2}(r)
-    loglik!(ht, lht, zt, at, spec, dist, meanspec, data, coefs)
+    loglik!(ht, lht, zt, at, spec, dist, meanspec, data, coefs, opq...)
 
 end
 
@@ -316,30 +319,40 @@ function scores(am::UnivariateARCHModel)
 	S = ForwardDiff.jacobian(f, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
 end
 
+selecting(opq...) = true
+selecting() = false
 
 function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
               meancoefs::Vector{T}, ::Type{VS}, ::Type{SD}, meanspec::MS,
-              data::Vector{T}; algorithm=BFGS(), autodiff=:forward, kwargs...
+              data::Vector{T}, opq...; algorithm=BFGS(), autodiff=:forward, kwargs...
               ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
                        MS<:MeanSpec, T<:AbstractFloat
                        }
-    obj = x -> -loglik(VS, SD, meanspec, data, x)
     coefs = vcat(garchcoefs, distcoefs, meancoefs)
-    #for fminbox:
+	lc = length(coefs)
+	if selecting(opq...)
+		longcoefs = zeros(T, max(27, lc))
+	else
+		longcoefs = zeros(T, lc)
+	end
+	obj = x -> -loglik(VS, SD, meanspec, data, x, opq...)
+
+	longcoefs[1:lc] .= coefs
+	#for fminbox:
     # lowergarch, uppergarch = constraints(VS, T)
     # lowerdist, upperdist = constraints(SD, T)
     # lowermean, uppermean = constraints(MS, T)
     # lower = vcat(lowergarch, lowerdist, lowermean)
     # upper = vcat(uppergarch, upperdist, uppermean)
     # res = optimize(obj, lower, upper, coefs, Fminbox(algorithm); autodiff=autodiff, kwargs...)
-    res = optimize(obj, coefs, algorithm; autodiff=autodiff, kwargs...)
-    coefs .= Optim.minimizer(res)
-    ng = nparams(VS)
+    res = optimize(obj, longcoefs, algorithm; autodiff=autodiff, kwargs...)
+    longcoefs .= Optim.minimizer(res)
+    ng = nparams(VS, opq...)
     ns = nparams(SD)
     nm = nparams(typeof(meanspec))
-    garchcoefs .= coefs[1:ng]
-    distcoefs .= coefs[ng+1:ng+ns]
-    meancoefs .= coefs[ng+ns+1:ng+ns+nm]
+    garchcoefs .= longcoefs[1:ng]
+    distcoefs .= longcoefs[ng+1:ng+ns]
+    meancoefs .= longcoefs[ng+ns+1:ng+ns+nm]
 	meanspec.coefs .= meancoefs
     return nothing
 end
@@ -381,7 +394,7 @@ Distribution parameters:
 ─────────────────────────────────────────
 ```
 """
-function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
+function fit(::Type{VS}, data::Vector{T}, opq...; dist::Type{SD}=StdNormal{T},
              meanspec::Union{MS, Type{MS}}=Intercept{T}(T[0]), algorithm=BFGS(),
              autodiff=:forward, kwargs...
              ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
@@ -389,11 +402,11 @@ function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
                       }
 	#can't use dispatch for this b/c meanspec is a kwarg
 	meanspec isa Type ? ms = meanspec(zeros(T, nparams(meanspec))) : ms = deepcopy(meanspec)
-    coefs = startingvals(VS, data)
+    coefs = startingvals(VS, data, opq...)
     distcoefs = startingvals(SD, data)
     meancoefs = startingvals(ms, data)
-	_fit!(coefs, distcoefs, meancoefs, VS, SD, ms, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
-	return UnivariateARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=ms, fitted=true)
+	_fit!(coefs, distcoefs, meancoefs, VS, SD, ms, data, opq...; algorithm=algorithm, autodiff=autodiff, kwargs...)
+	return UnivariateARCHModel(VS{opq...}(coefs), data; dist=SD(distcoefs), meanspec=ms, fitted=true)
 end
 
 function fit!(am::UnivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
@@ -477,13 +490,13 @@ function selectmodel(::Type{VS}, data::Vector{T};
 	ndims2 = max(my_unwrap_unionall(MS)-1, 0 )# e.g., two (p and q) for ARMA{p, q, T}
     res = Array{UnivariateARCHModel, ndims+ndims2}(undef, ntuple(i->maxlags - minlags + 1, ndims+ndims2))
     Threads.@threads for ind in collect(CartesianIndices(size(res)))
-		VSi = VS{ind.I[1:ndims] .+ minlags .-1...}
+		opq = (ind.I[1:ndims] .+ minlags .-1)
 		MSi = (ndims2==0 ? meanspec : meanspec{ind.I[ndims+1:end] .+ minlags .- 1...})
-		res[ind] = fit(VSi, data; dist=dist, meanspec=MSi,
+		res[ind] = fit(VS, data, opq...; dist=dist, meanspec=MSi,
                        algorithm=algorithm, autodiff=autodiff, kwargs...)
         if show_trace
             lock(mylock)
-            Core.print(modname(VSi))
+            Core.print(modname(VS{opq...}))
 			ndims2>0 && Core.print("-", modname(MSi))
 			Core.println(" model has ",
                               uppercase(split("$criterion", ".")[end]), " ",

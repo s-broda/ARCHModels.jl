@@ -71,12 +71,31 @@ Parameters:  1.0  0.3  0.4
 const ARCH = GARCH{0}
 
 @inline nparams(::Type{<:TGARCH{o, p, q}}) where {o, p, q} = o+p+q+1
+@inline nparams(::Type{<:TGARCH}, o, p, q) = o+p+q+1
 
 @inline presample(::Type{<:TGARCH{o, p, q}}) where {o, p, q} = max(o, p, q)
+@inline presample(::Type{<:TGARCH}, o, p, q) = max(o, p, q)
 
 Base.@propagate_inbounds @inline function update!(
         ht, lht, zt, at, ::Type{<:TGARCH{o, p, q}}, garchcoefs
         ) where {o, p, q}
+    mht = garchcoefs[1]
+    for i = 1:o
+        mht += garchcoefs[i+1]*min(at[end-i+1], 0)^2
+    end
+    for i = 1:p
+        mht += garchcoefs[i+1+o]*ht[end-i+1]
+    end
+    for i = 1:q
+        mht += garchcoefs[i+1+o+p]*(at[end-i+1])^2
+    end
+    push!(ht, mht)
+    push!(lht, (mht > 0) ? log(mht) : -mht)
+    return nothing
+end
+Base.@propagate_inbounds @inline function update!(
+        ht, lht, zt, at, ::Type{<:TGARCH}, garchcoefs, o, p, q
+        ) 
     mht = garchcoefs[1]
     for i = 1:o
         mht += garchcoefs[i+1]*min(at[end-i+1], 0)^2
@@ -112,7 +131,23 @@ function startingvals(::Type{<:TGARCH{o,p,q}}, data::Array{T}) where {o, p, q, T
     return x0
 end
 
+function startingvals(::Type{<:TGARCH}, data::Array{T}, o, p, q) where {T}
+    x0 = zeros(T, o+p+q+1)
+    x0[2:o+1] .= 0.04/o
+    x0[o+2:o+p+1] .= 0.9/p
+    x0[o+p+2:end] .= o>0 ? 0.01/q : 0.05/q
+    x0[1] = var(data)*(one(T)-sum(x0[2:o+1])/2-sum(x0[o+2:end]))
+    return x0
+end
+
 function constraints(::Type{<:TGARCH{o,p,q}}, ::Type{T}) where {o,p, q, T}
+    lower = zeros(T, o+p+q+1)
+    upper = ones(T, o+p+q+1)
+    upper[2:o+1] .= ones(T, o)/2
+    upper[1] = T(Inf)
+    return lower, upper
+end
+function constraints(::Type{<:TGARCH}, ::Type{T}, o, p, q) where {T}
     lower = zeros(T, o+p+q+1)
     upper = ones(T, o+p+q+1)
     upper[2:o+1] .= ones(T, o)/2
