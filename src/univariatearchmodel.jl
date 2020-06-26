@@ -139,7 +139,7 @@ function _simulate!(data::Vector{T2}, spec::UnivariateVolatilitySpec{T2};
     deleteat!(data, 1:warmup)
 end
 
-@inline function splitcoefs(coefs, VS, SD, meanspec, opq...)
+@inline function splitcoefs(coefs, VS, SD, meanspec, opq::Int...)
     ng = nparams(VS, opq...)
     nd = nparams(SD)
     nm = nparams(typeof(meanspec))
@@ -235,7 +235,7 @@ end
 #dimensional array of the right type.
 @inline function loglik!(ht::AbstractVector{T2}, lht::AbstractVector{T2},
                          zt::AbstractVector{T2}, at::AbstractVector{T2}, ::Type{VS}, ::Type{SD}, meanspec::MS,
-                         data::Vector{T1}, coefs::AbstractVector{T3}, opq...
+                         data::Vector{T1}, coefs::AbstractVector{T3}, opq::Int...
                          ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
                                   MS<:MeanSpec, T1<:AbstractFloat, T2, T3
                                   }
@@ -283,7 +283,7 @@ end
 end#function
 
 function loglik(spec::Type{VS}, dist::Type{SD}, meanspec::MS,
-                   data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}, opq...
+                   data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}, opq::Int...
                    ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
                             MS<:MeanSpec, T2
                             }
@@ -319,12 +319,12 @@ function scores(am::UnivariateARCHModel)
 	S = ForwardDiff.jacobian(f, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
 end
 
-selecting(opq...) = true
+selecting(opq::Int...) = true
 selecting() = false
 
 function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
               meancoefs::Vector{T}, ::Type{VS}, ::Type{SD}, meanspec::MS,
-              data::Vector{T}, opq...; algorithm=BFGS(), autodiff=:forward, kwargs...
+              data::Vector{T}, opq::Int...; algorithm=BFGS(), autodiff=:forward, kwargs...
               ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
                        MS<:MeanSpec, T<:AbstractFloat
                        }
@@ -394,7 +394,7 @@ Distribution parameters:
 ─────────────────────────────────────────
 ```
 """
-function fit(::Type{VS}, data::Vector{T}, opq...; dist::Type{SD}=StdNormal{T},
+function fit(::Type{VS}, data::Vector{T}, opq::Int...; dist::Type{SD}=StdNormal{T},
              meanspec::Union{MS, Type{MS}}=Intercept{T}(T[0]), algorithm=BFGS(),
              autodiff=:forward, kwargs...
              ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,

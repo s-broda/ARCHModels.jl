@@ -95,7 +95,7 @@ Base.@propagate_inbounds @inline function update!(
 end
 Base.@propagate_inbounds @inline function update!(
         ht, lht, zt, at, ::Type{<:TGARCH}, garchcoefs, o, p, q
-        ) 
+        )
     mht = garchcoefs[1]
     for i = 1:o
         mht += garchcoefs[i+1]*min(at[end-i+1], 0)^2
