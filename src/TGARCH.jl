@@ -128,3 +128,20 @@ function coefnames(::Type{<:TGARCH{o,p,q}}) where {o,p, q}
     names[o+p+2:o+p+q+1] .= (i -> "α"*subscript(i)).([1:q...])
     return names
 end
+
+@inline function subsetindices(VS_large::Type{TGARCH{o, p, q}}, subs) where {o, p, q}
+	ind = falses(nparams(VS_large))
+	subset = zeros(Int, 3)
+	subset[4-length(subs):end] .= subs
+	ind[1] = true
+	os = subset[1]
+	ps = subset[2]
+	qs = subset[3]
+	@assert os <= o
+	@assert ps <= p
+	@assert qs <= q
+	ind[2:2+os-1] .= true
+	ind[2+o:2+o+ps-1] .= true
+	ind[2+o+p:2+o+p+qs-1] .= true
+	ind
+end
