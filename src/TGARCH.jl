@@ -71,8 +71,10 @@ Parameters:  1.0  0.3  0.4
 const ARCH = GARCH{0}
 
 @inline nparams(::Type{<:TGARCH{o, p, q}}) where {o, p, q} = o+p+q+1
+@inline nparams(::Type{<:TGARCH{o, p, q}}, subset) where {o, p, q} = isempty(subset) ? 1 : sum(subset) + 1
 
 @inline presample(::Type{<:TGARCH{o, p, q}}) where {o, p, q} = max(o, p, q)
+
 
 Base.@propagate_inbounds @inline function update!(
         ht, lht, zt, at, ::Type{<:TGARCH{o, p, q}}, garchcoefs
@@ -112,6 +114,19 @@ function startingvals(::Type{<:TGARCH{o,p,q}}, data::Array{T}) where {o, p, q, T
     return x0
 end
 
+function startingvals(TT::Type{<:TGARCH}, data::Array{T} , subset::Tuple) where {T}
+	o, p, q = subsettuple(TT, subsetmask(TT, subset)) # defend against (p, q) instead of (o, p, q)
+	x0 = zeros(T, o+p+q+1)
+    x0[2:o+1] .= 0.04/o
+    x0[o+2:o+p+1] .= 0.9/p
+    x0[o+p+2:end] .= o>0 ? 0.01/q : 0.05/q
+    x0[1] = var(data)*(one(T)-sum(x0[2:o+1])/2-sum(x0[o+2:end]))
+	mask = subsetmask(TT, subset)
+	x0long = zeros(T, length(mask))
+	x0long[mask] .= x0
+    return x0long
+end
+
 function constraints(::Type{<:TGARCH{o,p,q}}, ::Type{T}) where {o,p, q, T}
     lower = zeros(T, o+p+q+1)
     upper = ones(T, o+p+q+1)
@@ -127,4 +142,37 @@ function coefnames(::Type{<:TGARCH{o,p,q}}) where {o,p, q}
     names[2+o:o+p+1] .= (i -> "β"*subscript(i)).([1:p...])
     names[o+p+2:o+p+q+1] .= (i -> "α"*subscript(i)).([1:q...])
     return names
+end
+
+@inline function subsetmask(VS_large::Union{Type{TGARCH{o, p, q}}, Type{TGARCH{o, p, q, T}}}, subs) where {o, p, q, T}
+	ind = falses(nparams(VS_large))
+	subset = zeros(Int, 3)
+	subset[4-length(subs):end] .= subs
+	ind[1] = true
+	os = subset[1]
+	ps = subset[2]
+	qs = subset[3]
+	@assert os <= o
+	@assert ps <= p
+	@assert qs <= q
+	ind[2:2+os-1] .= true
+	ind[2+o:2+o+ps-1] .= true
+	ind[2+o+p:2+o+p+qs-1] .= true
+	ind
+end
+
+@inline function subsettuple(VS_large::Union{Type{TGARCH{o, p, q}}, Type{TGARCH{o, p, q, T}}}, subsetmask) where {o, p, q, T}
+	os = 0
+	ps = 0
+	qs = 0
+	@inbounds @simd ivdep for i = 2 : o + 1
+		os += subsetmask[i]
+	end
+	@inbounds @simd ivdep for i = o + 2 : o + p + 1
+		ps += subsetmask[i]
+	end
+	@inbounds @simd ivdep for i = o + p + 2 : o + p + q + 1
+		qs += subsetmask[i]
+	end
+	(os, ps, qs)
 end

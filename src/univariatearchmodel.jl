@@ -41,6 +41,23 @@ mutable struct UnivariateARCHModel{T<:AbstractFloat,
     end
 end
 
+mutable struct UnivariateSubsetARCHModel{T<:AbstractFloat,
+                 				   VS<:UnivariateVolatilitySpec,
+                 		  	  	   SD<:StandardizedDistribution{T},
+                 				   MS<:MeanSpec{T},
+								   N
+                 				   } <: ARCHModel
+	spec::VS
+    data::Vector{T}
+    dist::SD
+    meanspec::MS
+	fitted::Bool
+	subset::NTuple{N, Int}
+    function UnivariateSubsetARCHModel{T, VS, SD, MS, N}(spec, data, dist, meanspec, fitted, subset) where {T, VS, SD, MS, N}
+        new(spec, data, dist, meanspec, fitted, subset)
+    end
+end
+
 """
     UnivariateARCHModel(spec::UnivariateVolatilitySpec, data::Vector; dist=StdNormal(),
 	          			meanspec=NoIntercept(), fitted=false
@@ -75,6 +92,20 @@ function UnivariateARCHModel(spec::VS,
     UnivariateARCHModel{T, VS, SD, MS}(spec, data, dist, meanspec, fitted)
 end
 
+function UnivariateSubsetARCHModel(spec::VS,
+          		 			 data::Vector{T};
+          					 dist::SD=StdNormal{T}(),
+          				 	 meanspec::MS=NoIntercept{T}(),
+		  			 		 fitted::Bool=false,
+							 subset::NTuple{N, Int}
+							 ) where {T<:AbstractFloat,
+                    			 	  VS<:UnivariateVolatilitySpec,
+                   					  SD<:StandardizedDistribution,
+                   					  MS<:MeanSpec,
+									  N
+                   			 		  }
+    UnivariateSubsetARCHModel{T, VS, SD, MS, N}(spec, data, dist, meanspec, fitted, subset)
+end
 loglikelihood(am::UnivariateARCHModel) = loglik(typeof(am.spec), typeof(am.dist),
                                       am.meanspec, am.data,
                                       vcat(am.spec.coefs, am.dist.coefs,
@@ -82,7 +113,17 @@ loglikelihood(am::UnivariateARCHModel) = loglik(typeof(am.spec), typeof(am.dist)
                                            )
                                       )
 
+loglikelihood(am::UnivariateSubsetARCHModel) = loglik(typeof(am.spec), typeof(am.dist),
+                                      am.meanspec, am.data,
+                                      vcat(am.spec.coefs, am.dist.coefs,
+                                           am.meanspec.coefs
+                                           ),
+									  subsetmask(typeof(am.spec), am.subset)
+									  )
+
+
 dof(am::UnivariateARCHModel) = nparams(typeof(am.spec)) + nparams(typeof(am.dist)) + nparams(typeof(am.meanspec))
+dof(am::UnivariateSubsetARCHModel) = nparams(typeof(am.spec), am.subset) + nparams(typeof(am.dist)) + nparams(typeof(am.meanspec))
 coef(am::UnivariateARCHModel)=vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs)
 coefnames(am::UnivariateARCHModel) = vcat(coefnames(typeof(am.spec)),
                                 coefnames(typeof(am.dist)),
@@ -232,19 +273,17 @@ end
 #but grows them by length(data); hence it should be called with an empty one-
 #dimensional array of the right type.
 @inline function loglik!(ht::AbstractVector{T2}, lht::AbstractVector{T2},
-                         zt::AbstractVector{T2}, at::AbstractVector{T2}, ::Type{VS}, ::Type{SD}, meanspec::MS,
-                         data::Vector{T1}, coefs::AbstractVector{T3}
+                         zt::AbstractVector{T2}, at::AbstractVector{T2}, vs::Type{VS}, ::Type{SD}, meanspec::MS,
+                         data::Vector{T1}, coefs::AbstractVector{T3}, subsetmask=trues(nparams(vs))
                          ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
                                   MS<:MeanSpec, T1<:AbstractFloat, T2, T3
                                   }
     garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, meanspec)
-    #the below 6 lines can be removed when using Fminbox
-    lowergarch, uppergarch = constraints(VS, T1)
-    lowerdist, upperdist = constraints(SD, T1)
+	lowergarch, uppergarch = constraints(VS, T1)
+	lowerdist, upperdist = constraints(SD, T1)
     lowermean, uppermean = constraints(MS, T1)
-    lower = vcat(lowergarch, lowerdist, lowermean)
-    upper = vcat(uppergarch, upperdist, uppermean)
-    all(lower.<coefs.<upper) || return T2(-Inf)
+    all(lowerdist.<distcoefs.<upperdist) && all(lowermean.<meancoefs.<uppermean) && all(lowergarch[subsetmask].<garchcoefs[subsetmask].<uppergarch[subsetmask]) || return T2(-Inf)
+	garchcoefs .*= subsetmask
     T = length(data)
 	r1 = presample(VS)
 	r2 = presample(meanspec)
@@ -280,7 +319,7 @@ end
 end#function
 
 function loglik(spec::Type{VS}, dist::Type{SD}, meanspec::MS,
-                   data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}
+                   data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}, subsetmask=trues(nparams(spec))
                    ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
                             MS<:MeanSpec, T2
                             }
@@ -290,7 +329,7 @@ function loglik(spec::Type{VS}, dist::Type{SD}, meanspec::MS,
     lht = CircularBuffer{T2}(r)
     zt = CircularBuffer{T2}(r)
 	at = CircularBuffer{T2}(r)
-    loglik!(ht, lht, zt, at, spec, dist, meanspec, data, coefs)
+    loglik!(ht, lht, zt, at, spec, dist, meanspec, data, coefs, subsetmask)
 
 end
 
@@ -325,13 +364,6 @@ function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
                        }
     obj = x -> -loglik(VS, SD, meanspec, data, x)
     coefs = vcat(garchcoefs, distcoefs, meancoefs)
-    #for fminbox:
-    # lowergarch, uppergarch = constraints(VS, T)
-    # lowerdist, upperdist = constraints(SD, T)
-    # lowermean, uppermean = constraints(MS, T)
-    # lower = vcat(lowergarch, lowerdist, lowermean)
-    # upper = vcat(uppergarch, upperdist, uppermean)
-    # res = optimize(obj, lower, upper, coefs, Fminbox(algorithm); autodiff=autodiff, kwargs...)
     res = optimize(obj, coefs, algorithm; autodiff=autodiff, kwargs...)
     coefs .= Optim.minimizer(res)
     ng = nparams(VS)
@@ -394,6 +426,34 @@ function fit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
     meancoefs = startingvals(ms, data)
 	_fit!(coefs, distcoefs, meancoefs, VS, SD, ms, data; algorithm=algorithm, autodiff=autodiff, kwargs...)
 	return UnivariateARCHModel(VS(coefs), data; dist=SD(distcoefs), meanspec=ms, fitted=true)
+end
+
+function fitsubset(::Type{VS}, data::Vector{T}, maxlags::Int, subset::Tuple; dist::Type{SD}=StdNormal{T},
+             meanspec::Union{MS, Type{MS}}=Intercept{T}(T[0]), algorithm=BFGS(),
+             autodiff=:forward, kwargs...
+             ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
+                      MS<:MeanSpec, T<:AbstractFloat
+                      }
+	#can't use dispatch for this b/c meanspec is a kwarg
+	meanspec isa Type ? ms = meanspec(zeros(T, nparams(meanspec))) : ms = deepcopy(meanspec)
+	VS_large = VS{ntuple(i->maxlags, length(subset))...}
+	ng = nparams(VS_large)
+	ns = nparams(SD)
+	nm = nparams(typeof(ms))
+	mask = subsetmask(VS_large, subset)
+	garchcoefs = startingvals(VS_large, data, subset)
+	distcoefs = startingvals(SD, data)
+    meancoefs = startingvals(ms, data)
+
+	obj = x -> -loglik(VS_large, SD, ms, data, x, mask)
+    coefs = vcat(garchcoefs, distcoefs, meancoefs)
+    res = optimize(obj, coefs, algorithm; autodiff=autodiff, kwargs...)
+    coefs .= Optim.minimizer(res)
+    garchcoefs .= coefs[1:ng]
+	distcoefs .= coefs[ng+1:ng+ns]
+    meancoefs .= coefs[ng+ns+1:ng+ns+nm]
+	ms.coefs .= meancoefs
+    return UnivariateSubsetARCHModel(VS_large(garchcoefs), data; dist=SD(distcoefs), meanspec=ms, fitted=true, subset=subset)
 end
 
 function fit!(am::UnivariateARCHModel; algorithm=BFGS(), autodiff=:forward, kwargs...)
@@ -475,14 +535,15 @@ function selectmodel(::Type{VS}, data::Vector{T};
 	mylock=Threads.ReentrantLock()
     ndims = max(my_unwrap_unionall(VS)-1, 0) # e.g., two (p and q) for GARCH{p, q, T}
 	ndims2 = max(my_unwrap_unionall(MS)-1, 0 )# e.g., two (p and q) for ARMA{p, q, T}
-    res = Array{UnivariateARCHModel, ndims+ndims2}(undef, ntuple(i->maxlags - minlags + 1, ndims+ndims2))
+    res = Array{UnivariateSubsetARCHModel, ndims+ndims2}(undef, ntuple(i->maxlags - minlags + 1, ndims+ndims2))
     Threads.@threads for ind in collect(CartesianIndices(size(res)))
-		VSi = VS{ind.I[1:ndims] .+ minlags .-1...}
-		MSi = (ndims2==0 ? meanspec : meanspec{ind.I[ndims+1:end] .+ minlags .- 1...})
-		res[ind] = fit(VSi, data; dist=dist, meanspec=MSi,
+		tup = (ind.I[1:ndims] .+ minlags .-1)
+		MSi = (ndims2==0 ? deepcopy(meanspec) : meanspec{ind.I[ndims+1:end] .+ minlags .- 1...})
+		res[ind] = fitsubset(VS, data, maxlags, tup; dist=dist, meanspec=MSi,
                        algorithm=algorithm, autodiff=autodiff, kwargs...)
         if show_trace
             lock(mylock)
+			VSi = VS{tup...}
             Core.print(modname(VSi))
 			ndims2>0 && Core.print("-", modname(MSi))
 			Core.println(" model has ",
@@ -494,9 +555,8 @@ function selectmodel(::Type{VS}, data::Vector{T};
     end
     crits = criterion.(res)
     _, ind = findmin(crits)
-    return res[ind]
+	return fit(VS{res[ind].subset...}, data; dist=dist, meanspec=res[ind].meanspec, algorithm=algorithm, autodiff=autodiff, kwargs...)
 end
-
 
 function coeftable(am::UnivariateARCHModel)
     cc = coef(am)
