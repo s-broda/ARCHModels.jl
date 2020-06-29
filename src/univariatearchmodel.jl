@@ -558,42 +558,6 @@ function selectmodel(::Type{VS}, data::Vector{T};
 	return fit(VS{res[ind].subset...}, data; dist=dist, meanspec=res[ind].meanspec, algorithm=algorithm, autodiff=autodiff, kwargs...)
 end
 
-function selectmodel_old(::Type{VS}, data::Vector{T};
-                     dist::Type{SD}=StdNormal{T}, meanspec::Union{MS, Type{MS}}=Intercept{T},
-                     maxlags::Integer=3, minlags::Integer=1, criterion=bic, show_trace=false, algorithm=BFGS(),
-                     autodiff=:forward, kwargs...
-                     ) where {VS<:UnivariateVolatilitySpec, T<:AbstractFloat,
-                              SD<:StandardizedDistribution, MS<:MeanSpec
-                              }
-	@assert maxlags >= minlags >= 0
-
-	#threading sometimes segfaults in tests locally. possibly https://github.com/JuliaLang/julia/issues/29934
-	mylock=Threads.ReentrantLock()
-    ndims = max(my_unwrap_unionall(VS)-1, 0) # e.g., two (p and q) for GARCH{p, q, T}
-	ndims2 = max(my_unwrap_unionall(MS)-1, 0 )# e.g., two (p and q) for ARMA{p, q, T}
-    res = Array{UnivariateARCHModel, ndims+ndims2}(undef, ntuple(i->maxlags - minlags + 1, ndims+ndims2))
-    for ind in collect(CartesianIndices(size(res)))
-		VSi = VS{ind.I[1:ndims] .+ minlags .-1...}
-		MSi = (ndims2==0 ? meanspec : meanspec{ind.I[ndims+1:end] .+ minlags .- 1...})
-		res[ind] = fit(VSi, data; dist=dist, meanspec=MSi,
-                       algorithm=algorithm, autodiff=autodiff, kwargs...)
-        if show_trace
-            lock(mylock)
-            Core.print(modname(VSi))
-			ndims2>0 && Core.print("-", modname(MSi))
-			Core.println(" model has ",
-                              uppercase(split("$criterion", ".")[end]), " ",
-                              criterion(res[ind]), "."
-                              )
-            unlock(mylock)
-        end
-    end
-    crits = criterion.(res)
-    _, ind = findmin(crits)
-    return res[ind]
-end
-
-
 function coeftable(am::UnivariateARCHModel)
     cc = coef(am)
     se = stderror(am)
