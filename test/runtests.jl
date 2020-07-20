@@ -64,12 +64,20 @@ end
     @test isfitted(am2) == false
     io = IOBuffer()
     str = sprint(io -> show(io, am2))
-    @test startswith(str, "\nTGARCH{0,1,1}")
+    if VERSION < v"1.5.5"
+        @test startswith(str, "\nTGARCH{0,1,1}")
+    else
+        @test startswith(str, "\nGARCH{1,1}")
+    end
     fit!(am2)
     @test isfitted(am2) == true
     io = IOBuffer()
     str = sprint(io -> show(io, am2))
-    @test startswith(str, "\nTGARCH{0,1,1}")
+    if VERSION < v"1.5.5"
+        @test startswith(str, "\nTGARCH{0,1,1}")
+    else
+        @test startswith(str, "\nGARCH{1,1}")
+    end
     am3 = fit(am2)
     @test isfitted(am3) == true
     @test all(am2.spec.coefs .== am.spec.coefs)
