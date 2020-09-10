@@ -19,7 +19,11 @@ end
     Random.seed!(1)
     spec = TGARCH{1,1,1}([1., .05, .9, .01]);
     str = sprint(show, spec)
-    @test startswith(str, "TGARCH{1,1,1} specification.\n\n─────────────────────────────────\n               ω    γ₁   β₁    α₁\n─────────────────────────────────\nParameters:  1.0  0.05  0.9  0.01\n─────────────────────────────────\n")
+    if VERSION < v"1.5.5"
+        @test startswith(str, "TGARCH{1,1,1} specification.\n\n─────────────────────────────────\n               ω    γ₁   β₁    α₁\n─────────────────────────────────\nParameters:  1.0  0.05  0.9  0.01\n─────────────────────────────────\n")
+    else
+        @test startswith(str, "TGARCH{1, 1, 1} specification.\n\n─────────────────────────────────\n               ω    γ₁   β₁    α₁\n─────────────────────────────────\nParameters:  1.0  0.05  0.9  0.01\n─────────────────────────────────\n")
+    end
     am = simulate(spec, T);
     am = selectmodel(TGARCH, am.data; meanspec=NoIntercept(), show_trace=true, maxlags=2)
     @test all(isapprox.(coef(am), [0.9439667311150648
@@ -67,7 +71,7 @@ end
     if VERSION < v"1.5.5"
         @test startswith(str, "\nTGARCH{0,1,1}")
     else
-        @test startswith(str, "\nGARCH{1,1}")
+        @test startswith(str, "\nGARCH{1, 1}")
     end
     fit!(am2)
     @test isfitted(am2) == true
@@ -76,7 +80,7 @@ end
     if VERSION < v"1.5.5"
         @test startswith(str, "\nTGARCH{0,1,1}")
     else
-        @test startswith(str, "\nGARCH{1,1}")
+        @test startswith(str, "\nGARCH{1, 1}")
     end
     am3 = fit(am2)
     @test isfitted(am3) == true
