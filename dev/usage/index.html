@@ -216,33 +216,35 @@ Volatility parameters:
    Estimate  Std.Error  z value  Pr(&gt;|z|)
 ─────────────────────────────────────────
 ω  0.220848  0.0118061  18.7063    &lt;1e-77
-─────────────────────────────────────────</code></pre><p>In this case, an ARMA(1, 1) specification was selected.</p><p>As a final example, a construction like the following can be used to automatically select not just the lag length, but also the class of GARCH model and the error distribution:</p><pre><code class="language-julia-repl">julia&gt; models = [selectmodel(VS, BG96; dist=D, minlags=0, maxlags=1) for VS in subtypes(UnivariateVolatilitySpec), D in setdiff(subtypes(StandardizedDistribution), [Standardized])];
+─────────────────────────────────────────</code></pre><p>In this case, an ARMA(1, 1) specification was selected.</p><p>As a final example, a construction like the following can be used to automatically select not just the lag length, but also the class of GARCH model and the error distribution:</p><pre><code class="language-julia-repl">julia&gt; models = [selectmodel(VS, BG96; dist=D, minlags=1, maxlags=2) for VS in subtypes(UnivariateVolatilitySpec), D in setdiff(subtypes(StandardizedDistribution), [Standardized])];
 
 julia&gt; best_model = models[findmin(bic.(models))[2]]
 
-EGARCH{0,1,1} model with Student&#39;s t errors, T=1974.
+EGARCH{1,1,2} model with Student&#39;s t errors, T=1974.
 
 Mean equation parameters:
-────────────────────────────────────────────
-    Estimate   Std.Error   z value  Pr(&gt;|z|)
-────────────────────────────────────────────
-μ  0.0023979  0.00676726  0.354338    0.7231
-────────────────────────────────────────────
+─────────────────────────────────────────────
+     Estimate   Std.Error   z value  Pr(&gt;|z|)
+─────────────────────────────────────────────
+μ  0.00196126  0.00695292  0.282077    0.7779
+─────────────────────────────────────────────
 
 Volatility parameters:
 ──────────────────────────────────────────────
       Estimate  Std.Error    z value  Pr(&gt;|z|)
 ──────────────────────────────────────────────
-ω   -0.0134947  0.0184732  -0.730505    0.4651
-β₁   0.978003   0.0125042  78.2141      &lt;1e-99
-α₁   0.265674   0.0624712   4.25274     &lt;1e-4
+ω   -0.0031274  0.0112444   -0.27813    0.7809
+γ₁  -0.0307681  0.0160751   -1.91402    0.0556
+β₁   0.989056   0.0073639  134.311      &lt;1e-99
+α₁   0.421644   0.0678152    6.21755    &lt;1e-9
+α₂  -0.229068   0.0755297   -3.03281    0.0024
 ──────────────────────────────────────────────
 
 Distribution parameters:
 ─────────────────────────────────────────
    Estimate  Std.Error  z value  Pr(&gt;|z|)
 ─────────────────────────────────────────
-ν   4.12683   0.403878   10.218    &lt;1e-23
+ν   4.18795   0.418698  10.0023    &lt;1e-22
 ─────────────────────────────────────────</code></pre><h2><a class="nav-anchor" id="Value-at-Risk-1" href="#Value-at-Risk-1">Value at Risk</a></h2><p>One of the primary uses of ARCH models is for estimating and forecasting <a href="https://en.wikipedia.org/wiki/Value_at_risk">Value at Risk</a>. Basic in-sample estimates for the Value at Risk implied by an estimated <a href="../reference/#ARCHModels.UnivariateARCHModel"><code>UnivariateARCHModel</code></a> can be obtained using <a href="../reference/#ARCHModels.VaRs"><code>VaRs</code></a>:</p><div></div><pre><code class="language-julia-repl">julia&gt; am = fit(GARCH{1, 1}, BG96);
 
 julia&gt; vars = VaRs(am, 0.05);
