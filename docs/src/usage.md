@@ -329,33 +329,35 @@ In this case, an ARMA(1, 1) specification was selected.
 As a final example, a construction like the following can be used to automatically select not just the lag length, but also the class of GARCH model and the error distribution:
 
 ```jldoctest MANUAL
-julia> models = [selectmodel(VS, BG96; dist=D, minlags=0, maxlags=1) for VS in subtypes(UnivariateVolatilitySpec), D in setdiff(subtypes(StandardizedDistribution), [Standardized])];
+julia> models = [selectmodel(VS, BG96; dist=D, minlags=1, maxlags=2) for VS in subtypes(UnivariateVolatilitySpec), D in setdiff(subtypes(StandardizedDistribution), [Standardized])];
 
 julia> best_model = models[findmin(bic.(models))[2]]
 
-EGARCH{0,1,1} model with Student's t errors, T=1974.
+EGARCH{1,1,2} model with Student's t errors, T=1974.
 
 Mean equation parameters:
-────────────────────────────────────────────
-    Estimate   Std.Error   z value  Pr(>|z|)
-────────────────────────────────────────────
-μ  0.0023979  0.00676726  0.354338    0.7231
-────────────────────────────────────────────
+─────────────────────────────────────────────
+     Estimate   Std.Error   z value  Pr(>|z|)
+─────────────────────────────────────────────
+μ  0.00196126  0.00695292  0.282077    0.7779
+─────────────────────────────────────────────
 
 Volatility parameters:
 ──────────────────────────────────────────────
       Estimate  Std.Error    z value  Pr(>|z|)
 ──────────────────────────────────────────────
-ω   -0.0134947  0.0184732  -0.730505    0.4651
-β₁   0.978003   0.0125042  78.2141      <1e-99
-α₁   0.265674   0.0624712   4.25274     <1e-4
+ω   -0.0031274  0.0112444   -0.27813    0.7809
+γ₁  -0.0307681  0.0160751   -1.91402    0.0556
+β₁   0.989056   0.0073639  134.311      <1e-99
+α₁   0.421644   0.0678152    6.21755    <1e-9
+α₂  -0.229068   0.0755297   -3.03281    0.0024
 ──────────────────────────────────────────────
 
 Distribution parameters:
 ─────────────────────────────────────────
    Estimate  Std.Error  z value  Pr(>|z|)
 ─────────────────────────────────────────
-ν   4.12683   0.403878   10.218    <1e-23
+ν   4.18795   0.418698  10.0023    <1e-22
 ─────────────────────────────────────────
 ```
 ## Value at Risk
