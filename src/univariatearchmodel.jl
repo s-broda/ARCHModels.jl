@@ -205,9 +205,11 @@ end
 
 """
     predict(am::UnivariateARCHModel, what=:volatility; level=0.01, horizon=1)
-Form a 1-step ahead prediction from `am`. `what` controls which object is predicted.
+Form a `horizon`-step ahead prediction from `am`. `what` controls which object is predicted.
 The choices are `:volatility` (the default), `:variance`, `:return`, and `:VaR`. The VaR
 level can be controlled with the keyword argument `level`.
+
+For `what=:VaR`, only a `horizon = 1` horizon is currently supported.
 """
 function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility, horizon=1; level=0.01) where {T, VS, SD, MS}
 	ht = volatilities(am).^2
