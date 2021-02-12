@@ -218,13 +218,15 @@ function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility, horizon=1
 	if horizon > 1 && what == :VaR
 		error("Predicting VaR more than one period ahead is not implemented. Consider predicting one period ahead and scaling by `sqrt(horizon)`.")
 	end
-	for t = length(am.data) .+ (1 : horizon)
+    data = copy(am.data)
+	for t = length(data) .+ (1 : horizon)
 		if what == :return || what == :VaR
 			themean = mean(at, ht, lht, am.data, am.meanspec, am.meanspec.coefs, t)
 		end
 		update!(ht, lht, zt, at, VS, am.spec.coefs)
 		push!(zt, 0.)
 		push!(at, 0.)
+        push!(data, themean)
 	end
 	if what == :return
 		return themean
