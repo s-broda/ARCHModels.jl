@@ -49,7 +49,7 @@ import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, co
 				  informationmatrix, islinear, score, vcov, residuals, predict
 import StatsModels: TableRegressionModel
 export ARCHModel, UnivariateARCHModel, UnivariateVolatilitySpec, StandardizedDistribution, Standardized, MeanSpec,
-       simulate, simulate!, selectmodel, StdNormal, StdT, StdGED, Intercept, Regression,
+       simulate, simulate!, selectmodel, StdNormal, StdT, StdGED, StdSkewT, Intercept, Regression,
        NoIntercept, ARMA, AR, MA, BG96, volatilities, mean, quantile, VaRs, pvalue, means, VolatilitySpec,
 	   MultivariateVolatilitySpec, MultivariateStandardizedDistribution, MultivariateARCHModel, MultivariateStdNormal,
 	   EGARCH, ARCH, GARCH, TGARCH, ARCHLMTest, DQTest,

@@ -253,3 +253,78 @@ function quantile(dist::StdGED, q::Real)
     qq = 2*q-1
     return sign(qq) * (gammainvcdf(ip, 1., abs(qq)))^ip/kernelinvariants(StdGED, [p])[1]
 end
+
+################################################################################
+#Hansen's SKT-Distribution
+
+"""
+    StdSkewT{T} <: StandardizedDistribution{T}
+
+Hansen's standardized (mean zero, variance one) Skewed Student's t distribution.
+"""
+struct StdSkewT{T} <: StandardizedDistribution{T}
+    coefs::Vector{T}
+    function StdSkewT{T}(coefs::Vector) where {T}
+        length(coefs) == 2 || throw(NumParamError(2, length(coefs)))
+        new{T}(coefs)
+    end
+end
+
+"""
+    StdSkewT(v,λ)
+
+Create a standardized skewed t distribution with `v` degrees of freedom and `λ` shape parameter. `ν,λ`` can be passed
+as scalars or vectors.
+"""
+StdSkewT(ν,λ) = StdSkewT([ν λ])
+StdSkewT(ν::Integer,λ::Integer) = StdSkewT(float(ν),float(λ))
+StdSkewT(v::Vector{T},λ::Vector{T}) where {T} = StdSkewT{T}(v,λ)
+StdSkewT(coefs::Vector{T}) where {T} = StdSkewT{T}(coefs)
+
+(rand(d::StdSkewT{T})::T) where {T}  =  (ν=d.coefs[1];λ=d.coefs[2]; quantile(d,rand(1)))
+
+@inline a(d::Type{<:StdSkewT}, coefs) =  (ν=coefs[1];λ=coefs[2]; 4λ*c(d,coefs) * ((ν-2)/(ν-1)))
+@inline b(d::Type{<:StdSkewT}, coefs) =  (ν=coefs[1];λ=coefs[2]; sqrt(1+3λ^2-a(d,coefs)^2))
+@inline c(d::Type{<:StdSkewT}, coefs) =  (ν=coefs[1];λ=coefs[2]; gamma((ν+1)/2) / (√(π*(ν-2)) * gamma(ν/2)))
+@inline S(d::Type{<:StdSkewT},x,coefs) = x < -(a(d,coefs)/b(d,coefs)) ? -1 : 1
+
+@inline kernelinvariants(::Type{<:StdSkewT}, coefs) = (1/ (coefs[1]-2),)
+@inline logkernel(d::Type{<:StdSkewT}, x, coefs, iv) = (-(coefs[1] + 1) / 2) * log1p(1/abs2(1+coefs[2]*S(d,x,coefs)) * abs2(b(d,coefs)*x+a(d,coefs)) *iv)
+@inline logconst(d::Type{<:StdSkewT}, coefs)  = (log(b(d,coefs))+(log(c(d,coefs))))
+
+nparams(::Type{<:StdSkewT}) = 2
+coefnames(::Type{<:StdSkewT}) = ["ν", "λ"]
+distname(::Type{<:StdSkewT}) = "Hansen's Skewed Student's t"
+
+function constraints(::Type{<:StdSkewT}, ::Type{T}) where {T}
+    lower = T[20/10, -one(T)]
+    upper = T[Inf,one(T)]
+    return lower, upper
+end
+
+function startingvals(::Type{<:StdSkewT}, data::Array{T}) where {T<:AbstractFloat}
+    ## TODO: duplicate code in startingvals(::Type{<:StdT},..)
+    #mean of abs(t)
+    eabst(ν)=2*sqrt(ν-2)/(ν-1)/beta(ν/2, 1/2)
+    ##alteratively, could use mean of log(abs(t)):
+    #elogabst(ν)=log(ν-2)/2-digamma(ν/2)/2+digamma(1/2)/2
+    ht = T[]
+    lht = T[]
+    zt = T[]
+    at = T[]
+    loglik!(ht, lht, zt, at,  GARCH{1, 1}, StdNormal, Intercept(0.), data, vcat(startingvals(GARCH{1, 1}, data), startingvals(Intercept(0.), data)))
+    lower = convert(T, 2)
+    upper = convert(T, 30)
+    z = mean(abs.(data.-mean(data))./sqrt.(ht))
+    z > eabst(upper) ? [upper,0] : [find_zero(x -> z-eabst(x), (lower, upper)),zero(T)]
+end
+
+function quantile(d::StdSkewT{T}, q::T) where T
+    ν = d.coefs[1]
+    λ = d.coefs[2]
+    xa = a(d,d.coefs)
+    xb = b(d,d.coefs)
+    λconst = q < (1 - λ)/2 ? (1 - λ) : (1 + λ)
+    quant_numer = q < (1 - λ)/2 ? q : (q + λ)
+    1/xb * ((λconst) * sqrt((ν-2)/ν) * tdistinvcdf(ν, quant_numer/λconst) - xa)
+end
