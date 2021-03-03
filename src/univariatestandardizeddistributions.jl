@@ -142,14 +142,14 @@ struct StdT{T} <: StandardizedDistribution{T}
 end
 
 """
-    StdT(v)
+    StdT(ν)
 
-Create a standardized t distribution with `v` degrees of freedom. `ν`` can be passed
+Create a standardized t distribution with `ν` degrees of freedom. `ν`` can be passed
 as a scalar or vector.
 """
 StdT(ν) = StdT([ν])
 StdT(ν::Integer) = StdT(float(ν))
-StdT(v::Vector{T}) where {T} = StdT{T}(v)
+StdT(ν::Vector{T}) where {T} = StdT{T}(ν)
 (rand(d::StdT{T})::T) where {T}  =  (ν=d.coefs[1]; tdistrand(ν)*sqrt((ν-2)/ν))
 @inline kernelinvariants(::Type{<:StdT}, coefs) = (1/ (coefs[1]-2),)
 @inline logkernel(::Type{<:StdT}, x, coefs, iv) = (-(coefs[1] + 1) / 2) * log1p(abs2(x) *iv)
@@ -184,8 +184,8 @@ function startingvals(::Type{<:StdT}, data::Array{T}) where {T}
 end
 
 function quantile(dist::StdT, q::Real)
-    v = dist.coefs[1]
-    tdistinvcdf(v, q)*sqrt((v-2)/v)
+    ν = dist.coefs[1]
+    tdistinvcdf(ν, q)*sqrt((ν-2)/ν)
 end
 
 ################################################################################
