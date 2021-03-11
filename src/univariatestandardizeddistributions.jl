@@ -283,11 +283,18 @@ StdSkewT(coefs::Vector{T}) where {T} = StdSkewT{T}(coefs)
 
 @inline a(d::Type{<:StdSkewT}, coefs) =  (ν=coefs[1];λ=coefs[2]; 4λ*c(d,coefs) * ((ν-2)/(ν-1)))
 @inline b(d::Type{<:StdSkewT}, coefs) =  (ν=coefs[1];λ=coefs[2]; sqrt(1+3λ^2-a(d,coefs)^2))
-@inline c(d::Type{<:StdSkewT}, coefs) =  (ν=coefs[1];λ=coefs[2]; gamma((ν+1)/2) / (√(π*(ν-2)) * gamma(ν/2)))
-@inline S(d::Type{<:StdSkewT},x,coefs) = x < -(a(d,coefs)/b(d,coefs)) ? -1 : 1
+@inline c(d::Type{<:StdSkewT}, coefs) =  (ν=coefs[1];λ=coefs[2]; gamma((ν+1)/2) / (sqrt(π*(ν-2)) * gamma(ν/2)))
 
 @inline kernelinvariants(::Type{<:StdSkewT}, coefs) = (1/ (coefs[1]-2),)
-@inline logkernel(d::Type{<:StdSkewT}, x, coefs, iv) = (-(coefs[1] + 1) / 2) * log1p(1/abs2(1+coefs[2]*S(d,x,coefs)) * abs2(b(d,coefs)*x+a(d,coefs)) *iv)
+@inline function logkernel(d::Type{<:StdSkewT}, x, coefs, iv)
+    ν=coefs[1]
+    λ=coefs[2]
+    c = gamma((ν+1)/2) / (sqrt(π*(ν-2)) * gamma(ν/2))
+    a = 4λ * c * ((ν-2)/(ν-1))
+    b = sqrt(1 + 3λ^2 -a^2)
+    λsign = x < (-a/b) ? -1 : 1
+    (-(ν + 1) / 2) * log1p(1/abs2(1+λ*λsign) * abs2(b*x + a) *iv)
+end
 @inline logconst(d::Type{<:StdSkewT}, coefs)  = (log(b(d,coefs))+(log(c(d,coefs))))
 
 nparams(::Type{<:StdSkewT}) = 2
