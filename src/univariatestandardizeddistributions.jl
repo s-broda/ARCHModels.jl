@@ -292,7 +292,7 @@ StdSkewT(coefs::Vector{T}) where {T} = StdSkewT{T}(coefs)
 
 nparams(::Type{<:StdSkewT}) = 2
 coefnames(::Type{<:StdSkewT}) = ["ν", "λ"]
-distname(::Type{<:StdSkewT}) = "Hansen's Skewed Student's t"
+distname(::Type{<:StdSkewT}) = "Hansen's Skewed t"
 
 function constraints(::Type{<:StdSkewT}, ::Type{T}) where {T}
     lower = T[20/10, -one(T)]
