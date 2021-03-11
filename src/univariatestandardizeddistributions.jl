@@ -276,7 +276,7 @@ end
 Create a standardized skewed t distribution with `v` degrees of freedom and `λ` shape parameter. `ν,λ`` can be passed
 as scalars or vectors.
 """
-StdSkewT(ν,λ) = StdSkewT([ν, λ])
+StdSkewT(ν,λ) = StdSkewT([float(ν), float(λ)])
 StdSkewT(coefs::Vector{T}) where {T} = StdSkewT{T}(coefs)
 
 (rand(d::StdSkewT{T}) where {T} = (quantile(d, rand())))
