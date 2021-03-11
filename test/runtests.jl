@@ -302,6 +302,7 @@ end
     @test_throws ARCHModels.NumParamError NoIntercept([1.])
     @test_throws ARCHModels.NumParamError StdNormal([1.])
     @test_throws ARCHModels.NumParamError StdT([1., 2.])
+    @test_throws ARCHModels.NumParamError StdSkewT([2.])
     @test_throws ARCHModels.NumParamError StdGED([1., 2.])
     @test_throws ARCHModels.NumParamError Regression([1], [1 2; 3 4])
     at = zeros(10)
