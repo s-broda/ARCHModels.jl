@@ -276,12 +276,10 @@ end
 Create a standardized skewed t distribution with `v` degrees of freedom and `λ` shape parameter. `ν,λ`` can be passed
 as scalars or vectors.
 """
-StdSkewT(ν,λ) = StdSkewT([ν λ])
-StdSkewT(ν::Integer,λ::Integer) = StdSkewT(float(ν),float(λ))
-StdSkewT(v::Vector{T},λ::Vector{T}) where {T} = StdSkewT{T}(v,λ)
+StdSkewT(ν,λ) = StdSkewT([ν, λ])
 StdSkewT(coefs::Vector{T}) where {T} = StdSkewT{T}(coefs)
 
-(rand(d::StdSkewT{T})::T) where {T}  =  (ν=d.coefs[1];λ=d.coefs[2]; quantile(d,rand(1)))
+(rand(d::StdSkewT{T}) where {T} = (quantile(d, rand())))
 
 @inline a(d::Type{<:StdSkewT}, coefs) =  (ν=coefs[1];λ=coefs[2]; 4λ*c(d,coefs) * ((ν-2)/(ν-1)))
 @inline b(d::Type{<:StdSkewT}, coefs) =  (ν=coefs[1];λ=coefs[2]; sqrt(1+3λ^2-a(d,coefs)^2))
@@ -302,29 +300,14 @@ function constraints(::Type{<:StdSkewT}, ::Type{T}) where {T}
     return lower, upper
 end
 
-function startingvals(::Type{<:StdSkewT}, data::Array{T}) where {T<:AbstractFloat}
-    ## TODO: duplicate code in startingvals(::Type{<:StdT},..)
-    #mean of abs(t)
-    eabst(ν)=2*sqrt(ν-2)/(ν-1)/beta(ν/2, 1/2)
-    ##alteratively, could use mean of log(abs(t)):
-    #elogabst(ν)=log(ν-2)/2-digamma(ν/2)/2+digamma(1/2)/2
-    ht = T[]
-    lht = T[]
-    zt = T[]
-    at = T[]
-    loglik!(ht, lht, zt, at,  GARCH{1, 1}, StdNormal, Intercept(0.), data, vcat(startingvals(GARCH{1, 1}, data), startingvals(Intercept(0.), data)))
-    lower = convert(T, 2)
-    upper = convert(T, 30)
-    z = mean(abs.(data.-mean(data))./sqrt.(ht))
-    z > eabst(upper) ? [upper,0] : [find_zero(x -> z-eabst(x), (lower, upper)),zero(T)]
-end
+startingvals(::Type{<:StdSkewT}, data::Array{T}) where {T<:AbstractFloat} = [startingvals(StdT, data)..., zero(T)]
 
 function quantile(d::StdSkewT{T}, q::T) where T
     ν = d.coefs[1]
     λ = d.coefs[2]
-    xa = a(d,d.coefs)
-    xb = b(d,d.coefs)
+    a_val = a(typeof(d),d.coefs)
+    b_val = b(typeof(d),d.coefs)
     λconst = q < (1 - λ)/2 ? (1 - λ) : (1 + λ)
     quant_numer = q < (1 - λ)/2 ? q : (q + λ)
-    1/xb * ((λconst) * sqrt((ν-2)/ν) * tdistinvcdf(ν, quant_numer/λconst) - xa)
+    1/b_val * ((λconst) * sqrt((ν-2)/ν) * tdistinvcdf(ν, quant_numer/λconst) - a_val)
 end
