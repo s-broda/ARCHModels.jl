@@ -16,7 +16,7 @@ function my_unwrap_unionall(@nospecialize a)
 end
 
 @inline function to_corr(Σ)
-	D = sqrt(Diagonal(Σ))
+	D = sqrt(abs.(Diagonal(Σ))) # horrible hack. required to fix a non-deterministic doctest failure
     iD = inv(D)
     R = iD * Σ * iD
     R = (R + R') / 2
