@@ -20,7 +20,7 @@ jobs:
             - libqt5widgets5
             - texlive
             - dvipng
-      julia: 1.4
+      julia: 1.5
       script:
         - julia --project=docs/ -e 'using Pkg;
                                     Pkg.develop(PackageSpec(path=pwd()));
