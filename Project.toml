@@ -1,7 +1,7 @@
 name = "ARCHModels"
 uuid = "6d3278bc-c23a-5105-85e5-0d57d2bf684f"
-authors = ["Simon Broda <simon.broda@uzh.ch>"]
-version = "1.3.0"
+authors = ["Simon Broda <s.a.broda@uva.nl> and contributors."]
+version = "1.4.0"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
