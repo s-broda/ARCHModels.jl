@@ -143,7 +143,7 @@ StdNormal{Float64}(coefs=Float64[])
 julia> StdT(3) # convenience constructor
 StdT{Float64}(coefs=[3.0])
 ```
-* [`StdSkewT`](@ref), [Standardized Hansen skewed ``t`` distribution](https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#cite_note-hansen-8):
+* [`StdSkewT`](@ref), the standardized [Hansen skewed ``t`` distribution](https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#cite_note-hansen-8):
 ```jldoctest TYPES
 julia> StdSkewT(3, -0.3) # convenience constructor
 StdSkewT{Float64}(coefs=[3.0, -0.3])
