@@ -22,6 +22,7 @@ As for error distributions, the user may choose among the following:
 
   * Standard Normal
   * Standardized Student's ``t``
+  * Standardized Hansen Skewed ``t``
   * Standardized Generalized Error Distribution
 
 For instance, a GARCH(1,1) model with a conditional mean from an AR(1) model with normally distributed errors can be esimated by
