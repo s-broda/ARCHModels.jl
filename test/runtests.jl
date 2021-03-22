@@ -302,6 +302,7 @@ end
     @test_throws ARCHModels.NumParamError NoIntercept([1.])
     @test_throws ARCHModels.NumParamError StdNormal([1.])
     @test_throws ARCHModels.NumParamError StdT([1., 2.])
+    @test_throws ARCHModels.NumParamError StdSkewT([2.])
     @test_throws ARCHModels.NumParamError StdGED([1., 2.])
     @test_throws ARCHModels.NumParamError Regression([1], [1 2; 3 4])
     at = zeros(10)
@@ -364,6 +365,40 @@ end
                                        0.04212329204579697,
                                        3.834033118707376,
                                        2.9918481871096083], rtol=1e-4))
+    end
+    @testset "HansenSkewedT" begin
+       Random.seed!(1)
+       data = rand(StdSkewT(4,-0.3), T)
+       spec = GARCH{1, 1}([1., .9, .05])
+       @test fit(StdSkewT, data).coefs[1] ≈ 4.115817082082046 rtol=1e-4
+       @test fit(StdSkewT, data).coefs[2] ≈ -0.29195923568201576 rtol=1e-4
+       @test typeof(StdSkewT(3,0)) == typeof(StdSkewT(3.,0)) == typeof(StdSkewT([3,0.0]))
+       @test coefnames(StdSkewT) == ["ν", "λ"]
+       @test ARCHModels.nparams(StdSkewT) == 2
+       @test ARCHModels.distname(StdSkewT) == "Hansen's Skewed t"
+       @test ARCHModels.constraints(StdNormal{Float64}, Float64) == (Float64[], Float64[])
+       @test quantile(StdSkewT(3,0), 0.5) == 0
+       @test quantile(StdSkewT(3,0), .05) ≈ -1.3587150125838563
+       @test ARCHModels.constraints(StdSkewT{Float64}, Float64) == (Float64[20/10, -one(Float64)], Float64[Inf,one(Float64)])
+       Random.seed!(1);
+       dataskt = simulate(spec, T; dist=StdSkewT(4,-0.3)).data
+       Random.seed!(1);
+       datam = simulate(spec, T; dist=StdSkewT(4,-0.3), meanspec=Intercept(3)).data
+       am4 = selectmodel(GARCH, dataskt; dist=StdSkewT, meanspec=NoIntercept{Float64}(), show_trace=true)
+       am5 = selectmodel(GARCH, datam; dist=StdSkewT, show_trace=true)
+       @test coefnames(am5) == ["ω", "β₁", "α₁", "ν", "λ", "μ"]
+       @test all(coeftable(am4).cols[2] .== stderror(am4))
+       @test all(isapprox(coef(am4), [1.1129628842351935,
+                                      0.8875795519570414,
+                                      0.06520263915417537,
+                                      3.886881385708421,
+                                      -0.29751925081928116], rtol=1e-4))
+       @test all(isapprox(coef(am5), [1.1108927904860744,
+                                      0.8875825749083535,
+                                      0.0651093574134582,
+                                      3.8894659913968255,
+                                      -0.29684836199362896,
+                                      3.0047117757300317], rtol=1e-4))
     end
     @testset "GED" begin
         Random.seed!(1)

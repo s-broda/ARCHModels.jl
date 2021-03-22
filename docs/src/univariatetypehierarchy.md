@@ -148,6 +148,11 @@ StdT{Float64}(coefs=[3.0])
 julia> StdGED(1) # convenience constructor
 StdGED{Float64}(coefs=[1.0])
 ```
+* [`StdSkewT`](@ref), [Hansen's standardized skewed Student's ``t`` ditribution](https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution#cite_note-hansen-8):
+```jldoctest TYPES
+julia> StdSkewT(3,-0.3) # convenience constructor
+StdSkewT{Float64}(coefs=[3.0,-0.3])
+```
 ### User-defined standardized distributions
 Apart from the natively supported standardized distributions, it is possible to wrap a continuous univariate distribution from the [Distributions package](https://github.com/JuliaStats/Distributions.jl) in the [`Standardized`](@ref) wrapper type. Below, we reimplement the standardized normal distribution:
 

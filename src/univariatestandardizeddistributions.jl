@@ -142,14 +142,14 @@ struct StdT{T} <: StandardizedDistribution{T}
 end
 
 """
-    StdT(v)
+    StdT(ν)
 
-Create a standardized t distribution with `v` degrees of freedom. `ν`` can be passed
+Create a standardized t distribution with `ν` degrees of freedom. `ν`` can be passed
 as a scalar or vector.
 """
 StdT(ν) = StdT([ν])
 StdT(ν::Integer) = StdT(float(ν))
-StdT(v::Vector{T}) where {T} = StdT{T}(v)
+StdT(ν::Vector{T}) where {T} = StdT{T}(ν)
 (rand(d::StdT{T})::T) where {T}  =  (ν=d.coefs[1]; tdistrand(ν)*sqrt((ν-2)/ν))
 @inline kernelinvariants(::Type{<:StdT}, coefs) = (1/ (coefs[1]-2),)
 @inline logkernel(::Type{<:StdT}, x, coefs, iv) = (-(coefs[1] + 1) / 2) * log1p(abs2(x) *iv)
@@ -184,8 +184,8 @@ function startingvals(::Type{<:StdT}, data::Array{T}) where {T}
 end
 
 function quantile(dist::StdT, q::Real)
-    v = dist.coefs[1]
-    tdistinvcdf(v, q)*sqrt((v-2)/v)
+    ν = dist.coefs[1]
+    tdistinvcdf(ν, q)*sqrt((ν-2)/ν)
 end
 
 ################################################################################
@@ -252,4 +252,69 @@ function quantile(dist::StdGED, q::Real)
     ip = 1/p
     qq = 2*q-1
     return sign(qq) * (gammainvcdf(ip, 1., abs(qq)))^ip/kernelinvariants(StdGED, [p])[1]
+end
+
+################################################################################
+#Hansen's SKT-Distribution
+
+"""
+    StdSkewT{T} <: StandardizedDistribution{T}
+
+Hansen's standardized (mean zero, variance one) Skewed Student's t distribution.
+"""
+struct StdSkewT{T} <: StandardizedDistribution{T}
+    coefs::Vector{T}
+    function StdSkewT{T}(coefs::Vector) where {T}
+        length(coefs) == 2 || throw(NumParamError(2, length(coefs)))
+        new{T}(coefs)
+    end
+end
+
+"""
+    StdSkewT(v,λ)
+
+Create a standardized skewed t distribution with `v` degrees of freedom and `λ` shape parameter. `ν,λ`` can be passed
+as scalars or vectors.
+"""
+StdSkewT(ν,λ) = StdSkewT([float(ν), float(λ)])
+StdSkewT(coefs::Vector{T}) where {T} = StdSkewT{T}(coefs)
+
+(rand(d::StdSkewT{T}) where {T} = (quantile(d, rand())))
+
+@inline a(d::Type{<:StdSkewT}, coefs) =  (ν=coefs[1];λ=coefs[2]; 4λ*c(d,coefs) * ((ν-2)/(ν-1)))
+@inline b(d::Type{<:StdSkewT}, coefs) =  (ν=coefs[1];λ=coefs[2]; sqrt(1+3λ^2-a(d,coefs)^2))
+@inline c(d::Type{<:StdSkewT}, coefs) =  (ν=coefs[1];λ=coefs[2]; gamma((ν+1)/2) / (sqrt(π*(ν-2)) * gamma(ν/2)))
+
+@inline kernelinvariants(::Type{<:StdSkewT}, coefs) = (1/ (coefs[1]-2),)
+@inline function logkernel(d::Type{<:StdSkewT}, x, coefs, iv)
+    ν=coefs[1]
+    λ=coefs[2]
+    c = gamma((ν+1)/2) / (sqrt(π*(ν-2)) * gamma(ν/2))
+    a = 4λ * c * ((ν-2)/(ν-1))
+    b = sqrt(1 + 3λ^2 -a^2)
+    λsign = x < (-a/b) ? -1 : 1
+    (-(ν + 1) / 2) * log1p(1/abs2(1+λ*λsign) * abs2(b*x + a) *iv)
+end
+@inline logconst(d::Type{<:StdSkewT}, coefs)  = (log(b(d,coefs))+(log(c(d,coefs))))
+
+nparams(::Type{<:StdSkewT}) = 2
+coefnames(::Type{<:StdSkewT}) = ["ν", "λ"]
+distname(::Type{<:StdSkewT}) = "Hansen's Skewed t"
+
+function constraints(::Type{<:StdSkewT}, ::Type{T}) where {T}
+    lower = T[20/10, -one(T)]
+    upper = T[Inf,one(T)]
+    return lower, upper
+end
+
+startingvals(::Type{<:StdSkewT}, data::Array{T}) where {T<:AbstractFloat} = [startingvals(StdT, data)..., zero(T)]
+
+function quantile(d::StdSkewT{T}, q::T) where T
+    ν = d.coefs[1]
+    λ = d.coefs[2]
+    a_val = a(typeof(d),d.coefs)
+    b_val = b(typeof(d),d.coefs)
+    λconst = q < (1 - λ)/2 ? (1 - λ) : (1 + λ)
+    quant_numer = q < (1 - λ)/2 ? q : (q + λ)
+    1/b_val * ((λconst) * sqrt((ν-2)/ν) * tdistinvcdf(ν, quant_numer/λconst) - a_val)
 end
