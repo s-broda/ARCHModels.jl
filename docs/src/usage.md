@@ -328,8 +328,10 @@ In this case, an ARMA(1, 1) specification was selected.
 
 As a final example, a construction like the following can be used to automatically select not just the lag length, but also the class of GARCH model and the error distribution:
 
-```jldoctest MANUAL
-julia> models = [selectmodel(VS, BG96; dist=D, minlags=1, maxlags=2) for VS in subtypes(UnivariateVolatilitySpec), D in setdiff(subtypes(StandardizedDistribution), [Standardized])];
+```
+julia> models = [selectmodel(VS, BG96; dist=D, minlags=1, maxlags=2)
+                 for VS in subtypes(UnivariateVolatilitySpec),
+                 D in setdiff(subtypes(StandardizedDistribution), [Standardized])];
 
 julia> best_model = models[findmin(bic.(models))[2]]
 
