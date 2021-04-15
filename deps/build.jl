@@ -1,9 +1,9 @@
 #using Retry
-using DelimitedFiles
-datadir = joinpath(@__DIR__, "..", "src", "data")
-isdir(datadir) || mkdir(datadir)
-@info "Downloading Bollerslev and Ghysels data..."
-isfile(joinpath(datadir, "bollerslev_ghysels.txt")) || download("http://people.stern.nyu.edu/wgreene/Text/Edition7/TableF20-1.txt", joinpath(datadir, "bollerslev_ghysels.txt"))
+#using DelimitedFiles
+#datadir = joinpath(@__DIR__, "..", "src", "data")
+#isdir(datadir) || mkdir(datadir)
+#@info "Downloading Bollerslev and Ghysels data..."
+#isfile(joinpath(datadir, "bollerslev_ghysels.txt")) || download("http://people.stern.nyu.edu/wgreene/Text/Edition7/TableF20-1.txt", joinpath(datadir, "bollerslev_ghysels.txt"))
 
 # @info "Downloading stock data..."
 # #"DOW" is excluded because it's listed too late

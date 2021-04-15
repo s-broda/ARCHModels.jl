@@ -6,7 +6,6 @@
 .DS_Store
 docs/build/
 docs/site
-src/data/bollerslev_ghysels.txt
 docs/Manifest.toml
 Manifest.toml
 make-require.jl
