@@ -160,7 +160,7 @@ function _simulate!(data::Matrix{T2}, spec::MultivariateVolatilitySpec{T2, d};
 				if t > r2
 					ht = getindex.(Ht, i, i)
 					lht = log.(ht)
-					themean[i] = mean(getindex.(at, i), ht, lht, simdata[:, i], meanspec[i], meanspec[i].coefs, t)
+					themean[i] = mean(getindex.(at, i), ht, lht, view(simdata, :, i), meanspec[i], meanspec[i].coefs, t)
 				else
 					themean[i] = uncond(meanspec[i])
 				end
