@@ -1,4 +1,5 @@
 #Todo:
+#PkgBenchmark
 #HAC s.e.s from CovariancesMatrices.jl?
 #Float16/32 don't seem to work anymore. Problem in Optim?
 #support missing data? timeseries?
