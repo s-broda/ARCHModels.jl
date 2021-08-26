@@ -80,15 +80,17 @@ Base.@propagate_inbounds @inline function update!(
         ht, lht, zt, at, ::Type{<:TGARCH{o, p, q}}, garchcoefs
         ) where {o, p, q}
     mht = garchcoefs[1]
-    for i = 1:o
-        mht += garchcoefs[i+1]*min(at[end-i+1], 0)^2
-    end
-    for i = 1:p
-        mht += garchcoefs[i+1+o]*ht[end-i+1]
-    end
-    for i = 1:q
-        mht += garchcoefs[i+1+o+p]*(at[end-i+1])^2
-    end
+    @muladd begin
+		for i = 1:o
+        	mht = mht + garchcoefs[i+1]*min(at[end-i+1], 0)^2
+    	end
+    	for i = 1:p
+        	mht = mht + garchcoefs[i+1+o]*ht[end-i+1]
+    	end
+    	for i = 1:q
+        	mht = mht + garchcoefs[i+1+o+p]*(at[end-i+1])^2
+    	end
+	end
     push!(ht, mht)
     push!(lht, (mht > 0) ? log(mht) : -mht)
     return nothing

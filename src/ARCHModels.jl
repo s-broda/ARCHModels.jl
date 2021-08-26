@@ -15,7 +15,7 @@ using Reexport
 using StatsFuns: normcdf, normccdf, normlogpdf, norminvcdf, log2π, logtwo, RFunctions.tdistrand, RFunctions.tdistinvcdf, RFunctions.gammarand, RFunctions.gammainvcdf
 using GLM: modelmatrix, response, LinearModel
 using SpecialFunctions: beta, gamma, digamma #, lgamma
-
+using MuladdMacro
 
 # work around https://github.com/JuliaMath/SpecialFunctions.jl/issues/186
 # until https://github.com/JuliaDiff/ForwardDiff.jl/pull/419/ is merged
