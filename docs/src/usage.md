@@ -392,12 +392,13 @@ the choices are `:volatility` (the default), `:variance`, `:return`, and `:VaR`.
 ```jldoctest MANUAL
 julia> am = fit(GARCH{1, 1}, BG96);
 
-julia> predict.(am, :volatility, 1:3)
-3-element Array{Float64,1}:
- 0.3835202691483884
- 0.3595760033430932
- 0.33905170921321015
+julia>  predict.(am, :variance, 1:3)
+3-element Vector{Float64}:
+ 0.14708779684765233
+ 0.15185983792481744
+ 0.15643758950119205
 ```
+Not all prediction targets and models support multi-step forecasts.
 
 One way to use `predict` is in a backtesting exercise. The following code snippet constructs out-of-sample VaR forecasts for the `BG96` data by re-estimating the model
 in a rolling window fashion, and then tests the correctness of the VaR specification with `DQTest`.

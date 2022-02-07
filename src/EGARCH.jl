@@ -34,19 +34,22 @@ EGARCH{o, p, q}(coefs::Vector{T}) where {o, p, q, T}  = EGARCH{o, p, q, T}(coefs
 @inline presample(::Type{<:EGARCH{o, p, q}}) where {o, p, q} = max(o, p, q)
 
 Base.@propagate_inbounds @inline function update!(
-            ht, lht, zt, at, ::Type{<:EGARCH{o, p ,q}}, garchcoefs
+            ht, lht, zt, at, ::Type{<:EGARCH{o, p ,q}}, garchcoefs,
+			current_horizon=1
             ) where {o, p, q}
     mlht = garchcoefs[1]
-    for i = 1:o
-        mlht += garchcoefs[i+1]*zt[end-i+1]
-    end
-    for i = 1:p
-        mlht += garchcoefs[i+1+o]*lht[end-i+1]
-    end
-    for i = 1:q
-        mlht += garchcoefs[i+1+o+p]*(abs(zt[end-i+1]) - sqrt2invpi)
-    end
-    push!(lht, mlht)
+    @muladd begin
+		for i = 1:o
+	        mlht = mlht + garchcoefs[i+1]*zt[end-i+1]
+	    end
+	    for i = 1:p
+	        mlht = mlht + garchcoefs[i+1+o]*lht[end-i+1]
+	    end
+	    for i = 1:q
+	        mlht = mlht + garchcoefs[i+1+o+p]*(abs(zt[end-i+1]) - sqrt2invpi)
+	    end
+	end
+	push!(lht, mlht)
     push!(ht, exp(mlht))
     return nothing
 end
