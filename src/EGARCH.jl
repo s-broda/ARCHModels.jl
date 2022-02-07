@@ -34,7 +34,8 @@ EGARCH{o, p, q}(coefs::Vector{T}) where {o, p, q, T}  = EGARCH{o, p, q, T}(coefs
 @inline presample(::Type{<:EGARCH{o, p, q}}) where {o, p, q} = max(o, p, q)
 
 Base.@propagate_inbounds @inline function update!(
-            ht, lht, zt, at, ::Type{<:EGARCH{o, p ,q}}, garchcoefs
+            ht, lht, zt, at, ::Type{<:EGARCH{o, p ,q}}, garchcoefs,
+			current_horizon=1
             ) where {o, p, q}
     mlht = garchcoefs[1]
     @muladd begin
