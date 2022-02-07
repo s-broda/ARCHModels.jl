@@ -1,12 +1,11 @@
 using Test
 
 using ARCHModels
-using Random
 using GLM
 using DataFrames
 using StableRNGs
 
-rng = StableRNG(1)
+
 T = 10^4;
 
 @testset "lgamma" begin
@@ -16,7 +15,6 @@ end
 @testset "TGARCH" begin
     @test ARCHModels.nparams(TGARCH{1, 2, 3}) == 7
     @test ARCHModels.presample(TGARCH{1, 2, 3}) == 3
-    Random.seed!(1)
     spec = TGARCH{1,1,1}([1., .05, .9, .01]);
     str = sprint(show, spec)
     if VERSION < v"1.5.5"
@@ -24,46 +22,34 @@ end
     else
         @test startswith(str, "TGARCH{1, 1, 1} specification.\n\n─────────────────────────────────\n               ω    γ₁   β₁    α₁\n─────────────────────────────────\nParameters:  1.0  0.05  0.9  0.01\n─────────────────────────────────\n")
     end
-    am = simulate(spec, T);
+    am = simulate(spec, T, rng=StableRNG(1));
     am = selectmodel(TGARCH, am.data; meanspec=NoIntercept(), show_trace=true, maxlags=2)
-    @test all(isapprox.(coef(am), [0.9439667311150648
-                                   0.04573706835008625
-                                   0.9043902283152758
-                                   0.012555948398277313], rtol=1e-4))
+    @test all(isapprox.(coef(am), [1.3954654215590847,
+                                   0.06693040956623193,
+                                   0.8680818765441008,
+                                   0.006665140784151278], rtol=1e-4))
    #everything below is just pure GARCH, in fact
-    Random.seed!(1)
     spec = GARCH{1, 1}([1., .9, .05])
-    am0 = simulate(spec, T);
+    am0 = simulate(spec, T; rng=StableRNG(1));
     am00 = deepcopy(am0)
-    Random.seed!(1)
     am00.data .= 0.
-    simulate!(am00)
+    simulate!(am00, rng=StableRNG(1))
     @test all(am00.data .== am0.data)
-    Random.seed!(1)
-    am00 = simulate(am0)
+    am00 = simulate(am0; rng=StableRNG(1))
     @test all(am00.data .== am0.data)
-    Random.seed!(1)
-    am000 = simulate(am0, nobs(am0))
+    am000 = simulate(am0, nobs(am0); rng=StableRNG(1))
     @test all(am000.data .== am0.data)
     am = selectmodel(GARCH, am0.data; meanspec=NoIntercept(), show_trace=true)
     @test isfitted(am) == true
-    #with unconditional as presample:
-    #@test all(isapprox.(coef(am), [0.9086632896184081,
-    #                               0.9055268468427705,
-    #                               0.050367854809777915], rtol=1e-4))
-    @test all(isapprox.(coef(am), [0.9086479266110243,
-                                   0.905531642067773,
-                                   0.050324600594884535], rtol=1e-4))
-    #with unconditional as presample:
-    #@test all(isapprox.(stderror(am), [0.14582381264705224,
-    #                                   0.010354562480367474,
-    #                                   0.005222817398477784], rtol=1e-4))
-    @test all(isapprox.(stderror(am), [0.14578736059501485,
-                                       0.010356284482676704,
-                                       0.005228247833454602], rtol=1e-3))
-    @test sum(volatilities(am0)) ≈ 44768.17421580251
-    @test sum(abs, residuals(am0)) ≈ 8022.163087384836
-    @test sum(abs, residuals(am0, standardized=false)) ≈ 35939.07066637026
+    @test all(isapprox.(coef(am), [1.116707484875346,
+                                   0.8920705288828562,
+                                   0.05103227915762242], rtol=1e-4))
+    @test all(isapprox.(stderror(am), [ 0.22260057264313066,
+                                        0.016030182299773734,
+                                        0.006460941055580745], rtol=1e-3))
+    @test sum(volatilities(am0)) ≈ 44285.00568611553
+    @test sum(abs, residuals(am0)) ≈ 7964.585890843087
+    @test sum(abs, residuals(am0, standardized=false)) ≈ 35281.71207401529
     am2 = UnivariateARCHModel(spec, am0.data)
     @test isfitted(am2) == false
     io = IOBuffer()
@@ -88,44 +74,34 @@ end
     @test all(am3.spec.coefs .== am2.spec.coefs)
 end
 @testset "ARCH" begin
-    Random.seed!(1);
     spec = ARCH{2}([1., .3, .4]);
-    am = simulate(spec, T);
+    am = simulate(spec, T; rng=StableRNG(1));
     @test selectmodel(ARCH, am.data).spec.coefs == fit(ARCH{2}, am.data).spec.coefs
-    Random.seed!(1);
     spec = ARCH{0}([1.]);
-    am = simulate(spec, T);
+    am = simulate(spec, T, rng=StableRNG(1));
     fit!(am)
-    @test all(isapprox.(coef(am), 1.013031276122647, rtol=1e-4))
+    @test all(isapprox.(coef(am),  0.991377950108106, rtol=1e-4))
 
 end
 
 @testset "EGARCH" begin
-    Random.seed!(1)
     @test ARCHModels.nparams(EGARCH{1, 2, 3}) == 7
     @test ARCHModels.presample(EGARCH{1, 2, 3}) == 3
-    am = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), T; meanspec=Intercept(3))
+    am = simulate(EGARCH{1, 1, 1}([.1, 0., .9, .1]), T; meanspec=Intercept(3), rng=StableRNG(1))
     am7 = selectmodel(EGARCH, am.data; maxlags=2, show_trace=true)
-    #with unconditional as presample:
-    #@test all(isapprox(coef(am7), [0.08502955535533116,
-    #                               0.004709708474515596,
-    #                               0.9164935566284109,
-    #                               0.09325947325535855,
-    #                               3.0137461089470308], rtol=1e-4))
-    @test all(isapprox(coef(am7), [0.08504883253172882,
-                                   0.0047015720582706125,
-                                   0.9164488571272553,
-                                   0.09323297680588628,
-                                   3.013732273404755], rtol=1e-4))
+    @test all(isapprox(coef(am7), [ 0.1240152087585493,
+                                   -0.010544394266072957,
+                                    0.874501604519596,
+                                    0.10762246065941368,
+                                    3.0008464829419053], rtol=1e-4))
 
     @test coefnames(EGARCH{2, 2, 2}) == ["ω", "γ₁", "γ₂", "β₁", "β₂", "α₁", "α₂"]
     @test_throws Base.ErrorException predict.(am7, :variance, 1:3)
 end
 @testset "StatisticalModel" begin
     #not implemented: adjr2, deviance, mss, nulldeviance, r2, rss, weights
-    Random.seed!(1);
     spec = GARCH{1, 1}([1., .9, .05])
-    am = simulate(spec, T)
+    am = simulate(spec, T; rng=StableRNG(1))
     fit!(am)
     @test loglikelihood(am) ==  ARCHModels.loglik!(Float64[],
                                                                 Float64[],
@@ -140,46 +116,28 @@ end
     @test nobs(am) == T
     @test dof(am) == 3
     @test coefnames(GARCH{1, 1}) == ["ω", "β₁", "α₁"]
-    #with unconditional as presample:
-    #@test aic(am) ≈ 58369.082969298106 rtol=1e-4
-    #@test bic(am) ≈ 58390.713990414035 rtol=1e-4
-    #@test aicc(am) ≈ 58369.085370258494 rtol=1e-4
-    @test aic(am) ≈ 58369.08203915834 rtol=1e-4
-    @test bic(am) ≈ 58390.71306027427 rtol=1e-4
-    @test aicc(am) ≈ 58369.08444011873 rtol=1e-4
+    @test aic(am) ≈ 57949.19500673284 rtol=1e-4
+    @test bic(am) ≈ 57970.82602784877 rtol=1e-4
+    @test aicc(am) ≈ 57949.19740769323 rtol=1e-4
 
     @test all(coef(am) .== am.spec.coefs)
-    #with unconditional as presample:
-    #@test all(isapprox(confint(am), [0.6228537382166024 1.1944723245606814;
-    #                                0.8852323068993577 0.9258214298904262;
-    #                                0.040131313548448275 0.060604377407810675],
-    #                   rtol=1e-4)
-    #                   )
-    @test all(isapprox(confint(am), [0.6229099504436408 1.1943859027784078;
-                                     0.8852336974680757 0.9258295866674704;
-                                     0.04007742313906393 0.06057177805070514],
+    @test all(isapprox(confint(am), [ 0.680418   1.553;
+                                      0.860652   0.923489;
+                                      0.0383691  0.0636955],
                        rtol=1e-4)
                        )
-    #with unconditional as presample:
-    #@test all(isapprox(informationmatrix(am; expected=false), [0.15326216336912968 2.9536982257433135 2.618124940552642;
-    #                                                           2.9536982257433135 58.956837321202826 53.74888605159925;
-    #                                                           2.618124940552642 53.74888605159925 53.29656483617587],
-    #                   rtol=1e-4)
-    #                   )
-    @test all(isapprox(informationmatrix(am; expected=false), [0.15267905577531846 2.9430054037767617 2.607992890001237;
-                                                               2.9430054037767617 58.76705213893014 53.57462949757515;
-                                                               2.607992890001237 53.57462949757517 53.14231838982629],
+    @test all(isapprox(informationmatrix(am; expected=false), [ 0.125032   2.33319   2.07012;
+                                                                2.33319   44.6399   40.8553;
+                                                                2.07012   40.8553   41.2192],
                        rtol=1e-4)
                        )
     @test_throws ErrorException informationmatrix(am)
-    #with unconditional as presample:
-    #@test all(isapprox(score(am), [-4.091261171623728e-6 3.524550271549742e-5 -6.989366926291041e-5], rtol=1e-4))
     @test all(isapprox(score(am), [0. 0. 0.], atol=1e-3))
     @test islinear(am::UnivariateARCHModel) == false
-    @test predict(am) ≈ 4.361606730361275
-    @test predict(am, :variance) ≈ 19.023613270332767
+    @test predict(am) ≈ 4.296827552671104
+    @test predict(am, :variance) ≈ 18.46272701739355
     @test predict(am, :return) == 0.0
-    @test predict(am, :VaR) ≈ 10.146614544578197
+    @test predict(am, :VaR) ≈ 9.995915642276554
     for what in [:return, :variance]
         @test predict.(am, what, 1:3) == [predict(am, what, h) for h in 1:3]
     end
@@ -188,19 +146,13 @@ end
 end
 
 @testset "MeanSpecs" begin
-    Random.seed!(1);
     spec = GARCH{1, 1}([1., .9, .05])
-    am = simulate(spec, T; meanspec=Intercept(0.))
+    am = simulate(spec, T; meanspec=Intercept(0.), rng=StableRNG(1))
     fit!(am)
-    #with unconditional as presample:
-    #@test all(isapprox(coef(am), [0.910496430719689,
-    #                               0.9054120402733519,
-    #                               0.05039127076312942,
-    #                               0.027705636765390795], rtol=1e-4))
-    @test all(isapprox(coef(am), [0.9104793904880137,
-                                  0.9054169985282575,
-                                  0.05034724930058784,
-                                  0.027707836268720806], rtol=1e-4))
+    @test all(isapprox(coef(am), [1.1176635890968043,
+                                  0.8919906787166815,
+                                  0.05106346071866704,
+                                  0.00952591461710004], rtol=1e-4))
     @test ARCHModels.coefnames(Intercept(0.)) == ["μ"]
     @test ARCHModels.nparams(Intercept) == 1
     @test ARCHModels.presample(Intercept(0.)) == 0
@@ -216,25 +168,24 @@ end
     @test ARCHModels.nparams(typeof(ms)) == length(ms.coefs)
     @test ARCHModels.presample(ms) == 2
     @test ARCHModels.coefnames(ms) == ["c", "φ₁", "φ₂", "θ₁", "θ₂"]
-    Random.seed!(1)
     spec = GARCH{1, 1}([1., .9, .05])
-    am = simulate(spec, T; meanspec=ms)
+    am = simulate(spec, T; meanspec=ms, rng=StableRNG(1))
     fit!(am)
-    @test all(isapprox(coef(am), [0.9063506916409171,
-                                  0.905682443482137,
-                                  0.05021834228447521,
-                                  1.079454022288992,
-                                  0.45097800554911116,
-                                  0.2357782619617334,
-                                  -0.05909354030019596,
-                                  0.2878312346045116], rtol=1e-4))
-    @test predict(am, :return) ≈ -1.4572460532296017 rtol = 1e-6
+    @test all(isapprox(coef(am), [ 1.1375727511714622,
+                                   0.8903853180079492,
+                                   0.05158067874765809,
+                                   1.0091192373639755,
+                                   0.482666588367849,
+                                   0.21802258440272837,
+                                  -0.08390300941364812,
+                                   0.28868236034111855], rtol=1e-4))
+    @test predict(am, :return) ≈ 2.335436537249963 rtol = 1e-6
     am = selectmodel(ARCH, BG96;  meanspec=AR, maxlags=2);
-    @test all(isapprox(coef(am), [0.11916340875306261,
-                                  0.3156862868133263,
-                                  0.18331803992622006,
-                                  -0.00685700871019875,
-                                  0.0358362785070197], rtol=1e-4))
+    @test all(isapprox(coef(am), [0.1191634087516343,
+                                  0.31568628680702837,
+                                  0.18331803992648235,
+                                 -0.006857008709781168,
+                                  0.035836278501164005], rtol=1e-4))
     @test typeof(Regression([1 2; 3 4])) == Regression{2, Float64}
     @test typeof(Regression([1. 2.; 3. 4.])) == Regression{2, Float64}
     @test typeof(Regression{Float32}([1 2; 3 4])) == Regression{2, Float32}
@@ -254,21 +205,19 @@ end
     @test ARCHModels.presample(reg) == 0
     @test ARCHModels.constraints(typeof(reg), Float64) == ([-Inf, -Inf], [Inf, Inf])
     @test all(isapprox(ARCHModels.startingvals(reg, y),
-        [0.9923610899808355, 2.0036469645073303], rtol=1e-4))
+        [0.992361089980835, 2.003646964507331], rtol=1e-4))
     @test ARCHModels.uncond(reg) === 0.
-    Random.seed!(1)
-    am = simulate(GARCH{1, 1}([1., .9, .05]), 2000; meanspec=reg, warmup=0)
+    am = simulate(GARCH{1, 1}([1., .9, .05]), 2000; meanspec=reg, warmup=0, rng=StableRNG(1))
     fit!(am)
     @test_throws Base.ErrorException predict(am, :return)
 
-    @test all(isapprox(coef(am), [1.522147151343697,
-                                  0.869732130237804,
-                                  0.060598935466617924,
-                                  0.7992856525779547,
-                                  2.0369823982928796], rtol=1e-4))
-    Random.seed!(1)
-    am = simulate(GARCH{1, 1}([1., .9, .05]), 1999; meanspec=reg, warmup=0)
-    @test predict(am, :return) ≈ 2.1435094119979254
+    @test all(isapprox(coef(am), [1.098632569628791,
+                                  0.8866288812154145,
+                                  0.05770241980639491,
+                                  0.7697476790102007,
+                                  2.403750061921962], rtol=1e-4))
+    am = simulate(GARCH{1, 1}([1., .9, .05]), 1999; meanspec=reg, warmup=0, rng=StableRNG(1))
+    @test predict(am, :return) ≈ 2.3760239544958175
     data = DataFrame(X=ones(1974), Y=BG96)
     model = lm(@formula(Y ~ -1 + X), data)
     am = fit(GARCH{1, 1}, model)
@@ -308,22 +257,20 @@ end
     @test_throws ARCHModels.NumParamError StdGED([1., 2.])
     @test_throws ARCHModels.NumParamError Regression([1], [1 2; 3 4])
     at = zeros(10)
-    data = rand(10)
+    data = rand(StableRNG(1), 10)
     reg = Regression(data[1:5])
     @test_throws ErrorException mean(at, at, at, data, reg, [0.], 6)
 end
 
 @testset "Distributions" begin
-    Random.seed!(1)
-    a=rand(StdT(3))
-    Random.seed!(1)
-    b=rand(StdT(3), 1)[1]
-    @test a==b # https://github.com/JuliaStats/Distributions.jl/issues/846
-    Random.seed!(1)
-    @test rand(MersenneTwister(), StdNormal()) ≈ 0.2972879845354616
+    a=rand(StableRNG(1), StdT(3))
+
+    b=rand(StableRNG(1), StdT(3), 1)[1]
+    @test a==b
+
+    @test rand(StableRNG(1), StdNormal()) ≈ -0.5325200748641231
     @testset "Gaussian" begin
-        Random.seed!(1)
-        data = rand(T)
+        data = rand(StableRNG(1), T)
         @test typeof(StdNormal())==typeof(StdNormal(Float64[]))
         @test fit(StdNormal, data).coefs == Float64[]
         @test coefnames(StdNormal) == String[]
@@ -332,48 +279,34 @@ end
         @test ARCHModels.constraints(StdNormal{Float64}, Float64) == (Float64[], Float64[])
     end
     @testset "Student" begin
-        Random.seed!(1)
-        data = rand(StdT(4), T)
+        data = rand(StableRNG(1), StdT(4), T)
         spec = GARCH{1, 1}([1., .9, .05])
-        @test fit(StdT, data).coefs[1] ≈ 3.972437329588246 rtol=1e-4
+        @test fit(StdT, data).coefs[1] ≈ 4.027241574961463 rtol=1e-4
         @test coefnames(StdT) == ["ν"]
         @test ARCHModels.distname(StdT) == "Student's t"
         @test quantile(StdT(3), .05) ≈ -1.3587150125838563
-        Random.seed!(1);
-        datat = simulate(spec, T; dist=StdT(4)).data
-        Random.seed!(1);
-        datam = simulate(spec, T; dist=StdT(4), meanspec=Intercept(3)).data
+        datat = simulate(spec, T; dist=StdT(4), rng=StableRNG(1)).data
+        datam = simulate(spec, T; dist=StdT(4), meanspec=Intercept(3), rng=StableRNG(1)).data
         am4 = selectmodel(GARCH, datat; dist=StdT, meanspec=NoIntercept{Float64}(), show_trace=true)
         am5 = selectmodel(GARCH, datam; dist=StdT, show_trace=true)
         @test coefnames(am5) == ["ω", "β₁", "α₁", "ν", "μ"]
         @test all(coeftable(am4).cols[2] .== stderror(am4))
-        #with unconditional as presample:
-        #@test all(isapprox(coef(am4), [0.8307014299672306,
-        #                               0.9189503152734588,
-        #                               0.042080807758329355,
-        #                               3.835646488238764], rtol=1e-4))
-        @test all(isapprox(coef(am4), [0.831327902922751,
-                                       0.9189082073187017,
-                                       0.04211450420515991,
-                                       3.834812845564172], rtol=1e-4))
-        #with unconditional as presample:
-        #@test all(isapprox(coef(am5), [0.8306175556436268,
-        #                               0.9189538270625667,
-        #                               0.04208964132482301,
-        #                               3.8348509665880797,
-        #                               2.9918445831618024], rtol=1e-4))
-        @test all(isapprox(coef(am5), [0.8312482931785029,
-                                       0.9189112458594789,
-                                       0.04212329204579697,
-                                       3.834033118707376,
-                                       2.9918481871096083], rtol=1e-4))
+        @test all(isapprox(coef(am4), [0.7400801158793416,
+                                       0.9185237789418755,
+                                       0.04062109019124998,
+                                       4.267591319191636], rtol=1e-4))
+        @test all(isapprox(coef(am5), [0.7402313332187656,
+                                       0.9184701329706532,
+                                       0.040654605524829274,
+                                       4.269395399912836,
+                                       3.035298011833236], rtol=1e-4))
     end
     @testset "HansenSkewedT" begin
-       Random.seed!(1)
-       data = rand(StdSkewT(4,-0.3), T)
+       data = rand(StableRNG(1), StdSkewT(4,-0.3), T)
        spec = GARCH{1, 1}([1., .9, .05])
-       @test fit(StdSkewT, data).coefs[1] ≈ 4.115817082082046 rtol=1e-4
-       @test fit(StdSkewT, data).coefs[2] ≈ -0.29195923568201576 rtol=1e-4
+       c = fit(StdSkewT, data).coefs
+       @test c[1] ≈ 3.990671630456716 rtol=1e-4
+       @test c[2] ≈ -0.3136773995478942 rtol=1e-4
        @test typeof(StdSkewT(3,0)) == typeof(StdSkewT(3.,0)) == typeof(StdSkewT([3,0.0]))
        @test coefnames(StdSkewT) == ["ν", "λ"]
        @test ARCHModels.nparams(StdSkewT) == 2
@@ -382,31 +315,28 @@ end
        @test quantile(StdSkewT(3,0), 0.5) == 0
        @test quantile(StdSkewT(3,0), .05) ≈ -1.3587150125838563
        @test ARCHModels.constraints(StdSkewT{Float64}, Float64) == (Float64[20/10, -one(Float64)], Float64[Inf,one(Float64)])
-       Random.seed!(1);
-       dataskt = simulate(spec, T; dist=StdSkewT(4,-0.3)).data
-       Random.seed!(1);
-       datam = simulate(spec, T; dist=StdSkewT(4,-0.3), meanspec=Intercept(3)).data
+       dataskt = simulate(spec, T; dist=StdSkewT(4,-0.3), rng=StableRNG(1)).data
+       datam = simulate(spec, T; dist=StdSkewT(4,-0.3), meanspec=Intercept(3), rng=StableRNG(1)).data
        am4 = selectmodel(GARCH, dataskt; dist=StdSkewT, meanspec=NoIntercept{Float64}(), show_trace=true)
        am5 = selectmodel(GARCH, datam; dist=StdSkewT, show_trace=true)
        @test coefnames(am5) == ["ω", "β₁", "α₁", "ν", "λ", "μ"]
        @test all(coeftable(am4).cols[2] .== stderror(am4))
-       @test all(isapprox(coef(am4), [1.1129628842351935,
-                                      0.8875795519570414,
-                                      0.06520263915417537,
-                                      3.886881385708421,
-                                      -0.29751925081928116], rtol=1e-4))
-       @test all(isapprox(coef(am5), [1.1108927904860744,
-                                      0.8875825749083535,
-                                      0.0651093574134582,
-                                      3.8894659913968255,
-                                      -0.29684836199362896,
-                                      3.0047117757300317], rtol=1e-4))
+       @test all(isapprox(coef(am4), [ 1.0123398035363282,
+                                       0.9010308454299863,
+                                       0.042335307040165894,
+                                       4.24455990918083,
+                                      -0.3115002211205442], rtol=1e-4))
+       @test all(isapprox(coef(am5), [ 1.0151845148616474,
+                                       0.9009908899358181,
+                                       0.04243949895951436,
+                                       4.241005415020919,
+                                      -0.3124667515252298,
+                                       2.9931917146031144], rtol=1e-4))
     end
     @testset "GED" begin
-        Random.seed!(1)
         @test typeof(StdGED(3)) == typeof(StdGED(3.)) == typeof(StdGED([3.]))
-        data = rand(StdGED(1), T)
-        @test fit(StdGED, data).coefs[1] ≈ 1.0193004687300224 rtol=1e-4
+        data = rand(StableRNG(1), StdGED(1), T)
+        @test fit(StdGED, data).coefs[1] ≈ 1.0062771307312837 rtol=1e-4
         @test coefnames(StdGED) == ["p"]
         @test ARCHModels.nparams(StdGED) == 1
         @test ARCHModels.distname(StdGED) == "GED"
@@ -423,9 +353,8 @@ end
         @test all(isapprox.(ARCHModels.startingvals(MyStdT, [0.]), eps()))
         @test quantile(MyStdT(3.), .1) ≈ quantile(StdT(3.), .1)
         ARCHModels.startingvals(::Type{<:MyStdT}, data::Vector{T}) where T = T[3.]
-        Random.seed!(1)
-        am = simulate(GARCH{1, 1}([1, 0.9, .05]), 1000, dist=MyStdT(3.))
-        @test  loglikelihood(fit(am)) ≈ -2700.9089012063323
+        am = simulate(GARCH{1, 1}([1, 0.9, .05]), 1000, dist=MyStdT(3.); rng=StableRNG(1))
+        @test  loglikelihood(fit(am)) ≈ -2543.7820751346744
     end
 end
 @testset "tests" begin
@@ -485,42 +414,36 @@ end
     @test typeof(MultivariateStdNormal(Float64[], 3)) == typeof(MultivariateStdNormal{Float64, 3}(Float64[]))
     @test typeof(MultivariateStdNormal{Float64}(3)) == typeof(MultivariateStdNormal{Float64, 3}(Float64[]))
     @test typeof(MultivariateStdNormal(3)) == typeof(MultivariateStdNormal{Float64, 3}(Float64[]))
-    Random.seed!(1)
-    @test all(isapprox(rand(MultivariateStdNormal(2)), [0.2972879845354616, 0.3823959677906078], rtol=1e-6))
+    @test all(isapprox(rand(StableRNG(1), MultivariateStdNormal(2)), [-0.5325200748641231,  0.098465514284785], rtol=1e-6))
     @test coefnames(MultivariateStdNormal) == String[]
     @test ARCHModels.distname(MultivariateStdNormal) == "Multivariate Normal"
 
-    Random.seed!(1)
+
     am = am1
     am.spec.coefs .= [.7, .2]
-    ams  = simulate(am)
+    ams  = simulate(am; rng=StableRNG(1))
     @test isfitted(ams) == false
     fit!(ams)
     @test isfitted(ams) == true
-    @test all(isapprox(ams.spec.coefs, [0.7122483516102956, 0.19156028421431875], rtol=1e-4))
-    Random.seed!(2)
-    simulate!(ams)
+    @test all(isapprox(ams.spec.coefs, [0.6611103068430052, 0.23089471530783906], rtol=1e-4))
+    simulate!(ams; rng=StableRNG(2))
     @test ams.fitted == false
     fit!(ams)
-    @test all(isapprox(ams.spec.coefs, [0.6630049669013613, 0.22885770926598498], rtol=1e-4))
-    Random.seed!(1)
+    @test all(isapprox(ams.spec.coefs, [0.6660369039914371, 0.2329752007155509], rtol=1e-4))
     amc = fit(DCC{1, 2, GARCH{3, 2}}, DOW29[:, 1:4]; meanspec=AR{3})
-    ams = simulate(amc, T)
+    ams = simulate(amc, T; rng=StableRNG(1))
     fit!(ams)
-    @test all(isapprox(ams.meanspec[1].coefs, [-0.09394176323811071, 0.05159711352207107, 0.011348428433666473, -0.020175913191330077], rtol=1e-4))
-    Random.seed!(1)
+    @test all(isapprox(ams.meanspec[1].coefs, [-0.1040426570178552, 0.03639191550146291, 0.033657970110476075, -0.020300480179225668], rtol=1e-4))
     ame = fit(DCC{1, 2, EGARCH{1, 1, 1}}, DOW29[:, 1:4])
-    ams = simulate(ame, T)
+    ams = simulate(ame, T; rng=StableRNG(1))
     fit!(ams)
-    @test all(isapprox(ams.spec.univariatespecs[1].coefs, [0.046700648921491957, -0.07258062140595305, 0.9664860227494515, 0.22051944930571496], rtol=1e-4))
-
-    Random.seed!(1)
+    @test all(isapprox(ams.spec.univariatespecs[1].coefs, [0.05335407349997172, -0.08008165178490954,  0.9627467601623543,  0.22652855417695117], rtol=1e-4))
     ccc = fit(CCC, DOW29[:, 1:4])
     @test dof(ccc) == 16
     @test ccc.spec.R[1, 2] ≈ 0.37095654552885643
     @test isapprox(stderror(ccc)[1], 0.06298215515406534, rtol=1e-3)
-    cccs = simulate(ccc, T)
-    @test  cccs.data[end, 1] ≈ -1.5061782364569236
+    cccs = simulate(ccc, T; rng=StableRNG(1))
+    @test  cccs.data[end, 1] ≈ -0.8530862593689736
     @test coefnames(ccc) == ["ω₁", "β₁₁", "α₁₁", "μ₁", "ω₂", "β₁₂", "α₁₂", "μ₂", "ω₃", "β₁₃", "α₁₃", "μ₃", "ω₄", "β₁₄", "α₁₄", "μ₄"]
     io = IOBuffer()
     str = sprint(io -> show(io, ccc))

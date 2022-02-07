@@ -133,17 +133,19 @@ coefnames(am::UnivariateARCHModel) = vcat(coefnames(typeof(am.spec)),
 
 # documented in general
 function simulate(spec::UnivariateVolatilitySpec{T2}, nobs; warmup=100, dist::StandardizedDistribution{T2}=StdNormal{T2}(),
-                  meanspec::MeanSpec{T2}=NoIntercept{T2}()
+                  meanspec::MeanSpec{T2}=NoIntercept{T2}(),
+				  rng=GLOBAL_RNG
                   ) where {T2<:AbstractFloat}
     data = zeros(T2, nobs)
-    _simulate!(data,  spec; warmup=warmup, dist=dist, meanspec=meanspec)
+    _simulate!(data,  spec; warmup=warmup, dist=dist, meanspec=meanspec, rng=rng)
     UnivariateARCHModel(spec, data; dist=dist, meanspec=meanspec, fitted=false)
 end
 
 function _simulate!(data::Vector{T2}, spec::UnivariateVolatilitySpec{T2};
                   warmup=100,
                   dist::StandardizedDistribution{T2}=StdNormal{T2}(),
-                  meanspec::MeanSpec{T2}=NoIntercept{T2}()
+                  meanspec::MeanSpec{T2}=NoIntercept{T2}(),
+				  rng=GLOBAL_RNG
                   ) where {T2<:AbstractFloat}
 	@assert warmup>=0
 	append!(data, zeros(T2, warmup))
@@ -172,7 +174,7 @@ function _simulate!(data::Vector{T2}, spec::UnivariateVolatilitySpec{T2};
 				push!(ht, h0)
                 push!(lht, log(h0))
             end
-			push!(zt, rand(dist))
+			push!(zt, rand(rng, dist))
 			push!(at, sqrt(ht[end])*zt[end])
 			data[t] = themean + at[end]
         end
