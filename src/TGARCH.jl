@@ -77,7 +77,8 @@ const ARCH = GARCH{0}
 
 
 Base.@propagate_inbounds @inline function update!(
-        ht, lht, zt, at, ::Type{<:TGARCH{o, p, q}}, garchcoefs
+        ht, lht, zt, at, ::Type{<:TGARCH{o, p, q}}, garchcoefs,
+		current_horizon=1
         ) where {o, p, q}
     mht = garchcoefs[1]
     @muladd begin
@@ -88,7 +89,11 @@ Base.@propagate_inbounds @inline function update!(
         	mht = mht + garchcoefs[i+1+o]*ht[end-i+1]
     	end
     	for i = 1:q
-        	mht = mht + garchcoefs[i+1+o+p]*(at[end-i+1])^2
+			if i >= current_horizon
+        		mht = mht + garchcoefs[i+1+o+p]*(at[end-i+1])^2
+			else
+				mht = mht + garchcoefs[i+1+o+p]*ht[end-i+1]
+			end
     	end
 	end
     push!(ht, mht)

@@ -119,6 +119,7 @@ end
                                    3.013732273404755], rtol=1e-4))
 
     @test coefnames(EGARCH{2, 2, 2}) == ["ω", "γ₁", "γ₂", "β₁", "β₂", "α₁", "α₂"]
+    @test_throws Base.ErrorException predict.(am7, :variance, 1:3)
 end
 @testset "StatisticalModel" begin
     #not implemented: adjr2, deviance, mss, nulldeviance, r2, rss, weights
@@ -183,6 +184,7 @@ end
         @test predict.(am, what, 1:3) == [predict(am, what, h) for h in 1:3]
     end
     @test_throws Base.ErrorException predict.(am, :VaR, 1:3)
+    @test_throws Base.ErrorException predict.(am, :volatility, 1:3)
 end
 
 @testset "MeanSpecs" begin
