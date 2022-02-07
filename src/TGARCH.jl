@@ -89,15 +89,11 @@ Base.@propagate_inbounds @inline function update!(
         	mht = mht + garchcoefs[i+1+o]*ht[end-i+1]
     	end
     	for i = 1:q
-<<<<<<< HEAD
-        	mht = mht + garchcoefs[i+1+o+p]*(at[end-i+1])^2
-=======
 			if i >= current_horizon
         		mht = mht + garchcoefs[i+1+o+p]*(at[end-i+1])^2
 			else
 				mht = mht + garchcoefs[i+1+o+p]*ht[end-i+1]
 			end
->>>>>>> 1b567383213740fbf46de5df3b4d5280b8a63298
     	end
 	end
     push!(ht, mht)
