@@ -30,7 +30,7 @@ The corresponding type is [`ARCH{q}`](@ref). For example, an ARCH(2) model with 
 julia> using ARCHModels
 
 julia> ARCH{2}([1., .5, .4])
-TGARCH{0,0,2} specification.
+TGARCH{0, 0, 2} specification.
 
 ──────────────────────────
                ω   α₁   α₂
@@ -47,7 +47,7 @@ The GARCH(p, q) model, due to [Bollerslev (1986)](https://doi.org/10.1016/0304-4
 It is available as [`GARCH{p, q}`](@ref):
 ```jldoctest TYPES
 julia> GARCH{1, 1}([1., .9, .05])
-TGARCH{0,1,1} specification.
+GARCH{1, 1} specification.
 
 ───────────────────────────
                ω   β₁    α₁
@@ -68,7 +68,7 @@ The TGARCH model allows the volatility to react differently (typically more stro
 
 ```jldoctest TYPES
 julia> TGARCH{1, 1, 1}([1., .04, .9, .01])
-TGARCH{1,1,1} specification.
+TGARCH{1, 1, 1} specification.
 
 ─────────────────────────────────
                ω    γ₁   β₁    α₁
@@ -86,7 +86,7 @@ The EGARCH{o, p, q} volatility specification, due to [Nelson (1991)](https://doi
 Like the TGARCH model, it can account for the leverage effect. The corresponding type is [`EGARCH{o, p, q}`](@ref):
 ```jldoctest TYPES
 julia> EGARCH{1, 1, 1}([-0.1, .1, .9, .04])
-EGARCH{1,1,1} specification.
+EGARCH{1, 1, 1} specification.
 
 ─────────────────────────────────
                 ω   γ₁   β₁    α₁
@@ -120,14 +120,14 @@ Another way to create a linear regression with ARCH errors is to pass a `LinearM
 * An ARMA(p, q) model: ``\mu_t=c+\sum_{i=1}^p \varphi_i r_{t-i}+\sum_{i=1}^q \theta_i a_{t-i}``. Available as [`ARMA{p, q}`](@ref):
 ```jldoctest TYPES
 julia> ARMA{1, 1}([1., .9, -.1])
-ARMA{1,1,Float64}([1.0, 0.9, -0.1])
+ARMA{1, 1, Float64}([1.0, 0.9, -0.1])
 ```
 Pure AR(p) and MA(q) models are obtained as follows:
 ```jldoctest TYPES
 julia> AR{1}([1., .9])
-ARMA{1,0,Float64}([1.0, 0.9])
+AR{1, Float64}([1.0, 0.9])
 julia> MA{1}([1., -.1])
-ARMA{0,1,Float64}([1.0, -0.1])
+MA{1, Float64}([1.0, -0.1])
 ```
 
 ## Distributions
@@ -182,7 +182,7 @@ julia> data = BG96;
 
 julia> am = UnivariateARCHModel(spec, data; dist=StdT(3.), meanspec=Intercept(1.))
 
-TGARCH{0,1,1} model with Student's t errors, T=1974.
+GARCH{1, 1} model with Student's t errors, T=1974.
 
 
 ──────────────────────────────
@@ -207,7 +207,7 @@ The model can then be fitted as follows:
 ```jldoctest TYPES
 julia> fit!(am)
 
-TGARCH{0,1,1} model with Student's t errors, T=1974.
+GARCH{1, 1} model with Student's t errors, T=1974.
 
 Mean equation parameters:
 ─────────────────────────────────────────────

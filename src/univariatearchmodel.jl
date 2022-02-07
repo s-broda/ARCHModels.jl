@@ -69,7 +69,7 @@ Create a UnivariateARCHModel.
 ```jldoctest
 julia> UnivariateARCHModel(GARCH{1, 1}([1., .9, .05]), randn(10))
 
-TGARCH{0,1,1} model with Gaussian errors, T=10.
+GARCH{1, 1} model with Gaussian errors, T=10.
 
 
 ─────────────────────────────────────────
@@ -405,7 +405,7 @@ GLM.LinearModel (or GLM.TableRegressionModel).
 ```jldoctest
 julia> fit(EGARCH{1, 1, 1}, BG96; meanspec=NoIntercept, dist=StdT)
 
-EGARCH{1,1,1} model with Student's t errors, T=1974.
+EGARCH{1, 1, 1} model with Student's t errors, T=1974.
 
 
 Volatility parameters:
@@ -415,7 +415,7 @@ Volatility parameters:
 ω   -0.0162014  0.0186792  -0.86735    0.3858
 γ₁  -0.0378454  0.0180239  -2.09974    0.0358
 β₁   0.977687   0.0125567  77.862      <1e-99
-α₁   0.255804   0.0625445   4.08995    <1e-4
+α₁   0.255804   0.0625445   4.08995    <1e-04
 ─────────────────────────────────────────────
 
 Distribution parameters:
@@ -514,7 +514,7 @@ minimizes the [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion
 ```jldoctest
 julia> selectmodel(EGARCH, BG96)
 
-EGARCH{1,1,2} model with Gaussian errors, T=1974.
+EGARCH{1, 1, 2} model with Gaussian errors, T=1974.
 
 Mean equation parameters:
 ───────────────────────────────────────────────
@@ -530,7 +530,7 @@ Volatility parameters:
 ω   -0.0544398  0.0591898  -0.919751    0.3577
 γ₁  -0.0243368  0.0270382  -0.900092    0.3681
 β₁   0.960301   0.038806   24.7462      <1e-99
-α₁   0.405788   0.0674641   6.01487     <1e-8
+α₁   0.405788   0.0674641   6.01487     <1e-08
 α₂  -0.207357   0.114132   -1.81682     0.0692
 ──────────────────────────────────────────────
 ```

@@ -64,7 +64,7 @@ unspecified, then these default to 1, 1, and `GARCH{1, 1}`.
 ```jldoctest
 julia> fit(DCC, DOW29)
 
-29-dimensional DCC{1, 1} - TGARCH{0,1,1} - Intercept{Float64} specification, T=2785.
+29-dimensional DCC{1, 1} - GARCH{1, 1} - Intercept{Float64} specification, T=2785.
 
 DCC parameters, estimated by largescale procedure:
 ────────────────────
