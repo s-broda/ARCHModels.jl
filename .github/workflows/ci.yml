@@ -58,12 +58,7 @@ jobs:
             Pkg.develop(PackageSpec(path=pwd()))
             Pkg.instantiate()
             Pkg.build("ARCHModels")'
-      - run: |
-          julia --project=docs -e '
-            using Documenter: doctest
-            using ARCHModels
-            doctest(ARCHModels)' # change MYPACKAGE to the name of your package
-      - run: julia --project=docs docs/make.jl
+      - run: julia --depwarn=no --project=docs/ docs/make.jl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
