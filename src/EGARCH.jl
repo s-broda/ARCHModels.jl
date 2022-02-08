@@ -17,7 +17,7 @@ Construct an EGARCH specification with the given parameters.
 # Example:
 ```jldoctest
 julia> EGARCH{1, 1, 1}([-0.1, .1, .9, .04])
-EGARCH{1,1,1} specification.
+EGARCH{1, 1, 1} specification.
 
 ─────────────────────────────────
                 ω   γ₁   β₁    α₁

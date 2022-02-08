@@ -16,7 +16,7 @@ Construct a TGARCH specification with the given parameters.
 # Example:
 ```jldoctest
 julia> TGARCH{1, 1, 1}([1., .04, .9, .01])
-TGARCH{1,1,1} specification.
+TGARCH{1, 1, 1} specification.
 
 ─────────────────────────────────
                ω    γ₁   β₁    α₁
@@ -37,7 +37,7 @@ Construct a GARCH specification with the given parameters.
 # Example:
 ```jldoctest
 julia> GARCH{2, 1}([1., .3, .4, .05 ])
-TGARCH{0,2,1} specification.
+GARCH{2, 1} specification.
 
 ────────────────────────────────
                ω   β₁   β₂    α₁
@@ -59,7 +59,7 @@ Construct an ARCH specification with the given parameters.
 # Example:
 ```jldoctest
 julia> ARCH{2}([1., .3, .4])
-TGARCH{0,0,2} specification.
+TGARCH{0, 0, 2} specification.
 
 ──────────────────────────
                ω   α₁   α₂

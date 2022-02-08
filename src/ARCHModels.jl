@@ -12,7 +12,7 @@ The ARCHModels package for Julia. For documentation, see https://s-broda.github.
 module ARCHModels
 using Reexport
 @reexport using StatsBase
-using StatsFuns: normcdf, normccdf, normlogpdf, norminvcdf, log2π, logtwo, RFunctions.tdistrand, RFunctions.tdistinvcdf, RFunctions.gammarand, RFunctions.gammainvcdf
+using StatsFuns: normcdf, normccdf, normlogpdf, norminvcdf, log2π, logtwo, RFunctions.tdistinvcdf, RFunctions.gammainvcdf
 using GLM: modelmatrix, response, LinearModel
 using SpecialFunctions: beta, gamma, digamma #, lgamma
 using MuladdMacro
@@ -41,7 +41,7 @@ using Statistics: cov
 import Distributions: quantile
 import Base: show, showerror, eltype
 import Statistics: mean
-import Random: rand, AbstractRNG
+import Random: rand, AbstractRNG, GLOBAL_RNG
 import HypothesisTests: HypothesisTest, testname, population_param_of_interest, default_tail, show_params, pvalue
 import StatsBase: StatisticalModel, stderror, loglikelihood, nobs, fit, fit!, confint, aic,
                   bic, aicc, dof, coef, coefnames, coeftable, CoefTable,

@@ -1,7 +1,6 @@
 ################################################################################
 #general functions
-# work around https://github.com/JuliaStats/Distributions.jl/issues/846
-rand(::AbstractRNG, sd::StandardizedDistribution) where {T} = rand(sd)
+#rand(sd::StandardizedDistribution) = rand(GLOBAL_RNG, sd)
 
 #loop invariant part of the kernel
 @inline kernelinvariants(::Type{<:StandardizedDistribution}, coefs) = ()
@@ -16,7 +15,7 @@ struct Standardized{D<:ContinuousUnivariateDistribution, T<:AbstractFloat}  <: S
 end
 Standardized{D}(coefs::T...) where {D, T} = Standardized{D, T}([coefs...])
 Standardized{D}(coefs::Vector{T}) where {D, T} = Standardized{D, T}([coefs...])
-rand(s::Standardized{D, T}) where {D, T} = (rand(D(s.coefs...))-mean(D(s.coefs...)))./std(D(s.coefs...))
+rand(rng::AbstractRNG, s::Standardized{D, T}) where {D, T} = (rand(rng, D(s.coefs...))-mean(D(s.coefs...)))./std(D(s.coefs...))
 @inline logkernel(S::Type{<:Standardized{D, T1} where T1}, x, coefs::Vector{T}) where {D, T} = (try sig=std(D(coefs...)); logpdf(D(coefs...), mean(D(coefs...)) + sig*x)+log(sig); catch; T(-Inf); end)
 @inline logconst(S::Type{<:Standardized{D, T1} where T1}, coefs::Vector{T}) where {D, T} = zero(T)
 nparams(S::Type{<:Standardized{D, T} where T}) where {D} = length(fieldnames(D))
@@ -103,7 +102,7 @@ Construct an instance of StdNormal.
 StdNormal(T::Type{<:AbstractFloat}=Float64) = StdNormal(T[])
 StdNormal{T}() where {T<:AbstractFloat} = StdNormal(T[])
 StdNormal(v::Vector{T}) where {T} = StdNormal{T}(v)
-rand(::StdNormal{T}) where {T} = randn(T)
+rand(rng::AbstractRNG, ::StdNormal{T}) where {T} = randn(rng, T)
 
 @inline logkernel(::Type{<:StdNormal}, x, coefs) = -abs2(x)/2
 @inline logconst(::Type{<:StdNormal}, coefs::Vector{T}) where {T} =  -T(log2π)/2
@@ -150,7 +149,7 @@ as a scalar or vector.
 StdT(ν) = StdT([ν])
 StdT(ν::Integer) = StdT(float(ν))
 StdT(ν::Vector{T}) where {T} = StdT{T}(ν)
-(rand(d::StdT{T})::T) where {T}  =  (ν=d.coefs[1]; tdistrand(ν)*sqrt((ν-2)/ν))
+(rand(rng::AbstractRNG, d::StdT{T})::T) where {T}  =  (ν=d.coefs[1]; rand(rng, TDist(ν))*sqrt((ν-2)/ν))
 @inline kernelinvariants(::Type{<:StdT}, coefs) = (1/ (coefs[1]-2),)
 @inline logkernel(::Type{<:StdT}, x, coefs, iv) = (-(coefs[1] + 1) / 2) * log1p(abs2(x) *iv)
 @inline logconst(::Type{<:StdT}, coefs)  = (lgamma((coefs[1] + 1) / 2)
@@ -214,7 +213,7 @@ StdGED(p) = StdGED([p])
 StdGED(p::Integer) = StdGED(float(p))
 StdGED(v::Vector{T}) where {T} = StdGED{T}(v)
 
-(rand(d::StdGED{T})::T) where {T} = (p = d.coefs[1]; ip=1/p;  (2*rand()-1)*gammarand(1+ip, 1)^ip * sqrt(gamma(ip) / gamma(3*ip)) )
+(rand(rng::AbstractRNG, d::StdGED{T})::T) where {T} = (p = d.coefs[1]; ip=1/p;  (2*rand(rng)-1)*rand(rng, Gamma(1+ip, 1))^ip * sqrt(gamma(ip) / gamma(3*ip)) )
 
 
 @inline logconst(::Type{<:StdGED}, coefs)  = (p = coefs[1]; ip = 1/p; lgamma(3*ip)/2 - lgamma(ip)*3/2 - logtwo  - log(ip))
@@ -279,7 +278,7 @@ as scalars or vectors.
 StdSkewT(ν,λ) = StdSkewT([float(ν), float(λ)])
 StdSkewT(coefs::Vector{T}) where {T} = StdSkewT{T}(coefs)
 
-(rand(d::StdSkewT{T}) where {T} = (quantile(d, rand())))
+(rand(rng::AbstractRNG, d::StdSkewT{T}) where {T} = (quantile(d, rand(rng))))
 
 @inline a(d::Type{<:StdSkewT}, coefs) =  (ν=coefs[1];λ=coefs[2]; 4λ*c(d,coefs) * ((ν-2)/(ν-1)))
 @inline b(d::Type{<:StdSkewT}, coefs) =  (ν=coefs[1];λ=coefs[2]; sqrt(1+3λ^2-a(d,coefs)^2))

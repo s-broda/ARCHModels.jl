@@ -79,30 +79,30 @@ Fit the uni- or multivariate ARCHModel specified by `am` and return the result i
 function fit(am::ARCHModel; kwargs...) end
 
 """
-    simulate!(am::ARCHModel; warmup=100)
+    simulate!(am::ARCHModel; warmup=100, rng=Random.GLOBAL_RNG)
 Simulate an ARCHModel, modifying `am` in place.
 """
 function simulate! end
 
 """
-    simulate(am::ARCHModel; warmup=100)
-	simulate(am::ARCHModel, T; warmup=100)
-    simulate(spec::UnivariateVolatilitySpec, T; warmup=100, dist=StdNormal(), meanspec=NoIntercept())
+    simulate(am::ARCHModel; warmup=100, rng=Random.GLOBAL_RNG)
+	simulate(am::ARCHModel, T; warmup=100, rng=Random.GLOBAL_RNG)
+    simulate(spec::UnivariateVolatilitySpec, T; warmup=100, dist=StdNormal(), meanspec=NoIntercept(), rng=Random.GLOBAL_RNG)
 Simulate a length-T time series from a UnivariateARCHModel.
-	simulate(spec::MultivariateVolatilitySpec, T; warmup=100, dist=MultivariateStdNormal(), meanspec=[NoIntercept() for i = 1:d])
+	simulate(spec::MultivariateVolatilitySpec, T; warmup=100, dist=MultivariateStdNormal(), meanspec=[NoIntercept() for i = 1:d], rng=Random.GLOBAL_RNG)
 Simulate a length-T time series from a MultivariateARCHModel.
 """
 function simulate end
 
-function simulate!(am::ARCHModel; warmup=100)
+function simulate!(am::ARCHModel; warmup=100, rng=GLOBAL_RNG)
 	am.fitted = false
-    _simulate!(am.data, am.spec; warmup=warmup, dist=am.dist, meanspec=am.meanspec)
+    _simulate!(am.data, am.spec; warmup=warmup, dist=am.dist, meanspec=am.meanspec, rng=rng)
     am
 end
 
-function simulate(am::ARCHModel, nobs; warmup=100)
+function simulate(am::ARCHModel, nobs; warmup=100, rng=GLOBAL_RNG)
 	am2 = deepcopy(am)
-	simulate(am2.spec, nobs; warmup=warmup, dist=am2.dist, meanspec=am2.meanspec)
+	simulate(am2.spec, nobs; warmup=warmup, dist=am2.dist, meanspec=am2.meanspec, rng)
 end
 
-simulate(am::ARCHModel; warmup=100) = simulate(am, size(am.data)[1]; warmup=warmup)
+simulate(am::ARCHModel; warmup=100, rng=GLOBAL_RNG) = simulate(am, size(am.data)[1]; warmup=warmup, rng=rng)

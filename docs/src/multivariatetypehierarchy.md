@@ -35,7 +35,7 @@ It is available as `DCC{p, q}`. The constructor takes as inputs ``\bar{Q}``, a v
 
 ```jldoctest
 julia> DCC{1, 1}([1. .5; .5 1.], [.9, .05], [GARCH{1, 1}([1., .9, .05]) for _ in 1:2])
-DCC{1, 1, TGARCH{0,1,1}} specification.
+DCC{1, 1, GARCH{1, 1}} specification.
 
 ──────────────────────
               β₁    α₁
@@ -57,7 +57,7 @@ As such, the constructor has the exact same signature, except that the DCC param
 
 ```jldoctest
 julia> CCC([1. .5; .5 1.], Float64[], [GARCH{1, 1}([1., .9, .05]) for _ in 1:2])
-DCC{0, 0, TGARCH{0,1,1}} specification.
+DCC{0, 0, GARCH{1, 1}} specification.
 
 No estimable parameters.
 ```

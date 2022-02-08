@@ -120,10 +120,11 @@ end
 function simulate(spec::MultivariateVolatilitySpec{T2, d}, nobs;
                   warmup=100,
                   dist::MultivariateStandardizedDistribution{T2}=MultivariateStdNormal{T2, d}(),
-                  meanspec::Vector{<:MeanSpec{T2}}=[NoIntercept{T2}() for i = 1:d]
+                  meanspec::Vector{<:MeanSpec{T2}}=[NoIntercept{T2}() for i = 1:d],
+				  rng=GLOBAL_RNG
                   ) where {T2<:AbstractFloat, d}
     data = zeros(T2, nobs, d)
-	_simulate!(data, spec; warmup=warmup, dist=dist, meanspec=meanspec)
+	_simulate!(data, spec; warmup=warmup, dist=dist, meanspec=meanspec, rng=rng)
 	return MultivariateARCHModel(spec, data; dist=dist, meanspec=meanspec, fitted=false)
 end
 
@@ -134,7 +135,8 @@ end
 function _simulate!(data::Matrix{T2}, spec::MultivariateVolatilitySpec{T2, d};
                   warmup=100,
                   dist::MultivariateStandardizedDistribution{T2}=MultivariateStdNormal{T2, d}(),
-                  meanspec::Vector{<:MeanSpec{T2}}=[NoIntercept{T2}() for i = 1:d]
+                  meanspec::Vector{<:MeanSpec{T2}}=[NoIntercept{T2}() for i = 1:d],
+				  rng=GLOBAL_RNG
                   ) where {T2<:AbstractFloat, d}
 	@assert warmup >= 0
 
@@ -173,7 +175,7 @@ function _simulate!(data::Matrix{T2}, spec::MultivariateVolatilitySpec{T2, d};
 				push!(Rt, R)
             end
 
-			z = rand(dist)
+			z = rand(rng, dist)
 			push!(zt, cholesky(Rt[end], check=false).L * z)
 			push!(at, sqrt.(diag(Ht[end])) .* zt[end])
 			simdata[t, :] .= themean + at[end]
