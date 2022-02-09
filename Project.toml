@@ -1,6 +1,6 @@
 name = "ARCHModels"
 uuid = "6d3278bc-c23a-5105-85e5-0d57d2bf684f"
-authors = ["Simon Broda <s.a.broda@uva.nl> and contributors."]
+authors = ["Simon Broda <simon.broda@alumni.ethz.ch> and contributors."]
 version = "2.0.1"
 
 [deps]
