@@ -628,5 +628,7 @@ function modname(::Type{S}) where S<:Union{UnivariateVolatilitySpec, MeanSpec}
     s = "$(S)"
 	lastcomma = findlast(isequal(','), s)
     lastcomma == nothing || (s = s[1:lastcomma-1] * '}')
+	firstdot = findfirst(isequal('.'), s)
+	firstdot == nothing || (s = s[firstdot+1:end])
 	s
 end
