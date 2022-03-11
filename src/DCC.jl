@@ -267,7 +267,7 @@ function stderror(am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, M
         m = UnivariateARCHModel(am.spec.univariatespecs[i], am.data[:, i]; meanspec=am.meanspec[i], fitted=true)
         resids[:, i] = residuals(m)
         w=1+(i-1)*nunivariateparams:1+i*nunivariateparams-1
-        Htt[w, w] .= -informationmatrix(m, expected=false)
+        Htt[w, w] .= -informationmatrix(m, expected=false)/nobs(m) # is the /nobs correct here?
         dt[:, w] = scores(m)
         stderrors[r .+ w] = stderror(m)
     end

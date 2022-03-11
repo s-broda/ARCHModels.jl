@@ -39,7 +39,7 @@ score(am::ARCHModel) = sum(scores(am), dims=1)
 
 function vcov(am::ARCHModel)
 	S = scores(am)
-	V = S'S/nobs(am)
+	V = S'S
     J = informationmatrix(am; expected=false) #Note: B&W use expected information.
     Ji = try
         inv(J)
@@ -51,7 +51,7 @@ function vcov(am::ARCHModel)
             rethrow(e)
         end
     end
-    v = Ji*V*Ji/nobs(am) #Huber sandwich
+    v = Ji*V*Ji #Huber sandwich
     all(diag(v).>0) || @warn "non-positive variance encountered; vcov matrix is inaccurate."
     v
 end

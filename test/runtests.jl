@@ -126,7 +126,7 @@ end
                                       0.0383691  0.0636955],
                        rtol=1e-4)
                        )
-    @test all(isapprox(informationmatrix(am; expected=false), [ 0.125032   2.33319   2.07012;
+    @test all(isapprox(informationmatrix(am; expected=false)/T, [ 0.125032   2.33319   2.07012;
                                                                 2.33319   44.6399   40.8553;
                                                                 2.07012   40.8553   41.2192],
                        rtol=1e-4)
