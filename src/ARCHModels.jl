@@ -29,7 +29,6 @@ using ForwardDiff: Dual, value, partials
 
 using Optim
 using ForwardDiff
-using FiniteDiff
 using Distributions
 using HypothesisTests
 using Roots

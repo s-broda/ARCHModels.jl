@@ -359,7 +359,7 @@ end
 function informationmatrix(am::UnivariateARCHModel; expected::Bool=true)
 	expected && error("expected informationmatrix is not implemented for UnivariateARCHModel. Use expected=false.")
 	g = x -> sum(logliks(typeof(am.spec), typeof(am.dist), am.meanspec, am.data, x))
-	H = FiniteDiff.finite_difference_hessian(g, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
+	H = ForwardDiff.hessian(g, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
 	J = -H
 end
 
