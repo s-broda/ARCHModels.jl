@@ -101,7 +101,6 @@ end
     ARMA{p, q, T} <: MeanSpec{T}
 An ARMA(p, q) mean specification.
 """
-
 struct ARMA{p, q, T} <: MeanSpec{T}
     coefs::Vector{T}
     function ARMA{p, q, T}(coefs::Vector) where {p, q, T}
@@ -109,6 +108,29 @@ struct ARMA{p, q, T} <: MeanSpec{T}
         new{p, q, T}(coefs)
     end
 end
+
+"""
+    fit(t::Type{<:ARMA}, data; kwargs...) -> UnivariateARCHModel
+
+Fit an `ARMA{p, q}` model to `data`.
+"""
+fit(t::Type{<:ARMA}, data; kwargs...) = fit(ARCH{0}, data; meanspec=t, kwargs...)
+
+"""
+    selectmodel(::Type{<:ARMA}, data; kwargs...)  -> UnivariateARCHModel
+
+Fit a number of `ARMA{p, q}` models to `data` and return that which
+minimizes the [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion).
+
+# Keyword arguments:
+- `dist=StdNormal`: the error distribution.
+- `minlags=1`: minimum lag length to try in each parameter of `VS`.
+- `maxlags=3`: maximum lag length to try in each parameter of `VS`.
+- `criterion=bic`: function that takes a `UnivariateARCHModel` and returns the criterion to minimize.
+- `show_trace=false`: print `criterion` to screen for each estimated model.
+- `algorithm=BFGS(), autodiff=:forward, kwargs...`: passed on to the optimizer.
+"""
+selectmodel(t::Type{<:ARMA}, data; kwargs...) = selectmodel(ARCH{0}, data; meanspec=t, kwargs...)
 
 """
     ARMA{p, q}(coefs::Vector)

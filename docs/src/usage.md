@@ -324,7 +324,7 @@ Volatility parameters:
 ω  0.220848  0.0118061  18.7063    <1e-77
 ─────────────────────────────────────────
 ```
-In this case, an ARMA(1, 1) specification was selected.
+In this case, an ARMA(1, 1) specification was selected. As a convenience, the above can equivalently achieved using `selectmodel(ARMA, BG96)`.
 
 As a final example, a construction like the following can be used to automatically select not just the lag length, but also the class of GARCH model and the error distribution:
 
