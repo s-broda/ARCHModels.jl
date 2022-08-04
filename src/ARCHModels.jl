@@ -36,6 +36,7 @@ using LinearAlgebra
 using DataStructures: CircularBuffer
 using DelimitedFiles
 using Statistics: cov
+using SnoopPrecompile
 
 import Distributions: quantile
 import Base: show, showerror, eltype
@@ -51,7 +52,8 @@ export ARCHModel, UnivariateARCHModel, UnivariateVolatilitySpec, StandardizedDis
        NoIntercept, ARMA, AR, MA, BG96, volatilities, mean, quantile, VaRs, pvalue, means, VolatilitySpec,
 	   MultivariateVolatilitySpec, MultivariateStandardizedDistribution, MultivariateARCHModel, MultivariateStdNormal,
 	   EGARCH, ARCH, GARCH, TGARCH, ARCHLMTest, DQTest,
-	   DOW29, DCC, CCC, covariances, correlations
+	   DOW29, DCC, CCC, covariances, correlations,
+	   myfit
 
 
 include("utils.jl")
@@ -65,4 +67,9 @@ include("tests.jl")
 include("multivariatearchmodel.jl")
 include("multivariatestandardizeddistributions.jl")
 include("DCC.jl")
+
+@precompile_all_calls begin
+	m = myfit(GARCH{1, 1}, BG96)
+	show(IOBuffer(), m)
+end
 end#module

@@ -41,6 +41,9 @@ mutable struct UnivariateARCHModel{T<:AbstractFloat,
     end
 end
 
+function (m::UnivariateARCHModel)(x)
+	-loglik(typeof(m.spec), typeof(m.dist), m.meanspec, m.data, x)
+end
 mutable struct UnivariateSubsetARCHModel{T<:AbstractFloat,
                  				   VS<:UnivariateVolatilitySpec,
                  		  	  	   SD<:StandardizedDistribution{T},
@@ -368,6 +371,29 @@ function scores(am::UnivariateARCHModel)
 	S = ForwardDiff.jacobian(f, vcat(am.spec.coefs, am.dist.coefs, am.meanspec.coefs))
 end
 
+function myfit(::Type{VS}, data::Vector{T}; dist::Type{SD}=StdNormal{T},
+             meanspec::Union{MS, Type{MS}}=Intercept{T}(T[0]), algorithm=BFGS(),
+             autodiff=:forward
+             ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
+                      MS<:MeanSpec, T<:AbstractFloat
+                      }
+	#can't use dispatch for this b/c meanspec is a kwarg
+	meanspec isa Type ? ms = meanspec(zeros(T, nparams(meanspec))) : ms = deepcopy(meanspec)
+    garchcoefs = startingvals(VS, data)
+    distcoefs = startingvals(SD, data)
+    meancoefs = startingvals(ms, data)
+	m = UnivariateARCHModel(VS(garchcoefs), data; dist=SD(distcoefs), meanspec=ms, fitted=true)
+	allcoefs = vcat(garchcoefs, distcoefs, meancoefs)
+	res = optimize(m, allcoefs, algorithm; autodiff=autodiff)
+	allcoefs .= Optim.minimizer(res)
+	ng = nparams(VS)
+    ns = nparams(SD)
+    nm = nparams(typeof(meanspec))
+	m.spec.coefs .= allcoefs[1:ng]
+    m.dist.coefs .= allcoefs[ng+1:ng+ns]
+    m.meanspec.coefs .= allcoefs[ng+ns+1:ng+ns+nm]
+	return m
+end
 
 function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
               meancoefs::Vector{T}, ::Type{VS}, ::Type{SD}, meanspec::MS,
