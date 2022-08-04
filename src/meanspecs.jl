@@ -171,7 +171,7 @@ function constraints(::Type{<:ARMA{p, q}}, ::Type{T})  where {T<:AbstractFloat, 
     return lower, upper
 end
 
-function startingvals(::ARMA{p, q, T}, data::Vector{T})  where {p, q, T<:AbstractFloat}
+function startingvals(mod::ARMA{p, q, T}, data::Vector{T})  where {p, q, T<:AbstractFloat}
     N = length(data)
     X = Matrix{T}(undef, N-p, p+1)
     X[:, 1] .= T(1)
@@ -179,6 +179,9 @@ function startingvals(::ARMA{p, q, T}, data::Vector{T})  where {p, q, T<:Abstrac
         X[:, i+1] .= data[p-i+1:N-i]
     end
     phi = X \ data[p+1:end]
+    lower, upper = constraints(ARMA{p, q}, T)
+    phi[2:end] .= max.(phi[2:end], lower[2:p+1]*.99)
+    phi[2:end] .= min.(phi[2:end], upper[2:p+1]*.99)
     return T[phi..., zeros(T, q)...]
 end
 
