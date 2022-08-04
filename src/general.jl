@@ -44,7 +44,7 @@ function vcov(am::ARCHModel)
     Ji = try
         inv(J)
     catch e
-        if e isa LinearAlgebra.SingularException
+        if e in [LinearAlgebra.SingularException, LinearAlgebra.LAPACKException(1)]
             @warn "Fisher information is singular; vcov matrix is inaccurate."
             pinv(J)
         else
