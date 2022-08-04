@@ -291,7 +291,7 @@ end
                          ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
                                   MS<:MeanSpec, T1<:AbstractFloat, T2, T3
                                   }
-    garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, meanspec)	
+    garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, meanspec)
 	lowergarch, uppergarch = constraints(VS, T1)
 	lowerdist, upperdist = constraints(SD, T1)
     lowermean, uppermean = constraints(MS, T1)
@@ -513,7 +513,7 @@ minimizes the [BIC](https://en.wikipedia.org/wiki/Bayesian_information_criterion
 - `algorithm=BFGS(), autodiff=:forward, kwargs...`: passed on to the optimizer.
 
 # Example
-```jldoctest
+```
 julia> selectmodel(EGARCH, BG96)
 
 EGARCH{1, 1, 2} model with Gaussian errors, T=1974.
