@@ -287,21 +287,22 @@ end
 #dimensional array of the right type.
 @inline function loglik!(ht::AbstractVector{T2}, lht::AbstractVector{T2},
                          zt::AbstractVector{T2}, at::AbstractVector{T2}, vs::Type{VS}, ::Type{SD}, meanspec::MS,
-                         data::Vector{T1}, coefs::AbstractVector{T3}, subsetmask=trues(nparams(vs))
+                         data::Vector{T1}, coefs::AbstractVector{T3}, subsetmask=trues(nparams(vs)), returnearly=false
                          ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
                                   MS<:MeanSpec, T1<:AbstractFloat, T2, T3
                                   }
-    garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, meanspec)
+    garchcoefs, distcoefs, meancoefs = splitcoefs(coefs, VS, SD, meanspec)	
 	lowergarch, uppergarch = constraints(VS, T1)
 	lowerdist, upperdist = constraints(SD, T1)
     lowermean, uppermean = constraints(MS, T1)
-    all(lowerdist.<distcoefs.<upperdist) && all(lowermean.<meancoefs.<uppermean) && all(lowergarch[subsetmask].<garchcoefs[subsetmask].<uppergarch[subsetmask]) || return T2(-Inf)
+	all_inbounds = all(lowerdist.<distcoefs.<upperdist) && all(lowermean.<meancoefs.<uppermean) && all(lowergarch[subsetmask].<garchcoefs[subsetmask].<uppergarch[subsetmask])
+    returnearly && !all_inbounds && return T2(-Inf)
 	garchcoefs .*= subsetmask
     T = length(data)
 	r1 = presample(VS)
 	r2 = presample(meanspec)
     r = max(r1, r2)
-    T > r || error("Sample too small.")
+    T - r > 0 || error("Sample too small.")
 	ki = kernelinvariants(SD, distcoefs)
     @inbounds begin
         h0 = var(data) # could be moved outside
@@ -329,10 +330,11 @@ end
         end#for
     end#inbounds
     LL += T*logconst(SD, distcoefs)
+	return all_inbounds ? LL : T2(-Inf)
 end#function
 
 function loglik(spec::Type{VS}, dist::Type{SD}, meanspec::MS,
-                   data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}, subsetmask=trues(nparams(spec))
+                   data::Vector{<:AbstractFloat}, coefs::AbstractVector{T2}, subsetmask=trues(nparams(spec)), returnearly=false
                    ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
                             MS<:MeanSpec, T2
                             }
@@ -342,7 +344,7 @@ function loglik(spec::Type{VS}, dist::Type{SD}, meanspec::MS,
     lht = CircularBuffer{T2}(r)
     zt = CircularBuffer{T2}(r)
 	at = CircularBuffer{T2}(r)
-    loglik!(ht, lht, zt, at, spec, dist, meanspec, data, coefs, subsetmask)
+    loglik!(ht, lht, zt, at, spec, dist, meanspec, data, coefs, subsetmask, returnearly)
 
 end
 
@@ -375,7 +377,7 @@ function _fit!(garchcoefs::Vector{T}, distcoefs::Vector{T},
               ) where {VS<:UnivariateVolatilitySpec, SD<:StandardizedDistribution,
                        MS<:MeanSpec, T<:AbstractFloat
                        }
-    obj = x -> -loglik(VS, SD, meanspec, data, x)
+    obj = x -> -loglik(VS, SD, meanspec, data, x, trues(length(garchcoefs)), true)
     coefs = vcat(garchcoefs, distcoefs, meancoefs)
     res = optimize(obj, coefs, algorithm; autodiff=autodiff, kwargs...)
     coefs .= Optim.minimizer(res)
@@ -458,7 +460,7 @@ function fitsubset(::Type{VS}, data::Vector{T}, maxlags::Int, subset::Tuple; dis
 	distcoefs = startingvals(SD, data)
     meancoefs = startingvals(ms, data)
 
-	obj = x -> -loglik(VS_large, SD, ms, data, x, mask)
+	obj = x -> -loglik(VS_large, SD, ms, data, x, mask, true)
     coefs = vcat(garchcoefs, distcoefs, meancoefs)
     res = optimize(obj, coefs, algorithm; autodiff=autodiff, kwargs...)
     coefs .= Optim.minimizer(res)
