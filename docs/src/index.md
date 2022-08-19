@@ -25,7 +25,7 @@ As for error distributions, the user may choose among the following:
   * Standardized Hansen Skewed ``t``
   * Standardized Generalized Error Distribution
 
-For instance, a GARCH(1,1) model with a conditional mean from an AR(1) model with normally distributed errors can be esimated by
+For instance, a GARCH(1,1) model with a conditional mean from an AR(1) model with normally distributed errors can be estimated by
 `fit(GARCH{1,1}, data; meanspec=AR{1}, dist=StdNormal)`.
 
 In addition, the following multivariate models are supported:
