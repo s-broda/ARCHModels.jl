@@ -457,6 +457,6 @@ end
 @testset "fixes" begin
     X = [-49.78749999996362, 2951.7375000000347, 1496.437499999923, 973.8375, 2440.662500000128, 2578.062500000019, 1064.42500000032, 3378.0625000002415, -1971.5000000001048, 4373.899999999894]
     am = fit(GARCH{2, 2}, X; meanspec = ARMA{2, 2});
-    @test length(volatilities(am)) == 10
-    @test loglikelihood(am) ≈ -86.01774
+    @test length(volatilities(am)) == 10    
+    @test isapprox(loglikelihood(am), -86.01774, rtol=.001)
 end
