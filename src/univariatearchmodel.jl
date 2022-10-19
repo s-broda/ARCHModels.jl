@@ -230,9 +230,9 @@ function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility, horizon=1
 	end
     data = copy(am.data)
 	for current_horizon = (1 : horizon)
-		t = length(data) + current_horizon
+		t = length(am.data) + current_horizon
 		if what == :return || what == :VaR
-			themean = mean(at, ht, lht, am.data, am.meanspec, am.meanspec.coefs, t)
+			themean = mean(at, ht, lht, data, am.meanspec, am.meanspec.coefs, t)
 		end
 		update!(ht, lht, zt, at, VS, am.spec.coefs, current_horizon)
 		push!(zt, 0.)
