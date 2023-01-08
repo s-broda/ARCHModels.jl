@@ -16,7 +16,7 @@ using StatsFuns: normcdf, normccdf, normlogpdf, norminvcdf, log2π, logtwo, RFun
 using GLM: modelmatrix, response, LinearModel
 using SpecialFunctions: beta, gamma, digamma #, lgamma
 using MuladdMacro
-
+using SnoopPrecompile
 # work around https://github.com/JuliaMath/SpecialFunctions.jl/issues/186
 # until https://github.com/JuliaDiff/ForwardDiff.jl/pull/419/ is merged
 # remove test in runtests.jl as well when this gets fixed
@@ -65,4 +65,33 @@ include("tests.jl")
 include("multivariatearchmodel.jl")
 include("multivariatestandardizeddistributions.jl")
 include("DCC.jl")
-end#module
+@static if VERSION >= v"1.9"
+	@precompile_all_calls begin
+		io = IOBuffer()
+		se = stderr
+		redirect_stderr()
+		# autocor(BG96.^2, 1:4, demean=true)
+		m = selectmodel(TGARCH, BG96)
+		show(io, m)
+		m = fit(GARCH{1, 1}, BG96; dist=StdT)
+		show(io, m)
+		m = fit(GARCH{1, 1}, BG96; dist=StdSkewT)
+		show(io, m)
+		m = fit(GARCH{1, 1}, BG96; dist=StdGED)
+		show(io, m)
+		ARCHLMTest(m, 4)
+		vars = VaRs(m, 0.05)
+		predict(m, :volatility; level=0.01)
+		t = DQTest([1., 2.], [.1, .1], .01)
+		show(io, t)
+		m = selectmodel(EGARCH, BG96)
+		show(io, m)
+		m = selectmodel(ARMA, BG96)
+		show(io, m)
+		m = fit(DCC, DOW29)
+		show(io, m)
+		simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=500, meanspec=Intercept(5.), dist=StdT(3.))
+		redirect_stderr(se)
+	end # precompile block
+end # if
+end # module

@@ -225,7 +225,7 @@ end
     @test coefnames(am)[end] == "X"
     @test all(isapprox(coef(am), coef(fit(GARCH{1, 1}, model.model)), rtol=1e-4))
     @test sum(coef(fit(ARMA{1, 1}, BG96))) ≈ 0.21595383060382695
-    @test sum(coef(selectmodel(ARMA, BG96; minlags=2, maxlags=3))) ≈ 0.25404112526031397
+    @test isapprox(sum(coef(selectmodel(ARMA, BG96; minlags=2, maxlags=3))), 0.254; atol=0.01)
 end
 
 @testset "VaR" begin

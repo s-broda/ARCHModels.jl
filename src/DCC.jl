@@ -77,7 +77,7 @@ Calculating standard errors is expensive. To show them, use
 `show(IOContext(stdout, :se=>true), <model>)`
 ```
 """
-function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale, algorithm=BFGS(), autodiff=:forward, dist::Type{<:MultivariateStandardizedDistribution}=MultivariateStdNormal{T}) where {p, q, VS<: UnivariateVolatilitySpec, T, d}
+function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept{T}, method=:largescale, algorithm=BFGS(), autodiff=:forward, dist::Type{<:MultivariateStandardizedDistribution}=MultivariateStdNormal{T}) where {p, q, VS<: UnivariateVolatilitySpec, T}
     n, dim = size(data)
     resids = similar(data)
     if n<12 && method == :largescale
@@ -347,7 +347,7 @@ end
 #     LL2step(coef[1:2], R, resids, p, q)
 # end
 
-function LL2step_pairs_full(DCCspec::Type{<:DCC{p, q}}, VS::Type{<:UnivariateVolatilitySpec}, meanspec, coef::Array{T}, R, data) where {T, T2, p, q}
+function LL2step_pairs_full(DCCspec::Type{<:DCC{p, q}}, VS::Type{<:UnivariateVolatilitySpec}, meanspec, coef::Array{T}, R, data) where {T, p, q}
     dcccoef = coef[1:p+q]
     garchcoef = coef[p+q+1:end]
     n, dims = size(data)
