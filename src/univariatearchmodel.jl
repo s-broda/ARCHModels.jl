@@ -213,7 +213,7 @@ level can be controlled with the keyword argument `level`.
 
 Not all prediction targets / volatility specifications support multi-step predictions.
 """
-function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility, horizon=1; level=0.01) where {T, VS, SD, MS}
+function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility, horizon=1; level=0.01) where {T, VS, SD}
 	ht = volatilities(am).^2
 	lht = log.(ht)
 	zt = residuals(am)
