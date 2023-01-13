@@ -557,9 +557,8 @@ function selectmodel(::Type{VS}, data::Vector{T};
 		res[ind] = fitsubset(VS, data, maxlags, tup; dist=dist, meanspec=MSi,
                        algorithm=algorithm, autodiff=autodiff, kwargs...)
         if show_trace
-            lock(mylock)
-			VSi = VS{tup...}
-            Core.print(modname(VSi))
+            lock(mylock)			
+            Core.print(modname(typeof(res[ind].spec)))
 			ndims2>0 && Core.print("-", modname(MSi))
 			Core.println(" model has ",
                               uppercase(split("$criterion", ".")[end]), " ",
