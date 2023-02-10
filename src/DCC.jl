@@ -197,7 +197,7 @@ function LL2step_pairs(DCCspec::Type{<:DCC{p, q}}, coef::Array{T}, R, resids::Ar
     n, dims = size(resids)
     len = doall ? n : 1
     LL = zeros(T, len, dims)
-    #Threads.@threads
+    #Threads.@threads :static
     for k = 1:dims-1
         thell = ll(DCCspec, coef, R[k, k+1], resids[:, k:k+1], doall)
         if doall
@@ -241,7 +241,7 @@ end
         r2 = rt[t]^2
         d = 1 - r2
 
-        L = (((e1*e1 + e2*e2) * r2 - 2 * rt[t] *e1 * e2) / d + log(d)) / 2
+        L = (((e1*e1 + e2*e2) * r2 - 2 * rt[t] *e1 * e2) / d + log(d^2)/2) / 2
 
         if doall
             LL[t] = -L
