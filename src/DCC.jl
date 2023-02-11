@@ -88,10 +88,10 @@ function fit(DCCspec::Type{<:DCC{p, q, VS}}, data::Matrix{T}; meanspec=Intercept
     resids[:, 1] = residuals(m)
     univariatespecs = Vector{typeof(m)}(undef, dim)
     univariatespecs[1] = m
-    Threads.@threads for i = 2:dim
-        m = fit(VS, data[:, i], meanspec=meanspec)
-        univariatespecs[i] = m
-        resids[:, i] = residuals(m)
+    Threads.@threads :static for i = 2:dim
+        curmod = fit(VS, data[:, i], meanspec=meanspec)
+        univariatespecs[i] = curmod
+        resids[:, i] = residuals(curmod)
     end
     method == :largescale ? Σ = analytical_shrinkage(resids) : Σ = cov(resids)
     R = to_corr(Σ)
