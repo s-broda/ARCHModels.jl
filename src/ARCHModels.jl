@@ -16,7 +16,7 @@ using StatsFuns: normcdf, normccdf, normlogpdf, norminvcdf, log2π, logtwo, RFun
 using GLM: modelmatrix, response, LinearModel
 using SpecialFunctions: beta, gamma, digamma #, lgamma
 using MuladdMacro
-using SnoopPrecompile
+using PrecompileTools
 # work around https://github.com/JuliaMath/SpecialFunctions.jl/issues/186
 # until https://github.com/JuliaDiff/ForwardDiff.jl/pull/419/ is merged
 # remove test in runtests.jl as well when this gets fixed
@@ -66,7 +66,7 @@ include("multivariatearchmodel.jl")
 include("multivariatestandardizeddistributions.jl")
 include("DCC.jl")
 @static if VERSION >= v"1.9"
-	@precompile_all_calls begin
+	@compile_workload begin
 		io = IOBuffer()
 		se = stderr
 		redirect_stderr()
