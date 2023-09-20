@@ -5,8 +5,7 @@ DocMeta.setdocmeta!(ARCHModels, :DocTestSetup, :(using ARCHModels; using Random;
 makedocs(modules=[ARCHModels],
         sitename="ARCHModels.jl",
         format = Documenter.HTML(assets=String[indigo]),
-        doctest=true,
-        strict=true,
+        doctest=true,        
         pages = ["Home" => "index.md",
                  "introduction.md",
                  "Type Hierarchy" => Any[
