@@ -17,7 +17,7 @@ in the Pkg REPL mode (which is entered by pressing `]` at the prompt).
 The extensive documentation is available [here](https://s-broda.github.io/ARCHModels.jl/stable/).
 
 # Citation
-If you use this package in your research, please consider citing [our paper](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3551503).
+If you use this package in your research, please consider citing [our paper](https://doi.org/10.18637/jss.v107.i05).
 
 # Acknowledgements
 
