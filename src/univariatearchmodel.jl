@@ -557,8 +557,8 @@ function selectmodel(::Type{VS}, data::Vector{T};
 		res[ind] = fitsubset(VS, data, maxlags, tup; dist=dist, meanspec=MSi,
                        algorithm=algorithm, autodiff=autodiff, kwargs...)
         if show_trace
-            lock(mylock)			
-            Core.print(modname(typeof(res[ind].spec)))
+            lock(mylock)			            
+			Core.print(modname(VS{tup..., T} where T))
 			ndims2>0 && Core.print("-", modname(MSi))
 			Core.println(" model has ",
                               uppercase(split("$criterion", ".")[end]), " ",
@@ -628,7 +628,7 @@ end
 function modname(::Type{S}) where S<:Union{UnivariateVolatilitySpec, MeanSpec}
     s = "$(S)"
 	lastcomma = findlast(isequal(','), s)
-    lastcomma == nothing || (s = s[1:lastcomma-1] * '}')
+	lastcomma == nothing || (s = s[1:lastcomma-1] * '}')
 	firstdot = findfirst(isequal('.'), s)
 	firstdot == nothing || (s = s[firstdot+1:end])
 	s
