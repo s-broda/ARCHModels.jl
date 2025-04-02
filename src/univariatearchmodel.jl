@@ -295,8 +295,8 @@ end
 	lowergarch, uppergarch = constraints(VS, T1)
 	lowerdist, upperdist = constraints(SD, T1)
     lowermean, uppermean = constraints(MS, T1)
-	all_inbounds = all(lowerdist.<distcoefs.<upperdist) && all(lowermean.<meancoefs.<uppermean) && all(lowergarch[subsetmask].<garchcoefs[subsetmask].<uppergarch[subsetmask])
-    returnearly && !all_inbounds && return T2(-Inf)
+	all_inbounds = all(lowerdist.<distcoefs.<upperdist) && all(lowermean.<=meancoefs.<=uppermean) && all(lowergarch[subsetmask].<=garchcoefs[subsetmask].<uppergarch[subsetmask])    
+	returnearly && !all_inbounds && return T2(-Inf)
 	garchcoefs .*= subsetmask
     T = length(data)
 	r1 = presample(VS)
