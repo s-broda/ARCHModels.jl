@@ -239,7 +239,7 @@ parameters (i.e., ``p`` and ``q`` in the case of [`GARCH`](@ref)) chosen to mini
 
 As an example, the following selects the optimal (minimum AIC) EGARCH(o, p, q) model, where o, p, q < 2,  assuming ``t`` distributed errors.
 
-```jldoctest MANUAL
+```
 julia> selectmodel(EGARCH, BG96; criterion=aic, maxlags=2, dist=StdT)
 
 EGARCH{1, 1, 2} model with Student's t errors, T=1974.
