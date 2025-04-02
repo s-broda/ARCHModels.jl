@@ -23,6 +23,14 @@ jobs:
           - windows-latest
         arch:
           - x64
+          - aarch64
+        exclude:
+          - os: macOS-latest
+            arch: x64
+          - os: ubuntu-latest
+            arch: aarch64
+          - os: windows-latest
+            arch: aarch64
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
