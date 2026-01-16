@@ -20,7 +20,7 @@ end
     if VERSION < v"1.5.5"
         @test startswith(str, "TGARCH{1,1,1} specification.")
     else
-        @test startswith(str, "TGARCH{1, 1, 1} specification.")
+        @test startswith(str, "TGARCH{1, 1, 1} specification.\n\n─────────────────────────────────\n               ω    γ₁   β₁    α₁\n─────────────────────────────────\nParameters:  1.0  0.05  0.9  0.01\n─────────────────────────────────\n")
     end
     am = simulate(spec, T, rng=StableRNG(1));
     am = selectmodel(TGARCH, am.data; meanspec=NoIntercept(), show_trace=true, maxlags=2)

@@ -295,7 +295,7 @@ end
 	lowergarch, uppergarch = constraints(VS, T1)
 	lowerdist, upperdist = constraints(SD, T1)
     lowermean, uppermean = constraints(MS, T1)
-	all_inbounds = all(lowerdist.<distcoefs.<upperdist) && all(lowermean.<=meancoefs.<=uppermean) && all(lowergarch[subsetmask].<=garchcoefs[subsetmask].<uppergarch[subsetmask])    
+	all_inbounds = all(lowerdist.<distcoefs.<upperdist) && all(lowermean.<=meancoefs.<=uppermean) && all(lowergarch[subsetmask].<=garchcoefs[subsetmask].<uppergarch[subsetmask])
 	returnearly && !all_inbounds && return T2(-Inf)
 	garchcoefs .*= subsetmask
     T = length(data)
@@ -557,7 +557,7 @@ function selectmodel(::Type{VS}, data::Vector{T};
 		res[ind] = fitsubset(VS, data, maxlags, tup; dist=dist, meanspec=MSi,
                        algorithm=algorithm, autodiff=autodiff, kwargs...)
         if show_trace
-            lock(mylock)			            
+            lock(mylock)
 			Core.print(modname(VS{tup..., T} where T))
 			ndims2>0 && Core.print("-", modname(MSi))
 			Core.println(" model has ",
@@ -581,7 +581,7 @@ function coeftable(am::UnivariateARCHModel)
               coefnames(am), 4)
 end
 
-function show(io::IO, am::UnivariateARCHModel)
+function show(io::IO, ::MIME"text/plain", am::UnivariateARCHModel)
 	if isfitted(am)
 		cc = coef(am)
 	    se = stderror(am)
