@@ -580,7 +580,7 @@ function coeftable(am::UnivariateARCHModel)
               ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
               coefnames(am), 4)
 end
-
+show(io::IO, am::UnivariateARCHModel) = show(io, "text/plain", am)
 function show(io::IO, ::MIME"text/plain", am::UnivariateARCHModel)
 	if isfitted(am)
 		cc = coef(am)
@@ -597,31 +597,38 @@ function show(io::IO, ::MIME"text/plain", am::UnivariateARCHModel)
 	    println(io, "\n", modname(typeof(am.spec)), " model with ",
 	            distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n")
 
-	    length(sem) > 0 && println(io, "Mean equation parameters:", "\n",
-	                               CoefTable(hcat(ccm, sem, zzm, 2.0 * normccdf.(abs.(zzm))),
-	                                         ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
-	                                         coefnames(am.meanspec), 4
-	                                         )
-	                              )
-	    println(io, "\nVolatility parameters:", "\n",
-	            CoefTable(hcat(ccg, seg, zzg, 2.0 * normccdf.(abs.(zzg))),
-	                      ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
-	                      coefnames(typeof(am.spec)), 4
-	                      )
-	            )
-	    length(sed) > 0 && println(io, "\nDistribution parameters:", "\n",
-	                               CoefTable(hcat(ccd, sed, zzd, 2.0 * normccdf.(abs.(zzd))),
-	                                         ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
-	                                         coefnames(typeof(am.dist)), 4
-	                                         )
-	                              )
+	    if length(sem) > 0
+			println(io, "Mean equation parameters:")
+            show(io, "text/plain", CoefTable(hcat(ccm, sem, zzm, 2.0 * normccdf.(abs.(zzm))),
+                         					 ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
+                         					 coefnames(am.meanspec), 4
+											 )
+                )
+			println()
+		end
+
+	    println(io, "\nVolatility parameters:")
+	    show(io, "text/plain",   CoefTable(hcat(ccg, seg, zzg, 2.0 * normccdf.(abs.(zzg))),
+					                       ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
+					                       coefnames(typeof(am.spec)), 4
+					                       )
+	        )
+		println()
+	    if length(sed) > 0
+			println(io, "\nDistribution parameters:")
+            show(io, "text/plain", CoefTable(hcat(ccd, sed, zzd, 2.0 * normccdf.(abs.(zzd))),
+						                     ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
+						                     coefnames(typeof(am.dist)), 4
+						                     )
+                )
+		end
 
    else
 	   println(io, "\n", modname(typeof(am.spec)), " model with ",
 			   distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n\n")
-	   length(am.meanspec.coefs) > 0 && println(io, CoefTable(am.meanspec.coefs, coefnames(am.meanspec), ["Mean equation parameters:"]))
-	   println(io, CoefTable(am.spec.coefs, coefnames(typeof(am.spec)), ["Volatility parameters:   "]))
-	   length(am.dist.coefs) > 0 && println(io, CoefTable(am.dist.coefs, coefnames(typeof(am.dist)), ["Distribution parameters: "]))
+	   length(am.meanspec.coefs) > 0 && show(io, "text/plain", CoefTable(am.meanspec.coefs, coefnames(am.meanspec), ["Mean equation parameters:"]))
+	   show(io, "text/plain", CoefTable(am.spec.coefs, coefnames(typeof(am.spec)), ["Volatility parameters:   "]))
+	   length(am.dist.coefs) > 0 && show(io, "text/plain", CoefTable(am.dist.coefs, coefnames(typeof(am.dist)), ["Distribution parameters: "]))
    end
 end
 

@@ -55,9 +55,14 @@ function vcov(am::ARCHModel)
     all(diag(v).>0) || @warn "non-positive variance encountered; vcov matrix is inaccurate."
     v
 end
-
-function show(io::IO, spec::VolatilitySpec)
-    println(io, modname(typeof(spec)), " specification.\n\n", length(spec.coefs) > 0 ? CoefTable(spec.coefs, coefnames(typeof(spec)), ["Parameters:"]) : "No estimable parameters.")
+show(io::IO, spec::VolatilitySpec) = show(io, "text/plain", spec)
+function show(io::IO, ::MIME"text/plain", spec::VolatilitySpec)
+    println(io, modname(typeof(spec)), " specification.\n")
+	if length(spec.coefs) > 0
+		show(io::IO, "text/plain", CoefTable(spec.coefs, coefnames(typeof(spec)), ["Parameters:"]))
+	else
+		println("No estimable parameters.")
+	end
 end
 
 stderror(am::ARCHModel) = sqrt.(abs.(diag(vcov(am))))

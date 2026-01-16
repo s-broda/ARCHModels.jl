@@ -391,7 +391,7 @@ function coefnames(am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, 
 end
 
 modname(::Type{DCC{p, q, VS, T, d}})  where {p, q, VS, T, d} = "DCC{$p, $q, $(modname(VS))}"
-
+show(io::IO, am::MultivariateARCHModel) = show(io, "text/plain", am)
 function show(io::IO, ::MIME"text/plain", am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, MVS<:DCC{p, q, VS}}
     r = p + q
     cc = coef(am)[1:r]
@@ -399,19 +399,18 @@ function show(io::IO, ::MIME"text/plain", am::MultivariateARCHModel{T, d, MVS}) 
     if isfitted(am) && (:se=>true) in io
         se = stderror(am)[1:r]
         z = cc ./ se
-        if p + q >0
-            println(io, "DCC parameters, estimated by $(am.spec.method) procedure:", "\n",
-    	            CoefTable(hcat(cc, se, z, 2.0 * normccdf.(abs.(z))),
-    	                      ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
-    	                      coefnames(MVS), 4
-    	                      )
-    	            )
+        if p + q > 0
+            println(io, "DCC parameters, estimated by $(am.spec.method) procedure:")
+    	    show(io, "text/plain", CoefTable(hcat(cc, se, z, 2.0 * normccdf.(abs.(z))),
+                    	                     ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
+                    	                     coefnames(MVS), 4
+                    	                     )
+            )
         end
     else
         if p + q > 0
-            println(io, "DCC parameters", isfitted(am) ? ", estimated by $(am.spec.method) procedure:" : "", "\n",
-    	            CoefTable(cc, coefnames(MVS), [""])
-    	            )
+            println(io, "DCC parameters", isfitted(am) ? ", estimated by $(am.spec.method) procedure:" : "")
+    	    show(io, "text/plain", CoefTable(cc, coefnames(MVS), [""]))
             if isfitted(am)
                 println(io, "\n","""Calculating standard errors is expensive. To show them, use
                  `show(IOContext(stdout, :se=>true), <model>)`""")

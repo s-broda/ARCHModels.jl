@@ -16,11 +16,11 @@ end
     @test ARCHModels.nparams(TGARCH{1, 2, 3}) == 7
     @test ARCHModels.presample(TGARCH{1, 2, 3}) == 3
     spec = TGARCH{1,1,1}([1., .05, .9, .01]);
-    str = sprint(show, spec)
+    str = sprint(show, "text/plain", spec)
     if VERSION < v"1.5.5"
-        @test startswith(str, "TGARCH{1,1,1} specification.")
+        @test startswith(str, "TGARCH{1,1,1} specification.\n\n─────────────────────────────────\n               ω    γ₁   β₁    α₁\n─────────────────────────────────\nParameters:  1.0  0.05  0.9  0.01\n─────────────────────────────────")
     else
-        @test startswith(str, "TGARCH{1, 1, 1} specification.\n\n─────────────────────────────────\n               ω    γ₁   β₁    α₁\n─────────────────────────────────\nParameters:  1.0  0.05  0.9  0.01\n─────────────────────────────────\n")
+        @test startswith(str, "TGARCH{1, 1, 1} specification.\n\n─────────────────────────────────\n               ω    γ₁   β₁    α₁\n─────────────────────────────────\nParameters:  1.0  0.05  0.9  0.01\n─────────────────────────────────")                
     end
     am = simulate(spec, T, rng=StableRNG(1));
     am = selectmodel(TGARCH, am.data; meanspec=NoIntercept(), show_trace=true, maxlags=2)
