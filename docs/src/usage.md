@@ -61,22 +61,22 @@ Having established the presence of volatility clustering, we can begin by fittin
 ```jldoctest MANUAL
 julia> fit(GARCH{1, 1}, BG96)
 
-TGARCH{0,1,1} model with Gaussian errors, T=1974.
+GARCH{1, 1} model with Gaussian errors, T=1974.
 
 Mean equation parameters:
 ───────────────────────────────────────────────
       Estimate   Std.Error    z value  Pr(>|z|)
 ───────────────────────────────────────────────
-μ  -0.00616637  0.00920152  -0.670147    0.5028
+μ  -0.00616637  0.00920163  -0.670139    0.5028
 ───────────────────────────────────────────────
 
 Volatility parameters:
 ─────────────────────────────────────────────
      Estimate   Std.Error   z value  Pr(>|z|)
 ─────────────────────────────────────────────
-ω   0.0107606  0.00649303   1.65725    0.0975
-β₁  0.805875   0.0724765   11.1191     <1e-27
-α₁  0.153411   0.0536404    2.86       0.0042
+ω   0.0107606  0.00649493   1.65677    0.0976
+β₁  0.805875   0.0725003   11.1155     <1e-27
+α₁  0.153411   0.0536586    2.85903    0.0042
 ─────────────────────────────────────────────
 ```
 
@@ -97,22 +97,22 @@ julia> reg = Regression(X);
 
 julia> fit(GARCH{1, 1}, BG96; meanspec=reg)
 
-TGARCH{0,1,1} model with Gaussian errors, T=1974.
+GARCH{1, 1} model with Gaussian errors, T=1974.
 
 Mean equation parameters:
 ────────────────────────────────────────────────
        Estimate   Std.Error    z value  Pr(>|z|)
 ────────────────────────────────────────────────
-β₀  -0.00616637  0.00920152  -0.670147    0.5028
+β₀  -0.00616637  0.00920163  -0.670139    0.5028
 ────────────────────────────────────────────────
 
 Volatility parameters:
 ─────────────────────────────────────────────
      Estimate   Std.Error   z value  Pr(>|z|)
 ─────────────────────────────────────────────
-ω   0.0107606  0.00649303   1.65725    0.0975
-β₁  0.805875   0.0724765   11.1191     <1e-27
-α₁  0.153411   0.0536404    2.86       0.0042
+ω   0.0107606  0.00649493   1.65677    0.0976
+β₁  0.805875   0.0725003   11.1155     <1e-27
+α₁  0.153411   0.0536586    2.85903    0.0042
 ─────────────────────────────────────────────
 ```
 Here, both `reg` and `BG86` contain 1974 observations. Notice that because in this case `X` contains only a column of ones, the estimation results are equivalent to those obtained with `fit(GARCH{1, 1}, BG96; meanspec=Intercept)` above; the latter is however more memory efficient, as no design matrix needs to be stored.
@@ -152,7 +152,7 @@ julia> spec = GARCH{1, 1}([1., 0., 0.]);
 
 julia>  am = UnivariateARCHModel(spec, BG96)
 
-TGARCH{0,1,1} model with Gaussian errors, T=1974.
+GARCH{1, 1} model with Gaussian errors, T=1974.
 
 
 ────────────────────────────────────────
@@ -164,7 +164,7 @@ Volatility parameters:     1.0  0.0  0.0
 
 julia> fit!(am)
 
-TGARCH{0,1,1} model with Gaussian errors, T=1974.
+GARCH{1, 1} model with Gaussian errors, T=1974.
 
 
 Volatility parameters:
@@ -180,7 +180,7 @@ Note that `fit!` will also modify the volatility (and mean and distribution) spe
 
 ```jldoctest MANUAL
 julia> spec
-TGARCH{0,1,1} specification.
+GARCH{1, 1} specification.
 
 ──────────────────────────────────────────
                      ω        β₁        α₁
@@ -464,20 +464,18 @@ To simulate from a [`UnivariateARCHModel`](@ref), use [`simulate`](@ref). You ca
 ```jldoctest MANUAL
 julia> am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=500, meanspec=Intercept(5.), dist=StdT(3.))
 
-TGARCH{0,1,1} model with Student's t errors, T=1000.
+GARCH{1, 1} model with Student's t errors, T=1000.
 
 
 ──────────────────────────────
                              μ
 ──────────────────────────────
 Mean equation parameters:  5.0
-──────────────────────────────
-─────────────────────────────────────────
+───────────────────────────────────────────────────────────────────────
                              ω   β₁    α₁
 ─────────────────────────────────────────
 Volatility parameters:     1.0  0.9  0.05
-─────────────────────────────────────────
-──────────────────────────────
+───────────────────────────────────────────────────────────────────────
                              ν
 ──────────────────────────────
 Distribution parameters:   3.0
@@ -491,20 +489,18 @@ julia> reg = Regression([5], ones(1000, 1));
 
 julia> am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=0, meanspec=reg, dist=StdT(3.))
 
-TGARCH{0,1,1} model with Student's t errors, T=1000.
+GARCH{1, 1} model with Student's t errors, T=1000.
 
 
 ──────────────────────────────
                             β₀
 ──────────────────────────────
 Mean equation parameters:  5.0
-──────────────────────────────
-─────────────────────────────────────────
+───────────────────────────────────────────────────────────────────────
                              ω   β₁    α₁
 ─────────────────────────────────────────
 Volatility parameters:     1.0  0.9  0.05
-─────────────────────────────────────────
-──────────────────────────────
+───────────────────────────────────────────────────────────────────────
                              ν
 ──────────────────────────────
 Distribution parameters:   3.0
@@ -521,7 +517,7 @@ multivariate ARCH specification to [`fit`](@ref). If the lag length (and in the 
 ```jldoctest MANUAL
 julia> m = fit(DCC, DOW29[:, 1:2])
 
-2-dimensional DCC{1, 1} - TGARCH{0,1,1} - Intercept{Float64} specification, T=2785.
+2-dimensional DCC{1, 1} - GARCH{1, 1} - Intercept{Float64} specification, T=2785.
 
 DCC parameters, estimated by largescale procedure:
 ─────────────────────

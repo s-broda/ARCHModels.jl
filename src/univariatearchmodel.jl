@@ -604,7 +604,7 @@ function show(io::IO, ::MIME"text/plain", am::UnivariateARCHModel)
                          					 coefnames(am.meanspec), 4
 											 )
                 )
-			println()
+			println(io)
 		end
 
 	    println(io, "\nVolatility parameters:")
@@ -613,7 +613,7 @@ function show(io::IO, ::MIME"text/plain", am::UnivariateARCHModel)
 					                       coefnames(typeof(am.spec)), 4
 					                       )
 	        )
-		println()
+		println(io)
 	    if length(sed) > 0
 			println(io, "\nDistribution parameters:")
             show(io, "text/plain", CoefTable(hcat(ccd, sed, zzd, 2.0 * normccdf.(abs.(zzd))),

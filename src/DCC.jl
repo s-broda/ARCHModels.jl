@@ -411,6 +411,7 @@ function show(io::IO, ::MIME"text/plain", am::MultivariateARCHModel{T, d, MVS}) 
         if p + q > 0
             println(io, "DCC parameters", isfitted(am) ? ", estimated by $(am.spec.method) procedure:" : "")
     	    show(io, "text/plain", CoefTable(cc, coefnames(MVS), [""]))
+            println(io)
             if isfitted(am)
                 println(io, "\n","""Calculating standard errors is expensive. To show them, use
                  `show(IOContext(stdout, :se=>true), <model>)`""")
