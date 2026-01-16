@@ -392,7 +392,7 @@ end
 
 modname(::Type{DCC{p, q, VS, T, d}})  where {p, q, VS, T, d} = "DCC{$p, $q, $(modname(VS))}"
 show(io::IO, am::MultivariateARCHModel) = show(io, "text/plain", am)
-function show(io::IO, ::MIME"text/plain", am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, MVS<:DCC{p, q, VS}}
+function show(io::IO, ::MIME"text/plain", am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, MVS<:DCC{p, q, VS}}    
     r = p + q
     cc = coef(am)[1:r]
     println(io, "\n", "$d-dimensional DCC{$p, $q} - $(modname(VS)) - $(modname(typeof(am.meanspec[1]))) specification, T=", size(am.data)[1], ".\n")

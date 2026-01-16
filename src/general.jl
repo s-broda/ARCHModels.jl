@@ -61,7 +61,7 @@ function show(io::IO, ::MIME"text/plain", spec::VolatilitySpec)
 	if length(spec.coefs) > 0
 		show(io::IO, "text/plain", CoefTable(spec.coefs, coefnames(typeof(spec)), ["Parameters:"]))
 	else
-		println("No estimable parameters.")
+		println(io, "No estimable parameters.")
 	end
 end
 
