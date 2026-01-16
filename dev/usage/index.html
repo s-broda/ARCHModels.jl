@@ -29,44 +29,44 @@ Details:
     number of lags:                 1
     LM statistic:                   98.12107516935244</code></pre><p>The null is strongly rejected, again providing evidence for the presence of volatility clustering.</p><h2 id="Estimation"><a class="docs-heading-anchor" href="#Estimation">Estimation</a><a id="Estimation-1"></a><a class="docs-heading-anchor-permalink" href="#Estimation" title="Permalink"></a></h2><h3 id="Standalone-Models"><a class="docs-heading-anchor" href="#Standalone-Models">Standalone Models</a><a id="Standalone-Models-1"></a><a class="docs-heading-anchor-permalink" href="#Standalone-Models" title="Permalink"></a></h3><p>Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a GARCH(1, 1) with standard normal errors;  for other model classes such as <a href="../univariatetypehierarchy/#EGARCH"><code>EGARCH</code></a>, see the <a href="../univariatetypehierarchy/#volaspec">section on volatility specifications</a>.</p><pre><code class="language-julia-repl hljs">julia&gt; fit(GARCH{1, 1}, BG96)
 
-TGARCH{0,1,1} model with Gaussian errors, T=1974.
+GARCH{1, 1} model with Gaussian errors, T=1974.
 
 Mean equation parameters:
 ───────────────────────────────────────────────
       Estimate   Std.Error    z value  Pr(&gt;|z|)
 ───────────────────────────────────────────────
-μ  -0.00616637  0.00920152  -0.670147    0.5028
+μ  -0.00616637  0.00920163  -0.670139    0.5028
 ───────────────────────────────────────────────
 
 Volatility parameters:
 ─────────────────────────────────────────────
      Estimate   Std.Error   z value  Pr(&gt;|z|)
 ─────────────────────────────────────────────
-ω   0.0107606  0.00649303   1.65725    0.0975
-β₁  0.805875   0.0724765   11.1191     &lt;1e-27
-α₁  0.153411   0.0536404    2.86       0.0042
+ω   0.0107606  0.00649493   1.65677    0.0976
+β₁  0.805875   0.0725003   11.1155     &lt;1e-27
+α₁  0.153411   0.0536586    2.85903    0.0042
 ─────────────────────────────────────────────</code></pre><p>This returns an instance of <a href="../reference/#ARCHModels.UnivariateARCHModel"><code>UnivariateARCHModel</code></a>, as described in the section <a href="../univariatetypehierarchy/#Working-with-UnivariateARCHModels">Working with UnivariateARCHModels</a>. The parameters <span>$\alpha_1$</span> and <span>$\beta_1$</span> in the volatility equation are highly significant, again confirming the presence of volatility clustering. The standard errors are from a robust (sandwich) estimator of the variance-covariance matrix. Note also that the fitted values are the same as those found by <a href="https://doi.org/10.2307/1392425">Bollerslev and Ghysels (1986)</a> and <a href="https://doi.org/10.1016/S0169-2070(00)00070-4">Brooks et.al. (2001)</a> for the same dataset.</p><p>The <a href="../reference/#StatsAPI.fit-Tuple{ARCHModel}"><code>fit</code></a> method supports a number of keyword arguments; the full signature is</p><pre><code class="language-julia hljs">fit(::Type{&lt;:UnivariateVolatilitySpec}, data::Vector; dist=StdNormal, meanspec=Intercept, algorithm=BFGS(), autodiff=:forward, kwargs...)</code></pre><p>Their meaning is as follows:</p><ul><li><code>dist</code>: the error distribution. A subtype (<em>not instance</em>) of <a href="../reference/#ARCHModels.StandardizedDistribution"><code>StandardizedDistribution</code></a>; see Section <a href="../univariatetypehierarchy/#Distributions">Distributions</a>.</li><li><code>meanspec=Intercept</code>: the mean specification. Either a subtype of <a href="../reference/#ARCHModels.MeanSpec"><code>MeanSpec</code></a> or an instance thereof (for specifications that require additional data, such as <a href="../reference/#ARCHModels.Regression"><code>Regression</code></a>; see the <a href="../univariatetypehierarchy/#meanspec">section on mean specification</a>). If the mean specification in question has a notion of sample size (like <a href="../reference/#ARCHModels.Regression"><code>Regression</code></a>), then the sample size should match that of the data, or an error will be thrown. As an example,</li></ul><pre><code class="language-julia-repl hljs">julia&gt; X = ones(length(BG96), 1);
 
 julia&gt; reg = Regression(X);
 
 julia&gt; fit(GARCH{1, 1}, BG96; meanspec=reg)
 
-TGARCH{0,1,1} model with Gaussian errors, T=1974.
+GARCH{1, 1} model with Gaussian errors, T=1974.
 
 Mean equation parameters:
 ────────────────────────────────────────────────
        Estimate   Std.Error    z value  Pr(&gt;|z|)
 ────────────────────────────────────────────────
-β₀  -0.00616637  0.00920152  -0.670147    0.5028
+β₀  -0.00616637  0.00920163  -0.670139    0.5028
 ────────────────────────────────────────────────
 
 Volatility parameters:
 ─────────────────────────────────────────────
      Estimate   Std.Error   z value  Pr(&gt;|z|)
 ─────────────────────────────────────────────
-ω   0.0107606  0.00649303   1.65725    0.0975
-β₁  0.805875   0.0724765   11.1191     &lt;1e-27
-α₁  0.153411   0.0536404    2.86       0.0042
+ω   0.0107606  0.00649493   1.65677    0.0976
+β₁  0.805875   0.0725003   11.1155     &lt;1e-27
+α₁  0.153411   0.0536586    2.85903    0.0042
 ─────────────────────────────────────────────</code></pre><p>Here, both <code>reg</code> and <code>BG86</code> contain 1974 observations. Notice that because in this case <code>X</code> contains only a column of ones, the estimation results are equivalent to those obtained with <code>fit(GARCH{1, 1}, BG96; meanspec=Intercept)</code> above; the latter is however more memory efficient, as no design matrix needs to be stored.</p><ul><li>The remaining keyword arguments are passed on to the optimizer.</li></ul><p>As an example, an EGARCH(1, 1, 1) model without intercept and with  Student&#39;s <span>$t$</span> errors is fitted as follows:</p><pre><code class="language-julia-repl hljs">julia&gt; fit(EGARCH{1, 1, 1}, BG96; meanspec=NoIntercept, dist=StdT)
 
 EGARCH{1, 1, 1} model with Student&#39;s t errors, T=1974.
@@ -91,7 +91,7 @@ Distribution parameters:
 
 julia&gt;  am = UnivariateARCHModel(spec, BG96)
 
-TGARCH{0,1,1} model with Gaussian errors, T=1974.
+GARCH{1, 1} model with Gaussian errors, T=1974.
 
 
 ────────────────────────────────────────
@@ -103,7 +103,7 @@ Volatility parameters:     1.0  0.0  0.0
 
 julia&gt; fit!(am)
 
-TGARCH{0,1,1} model with Gaussian errors, T=1974.
+GARCH{1, 1} model with Gaussian errors, T=1974.
 
 
 Volatility parameters:
@@ -114,7 +114,7 @@ Volatility parameters:
 β₁  0.804431   0.0730161   11.0172     &lt;1e-27
 α₁  0.154597   0.0539139    2.86747    0.0041
 ─────────────────────────────────────────────</code></pre><p>Note that <code>fit!</code> will also modify the volatility (and mean and distribution) specifications:</p><pre><code class="language-julia-repl hljs">julia&gt; spec
-TGARCH{0,1,1} specification.
+GARCH{1, 1} specification.
 
 ──────────────────────────────────────────
                      ω        β₁        α₁
@@ -298,20 +298,18 @@ Details:
     number of lags:                 4
     LM statistic:                   4.211230445141555</code></pre><p>By default, the number of lags is chosen as the maximum order of the volatility specification (e.g., <span>$\max(p, q)$</span> for a GARCH(p, q) model). Here, the test does not reject, indicating that a GARCH(1, 1) specification is sufficient for modelling the volatility clustering (a common finding).</p><h2 id="Simulation"><a class="docs-heading-anchor" href="#Simulation">Simulation</a><a id="Simulation-1"></a><a class="docs-heading-anchor-permalink" href="#Simulation" title="Permalink"></a></h2><p>To simulate from a <a href="../reference/#ARCHModels.UnivariateARCHModel"><code>UnivariateARCHModel</code></a>, use <a href="../reference/#ARCHModels.simulate"><code>simulate</code></a>. You can either specify the <a href="../reference/#ARCHModels.UnivariateVolatilitySpec"><code>UnivariateVolatilitySpec</code></a> (and optionally the distribution and mean specification) and desired number of observations, or pass an existing <a href="../reference/#ARCHModels.UnivariateARCHModel"><code>UnivariateARCHModel</code></a>. Use <a href="../reference/#ARCHModels.simulate!"><code>simulate!</code></a> to modify the data in place. Example:</p><pre><code class="language-julia-repl hljs">julia&gt; am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=500, meanspec=Intercept(5.), dist=StdT(3.))
 
-TGARCH{0,1,1} model with Student&#39;s t errors, T=1000.
+GARCH{1, 1} model with Student&#39;s t errors, T=1000.
 
 
 ──────────────────────────────
                              μ
 ──────────────────────────────
 Mean equation parameters:  5.0
-──────────────────────────────
-─────────────────────────────────────────
+───────────────────────────────────────────────────────────────────────
                              ω   β₁    α₁
 ─────────────────────────────────────────
 Volatility parameters:     1.0  0.9  0.05
-─────────────────────────────────────────
-──────────────────────────────
+───────────────────────────────────────────────────────────────────────
                              ν
 ──────────────────────────────
 Distribution parameters:   3.0
@@ -321,26 +319,24 @@ julia&gt; am4 = simulate(am3, 1000); # passing the number of observations is opt
 
 julia&gt; am3 = simulate(GARCH{1, 1}([1., .9, .05]), 1000; warmup=0, meanspec=reg, dist=StdT(3.))
 
-TGARCH{0,1,1} model with Student&#39;s t errors, T=1000.
+GARCH{1, 1} model with Student&#39;s t errors, T=1000.
 
 
 ──────────────────────────────
                             β₀
 ──────────────────────────────
 Mean equation parameters:  5.0
-──────────────────────────────
-─────────────────────────────────────────
+───────────────────────────────────────────────────────────────────────
                              ω   β₁    α₁
 ─────────────────────────────────────────
 Volatility parameters:     1.0  0.9  0.05
-─────────────────────────────────────────
-──────────────────────────────
+───────────────────────────────────────────────────────────────────────
                              ν
 ──────────────────────────────
 Distribution parameters:   3.0
 ──────────────────────────────</code></pre><h2 id="Multivariate-models"><a class="docs-heading-anchor" href="#Multivariate-models">Multivariate models</a><a id="Multivariate-models-1"></a><a class="docs-heading-anchor-permalink" href="#Multivariate-models" title="Permalink"></a></h2><p>In this section, we will be using the percentage returns on 29 stocks from the DJIA from 03/19/2008 through 04/11/2019, available as <a href="../reference/#ARCHModels.DOW29"><code>DOW29</code></a>.</p><p>Fitting a multivariate ARCH model proceeds similarly to the univariate case, by passing the type of the multivariate ARCH specification to <a href="../reference/#StatsAPI.fit-Tuple{ARCHModel}"><code>fit</code></a>. If the lag length (and in the case of the DCC model, the univariate specification) is left unspecified, then these default to 1 (and <a href="../univariatetypehierarchy/#GARCH">GARCH</a>); i.e., the following is equivalent to both <code>fit(DCC{1, 1}, DOW29)</code> and <code>fit(DCC{1, 1, GARCH{1, 1}}, DOW29)</code>:</p><pre><code class="language-julia-repl hljs">julia&gt; m = fit(DCC, DOW29[:, 1:2])
 
-2-dimensional DCC{1, 1} - TGARCH{0,1,1} - Intercept{Float64} specification, T=2785.
+2-dimensional DCC{1, 1} - GARCH{1, 1} - Intercept{Float64} specification, T=2785.
 
 DCC parameters, estimated by largescale procedure:
 ─────────────────────
@@ -364,4 +360,4 @@ DCC parameters, estimated by largescale procedure:
       algorithm=BFGS(), autodiff=:forward, kwargs...)</code></pre><p>Their meaning is similar to the univariate case. In particular, <code>meanspec</code> can be any univariate mean specification, as described in under <a href="../univariatetypehierarchy/#meanspec">mean specification</a>. Certain models support different estimation methods; in the case of the DCC model, these are <code>:twostep</code> and <code>:largescale</code>, which respectively refer to the methods of <a href="https://doi.org/10.1198/073500102288618487">Engle (2002)</a> and <a href="https://doi.org/10.1080/07350015.2017.1345683">Engle, Ledoit, and Wolf (2019)</a>. The latter sacrifices some amount of statistical efficiency for much-improved computational speed and is the default.</p><p>Again paralleling the univariate case, one may also construct a <a href="../reference/#ARCHModels.MultivariateARCHModel"><code>MultivariateARCHModel</code></a> by hand, and then call <a href="../reference/#StatsAPI.fit-Tuple{ARCHModel}"><code>fit</code></a> or <a href="../reference/#StatsAPI.fit!-Tuple{ARCHModel}"><code>fit!</code></a> on it, but this is rather cumbersome, as it requires specifying all parameters of the covariance specification.</p><p>One-step ahead forecasts of the covariance or correlation matrix are obtained by respectively passing <code>what=:covariance</code> (the default) or <code>what=:correlation</code> to <a href="../reference/#StatsAPI.predict-Tuple{MultivariateARCHModel}"><code>predict</code></a>:</p><pre><code class="language-julia-repl hljs">julia&gt; predict(m, what=:correlation)
 2×2 Array{Float64,2}:
  1.0       0.436513
- 0.436513  1.0  </code></pre><p>In the multivariate case, there are three types of residuals that can be considered: the unstandardized residuals, <span>$a_t$</span>; the devolatized residuals, <span>$\epsilon_t$</span>, where <span>$\epsilon_{it}\equiv a_{it}/\sigma_{it}$</span>; and the decorrelated residuals <span>$z_t\equiv \Sigma^{-1/2}_ta_t$</span>. When called on a <a href="../reference/#ARCHModels.MultivariateARCHModel"><code>MultivariateARCHModel</code></a>, <a href="../reference/#StatsAPI.residuals-Union{Tuple{MultivariateARCHModel{T, d, MVS, SD, MS} where {SD&lt;:MultivariateStandardizedDistribution{T, d}, MS&lt;:MeanSpec{T}}}, Tuple{MVS}, Tuple{d}, Tuple{T}} where {T, d, MVS&lt;:DCC}"><code>residuals</code></a> returns <span>$\{z_t\}$</span> by default. Passing <code>decorrelated=false</code> returns <span>$\{\epsilon_t\}$</span>, and passing <code>standardized=false</code> returns  <span>$\{a_t\}$</span> (note that <code>decorrelated=true</code> implies <code>standardized=true</code>).</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../multivariatetypehierarchy/">« Multivariate</a><a class="docs-footer-nextpage" href="../reference/">Reference guide »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Monday 18 August 2025 08:58">Monday 18 August 2025</span>. Using Julia version 1.11.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 0.436513  1.0  </code></pre><p>In the multivariate case, there are three types of residuals that can be considered: the unstandardized residuals, <span>$a_t$</span>; the devolatized residuals, <span>$\epsilon_t$</span>, where <span>$\epsilon_{it}\equiv a_{it}/\sigma_{it}$</span>; and the decorrelated residuals <span>$z_t\equiv \Sigma^{-1/2}_ta_t$</span>. When called on a <a href="../reference/#ARCHModels.MultivariateARCHModel"><code>MultivariateARCHModel</code></a>, <a href="../reference/#StatsAPI.residuals-Union{Tuple{MultivariateARCHModel{T, d, MVS, SD, MS} where {SD&lt;:MultivariateStandardizedDistribution{T, d}, MS&lt;:MeanSpec{T}}}, Tuple{MVS}, Tuple{d}, Tuple{T}} where {T, d, MVS&lt;:DCC}"><code>residuals</code></a> returns <span>$\{z_t\}$</span> by default. Passing <code>decorrelated=false</code> returns <span>$\{\epsilon_t\}$</span>, and passing <code>standardized=false</code> returns  <span>$\{a_t\}$</span> (note that <code>decorrelated=true</code> implies <code>standardized=true</code>).</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../multivariatetypehierarchy/">« Multivariate</a><a class="docs-footer-nextpage" href="../reference/">Reference guide »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Friday 16 January 2026 17:44">Friday 16 January 2026</span>. Using Julia version 1.12.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
