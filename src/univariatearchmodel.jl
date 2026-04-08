@@ -594,8 +594,8 @@ function show(io::IO, ::MIME"text/plain", am::UnivariateARCHModel)
 	    zzg = ccg ./ seg
 	    zzd = ccd ./ sed
 	    zzm = ccm ./ sem
-	    println(io, "\n", modname(typeof(am.spec)), " model with ",
-	            distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n")
+	    println(io, modname(typeof(am.spec)), " model with ",
+	            distname(typeof(am.dist)), " errors, T=", nobs(am), ".")
 
 	    if length(sem) > 0
 			println(io, "Mean equation parameters:")
@@ -607,7 +607,7 @@ function show(io::IO, ::MIME"text/plain", am::UnivariateARCHModel)
 			println(io)
 		end
 
-	    println(io, "\nVolatility parameters:")
+	    println(io, "Volatility parameters:")
 	    show(io, "text/plain",   CoefTable(hcat(ccg, seg, zzg, 2.0 * normccdf.(abs.(zzg))),
 					                       ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
 					                       coefnames(typeof(am.spec)), 4
@@ -615,7 +615,7 @@ function show(io::IO, ::MIME"text/plain", am::UnivariateARCHModel)
 	        )
 		println(io)
 	    if length(sed) > 0
-			println(io, "\nDistribution parameters:")
+			println(io, "Distribution parameters:")
             show(io, "text/plain", CoefTable(hcat(ccd, sed, zzd, 2.0 * normccdf.(abs.(zzd))),
 						                     ["Estimate", "Std.Error", "z value", "Pr(>|z|)"],
 						                     coefnames(typeof(am.dist)), 4
@@ -624,8 +624,9 @@ function show(io::IO, ::MIME"text/plain", am::UnivariateARCHModel)
 		end
 
    else
-	   println(io, "\n", modname(typeof(am.spec)), " model with ",
-			   distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n\n")
+	   println(io, modname(typeof(am.spec)), " model with ",
+			   distname(typeof(am.dist)), " errors, T=", nobs(am), ".")
+	   println()
 	   length(am.meanspec.coefs) > 0 && show(io, "text/plain", CoefTable(am.meanspec.coefs, coefnames(am.meanspec), ["Mean equation parameters:"]))
 	   show(io, "text/plain", CoefTable(am.spec.coefs, coefnames(typeof(am.spec)), ["Volatility parameters:   "]))
 	   length(am.dist.coefs) > 0 && show(io, "text/plain", CoefTable(am.dist.coefs, coefnames(typeof(am.dist)), ["Distribution parameters: "]))

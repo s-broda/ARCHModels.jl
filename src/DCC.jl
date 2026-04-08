@@ -395,7 +395,7 @@ show(io::IO, am::MultivariateARCHModel) = show(io, "text/plain", am)
 function show(io::IO, ::MIME"text/plain", am::MultivariateARCHModel{T, d, MVS}) where {T, d, p, q, VS, MVS<:DCC{p, q, VS}}    
     r = p + q
     cc = coef(am)[1:r]
-    println(io, "\n", "$d-dimensional DCC{$p, $q} - $(modname(VS)) - $(modname(typeof(am.meanspec[1]))) specification, T=", size(am.data)[1], ".\n")
+    println(io, "$d-dimensional DCC{$p, $q} - $(modname(VS)) - $(modname(typeof(am.meanspec[1]))) specification, T=", size(am.data)[1], ".")
     if isfitted(am) && (:se=>true) in io
         se = stderror(am)[1:r]
         z = cc ./ se
@@ -413,7 +413,7 @@ function show(io::IO, ::MIME"text/plain", am::MultivariateARCHModel{T, d, MVS}) 
     	    show(io, "text/plain", CoefTable(cc, coefnames(MVS), [""]))
             println(io)
             if isfitted(am)
-                println(io, "\n","""Calculating standard errors is expensive. To show them, use
+                println(io, """Calculating standard errors is expensive. To show them, use
                  `show(IOContext(stdout, :se=>true), <model>)`""")
             end
         end
