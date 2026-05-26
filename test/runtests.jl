@@ -8,10 +8,6 @@ using StableRNGs
 
 T = 10^4;
 
-@testset "lgamma" begin
-    @test ARCHModels.lgamma(1.0f0) == 0.0f0
-end
-
 @testset "TGARCH" begin
     @test ARCHModels.nparams(TGARCH{1, 2, 3}) == 7
     @test ARCHModels.presample(TGARCH{1, 2, 3}) == 3

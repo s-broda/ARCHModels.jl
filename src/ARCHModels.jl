@@ -14,17 +14,9 @@ using Reexport
 @reexport using StatsBase
 using StatsFuns: normcdf, normccdf, normlogpdf, norminvcdf, log2π, logtwo, RFunctions.tdistinvcdf, RFunctions.gammainvcdf
 using GLM: modelmatrix, response, LinearModel
-using SpecialFunctions: beta, gamma, digamma #, lgamma
+using SpecialFunctions: beta, gamma, digamma, loggamma
 using MuladdMacro
 using PrecompileTools
-# work around https://github.com/JuliaMath/SpecialFunctions.jl/issues/186
-# until https://github.com/JuliaDiff/ForwardDiff.jl/pull/419/ is merged
-# remove test in runtests.jl as well when this gets fixed
-using Base.Math: libm
-using ForwardDiff: Dual, value, partials
-@inline lgamma(x::Float64) = ccall((:lgamma, libm), Float64, (Float64,), x)
-@inline lgamma(x::Float32) = ccall((:lgammaf, libm), Float32, (Float32,), x)
-@inline lgamma(d::Dual{T}) where T = Dual{T}(lgamma(value(d)), digamma(value(d)) * partials(d))
 
 
 using Optim
