@@ -146,9 +146,9 @@ StdT(ν::Vector{T}) where {T} = StdT{T}(ν)
 (rand(rng::AbstractRNG, d::StdT{T})::T) where {T}  =  (ν=d.coefs[1]; rand(rng, TDist(ν))*sqrt((ν-2)/ν))
 @inline kernelinvariants(::Type{<:StdT}, coefs) = (1/ (coefs[1]-2),)
 @inline logkernel(::Type{<:StdT}, x, coefs, iv) = (-(coefs[1] + 1) / 2) * log1p(abs2(x) *iv)
-@inline logconst(::Type{<:StdT}, coefs)  = (lgamma((coefs[1] + 1) / 2)
+@inline logconst(::Type{<:StdT}, coefs)  = (loggamma((coefs[1] + 1) / 2)
                                                - log((coefs[1]-2) * pi) / 2
-                                               - lgamma(coefs[1] / 2)
+                                               - loggamma(coefs[1] / 2)
                                                )
 nparams(::Type{<:StdT}) = 1
 coefnames(::Type{<:StdT}) = ["ν"]
@@ -210,7 +210,7 @@ StdGED(v::Vector{T}) where {T} = StdGED{T}(v)
 (rand(rng::AbstractRNG, d::StdGED{T})::T) where {T} = (p = d.coefs[1]; ip=1/p;  (2*rand(rng)-1)*rand(rng, Gamma(1+ip, 1))^ip * sqrt(gamma(ip) / gamma(3*ip)) )
 
 
-@inline logconst(::Type{<:StdGED}, coefs)  = (p = coefs[1]; ip = 1/p; lgamma(3*ip)/2 - lgamma(ip)*3/2 - logtwo  - log(ip))
+@inline logconst(::Type{<:StdGED}, coefs)  = (p = coefs[1]; ip = 1/p; loggamma(3*ip)/2 - loggamma(ip)*3/2 - logtwo  - log(ip))
 @inline logkernel(::Type{<:StdGED}, x, coefs, s) = (p = coefs[1]; -abs(x*s)^p)
 @inline kernelinvariants(::Type{<:StdGED}, coefs) = (p = coefs[1]; ip = 1/p; (sqrt(gamma(3*ip) / gamma(ip)),))
 
