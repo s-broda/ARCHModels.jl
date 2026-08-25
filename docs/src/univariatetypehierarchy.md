@@ -91,11 +91,11 @@ The TGARCH model allows the volatility to react differently (typically more stro
 julia> TGARCH{1, 1, 1}([1., .04, .9, .01])
 TGARCH{1, 1, 1} specification.
 
-─────────────────────────────
+─────────────────────────────────
                ω    γ₁   β₁    α₁
-─────────────────────────────
+─────────────────────────────────
 Parameters:  1.0  0.04  0.9  0.01
-─────────────────────────────
+─────────────────────────────────
 ```
 
 ### EGARCH
@@ -109,11 +109,11 @@ Like the TGARCH model, it can account for the leverage effect. The corresponding
 julia> EGARCH{1, 1, 1}([-0.1, .1, .9, .04])
 EGARCH{1, 1, 1} specification.
 
-─────────────────────────────
+─────────────────────────────────
                 ω   γ₁   β₁    α₁
-─────────────────────────────
+─────────────────────────────────
 Parameters:  -0.1  0.1  0.9  0.04
-─────────────────────────────
+─────────────────────────────────
 ```
 ## [Mean specifications](@id meanspec)
 Mean specifications serve to specify ``\mu_t``. They are modelled as subtypes of [`MeanSpec`](@ref). They contain their parameters as (possibly empty) vectors, but convenience constructors are provided where appropriate. The following specifications are available:
@@ -210,11 +210,11 @@ GARCH{1, 1} model with Student's t errors, T=1974.
                              μ
 ──────────────────────────────
 Mean equation parameters:  1.0
-─────────────────────────────────────────────────────────────
+───────────────────────────────────────────────────────────────────────
                              ω   β₁    α₁
 ─────────────────────────────────────────
 Volatility parameters:     1.0  0.9  0.05
-─────────────────────────────────────────────────────────────
+───────────────────────────────────────────────────────────────────────
                              ν
 ──────────────────────────────
 Distribution parameters:   3.0
