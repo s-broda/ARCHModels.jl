@@ -75,6 +75,7 @@ const ARCH = GARCH{0}
 
 @inline presample(::Type{<:TGARCH{o, p, q}}) where {o, p, q} = max(o, p, q)
 
+@inline supports_multistep_variance(::Type{<:TGARCH}) = true
 
 Base.@propagate_inbounds @inline function update!(
         ht, lht, zt, at, ::Type{<:TGARCH{o, p, q}}, garchcoefs,
