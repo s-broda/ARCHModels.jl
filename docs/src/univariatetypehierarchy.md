@@ -16,6 +16,7 @@ The table below lists current options for the conditional mean, conditional vari
 | `ARMA{p,q}` 	| `GARCH{p,q}` 	| `StdGED` 	|
 | `Regression(X)` 	| `TGARCH{o,p,q}` 	| Std User-Defined 	|
 |  	| `EGARCH{o,p,q}` 	|  	|
+|  	| `IGARCH{p,q}` 	|  	|
 
 Details on these options are given below.
 ## [Volatility specifications](@id volaspec)
@@ -57,6 +58,26 @@ Parameters:  1.0  0.9  0.05
 ```
 This creates a GARCH(1, 1) specification with ``ω=1``, ``β=.9``, and ``α=.05``.
 
+### IGARCH
+The IGARCH(p, q) model, due to [Engle and Bollerslev (1986)](https://doi.org/10.1080/07474938608800095), is GARCH with the equality constraint that the ARCH and GARCH lags sum to one:
+
+```math
+\sigma_t^2=\omega+\sum_{i=1}^q\alpha_i a_{t-i}^2+\sum_{j=1}^p\beta_j\sigma_{t-j}^2, \quad \sum_{i=1}^q\alpha_i+\sum_{j=1}^p\beta_j=1.
+```
+
+The unconditional variance is infinite, and multi-step variance forecasts do not mean-revert (for IGARCH(1,1), ``h_{T+k}=h_{T+1}+(k-1)\omega``). Because the package optimizer only has box constraints, the unit-root restriction is imposed by reparameterization rather than by storing a full GARCH coefficient vector: free coefficients are ``(\omega,\beta_1,\ldots,\beta_{p-1},\alpha_1,\ldots,\alpha_q)`` (so `nparams = p+q`), and the last GARCH coefficient is implied as ``\beta_p=1-\sum\alpha-\sum_{j<p}\beta_j`` (the same convention as rugarch). This requires `p ≥ 1`. `selectmodel(IGARCH, data)` fits true `IGARCH{p,q}` types on a lag grid rather than zeroing lags of a large model, which would hang leftover persistence on ``\sigma_{t-p_{\max}}``. It is available as [`IGARCH{p, q}`](@ref):
+```jldoctest TYPES
+julia> IGARCH{1, 1}([.1, .05])
+IGARCH{1, 1} specification.
+
+────────────────────────────────────
+               ω    α₁  β₁ (implied)
+────────────────────────────────────
+Parameters:  0.1  0.05          0.95
+────────────────────────────────────
+```
+This creates an IGARCH(1, 1) specification with ``ω=0.1`` and ``α=.05``; the implied ``β`` is ``0.95``.
+
 ### TGARCH
 As may have been guessed from the output above, the ARCH and GARCH models are actually special cases of a more general class of models, known as TGARCH (Threshold GARCH), due to [Glosten, Jagannathan, and Runkle (1993)](https://doi.org/10.1111/j.1540-6261.1993.tb05128.x). The TGARCH{o, p, q} model takes the form
 
@@ -70,11 +91,11 @@ The TGARCH model allows the volatility to react differently (typically more stro
 julia> TGARCH{1, 1, 1}([1., .04, .9, .01])
 TGARCH{1, 1, 1} specification.
 
-─────────────────────────────────
+─────────────────────────────
                ω    γ₁   β₁    α₁
-─────────────────────────────────
+─────────────────────────────
 Parameters:  1.0  0.04  0.9  0.01
-─────────────────────────────────
+─────────────────────────────
 ```
 
 ### EGARCH
@@ -88,11 +109,11 @@ Like the TGARCH model, it can account for the leverage effect. The corresponding
 julia> EGARCH{1, 1, 1}([-0.1, .1, .9, .04])
 EGARCH{1, 1, 1} specification.
 
-─────────────────────────────────
+─────────────────────────────
                 ω   γ₁   β₁    α₁
-─────────────────────────────────
+─────────────────────────────
 Parameters:  -0.1  0.1  0.9  0.04
-─────────────────────────────────
+─────────────────────────────
 ```
 ## [Mean specifications](@id meanspec)
 Mean specifications serve to specify ``\mu_t``. They are modelled as subtypes of [`MeanSpec`](@ref). They contain their parameters as (possibly empty) vectors, but convenience constructors are provided where appropriate. The following specifications are available:
@@ -189,11 +210,11 @@ GARCH{1, 1} model with Student's t errors, T=1974.
                              μ
 ──────────────────────────────
 Mean equation parameters:  1.0
-───────────────────────────────────────────────────────────────────────
+─────────────────────────────────────────────────────────────
                              ω   β₁    α₁
 ─────────────────────────────────────────
 Volatility parameters:     1.0  0.9  0.05
-───────────────────────────────────────────────────────────────────────
+─────────────────────────────────────────────────────────────
                              ν
 ──────────────────────────────
 Distribution parameters:   3.0
