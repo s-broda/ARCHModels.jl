@@ -4,6 +4,7 @@ using ARCHModels
 using GLM
 using DataFrames
 using StableRNGs
+using ForwardDiff
 
 
 T = 10^4;
@@ -347,6 +348,16 @@ end
         am = simulate(GARCH{1, 1}([1, 0.9, .05]), 1000, dist=MyStdT(3.); rng=StableRNG(1))
         @test  loglikelihood(fit(am)) >= -3000.
     end
+end
+@testset "loggamma Dual" begin
+    @test all(isfinite.(ForwardDiff.gradient(x -> ARCHModels.logconst(StdT, x), [5.0])))
+    @test all(isfinite.(ForwardDiff.hessian(x -> ARCHModels.logconst(StdT, x), [5.0])))
+    @test all(isfinite.(ForwardDiff.gradient(x -> ARCHModels.logconst(StdGED, x), [1.5])))
+    spec = GARCH{1, 1}([1., .9, .05]);
+    am = simulate(spec, 800; dist=StdT(4), meanspec=NoIntercept(), rng=StableRNG(1));
+    @test isfinite(loglikelihood(fit(GARCH{1, 1}, am.data; dist=StdT, meanspec=NoIntercept())))
+    am = simulate(spec, 800; dist=StdGED(1.5), meanspec=NoIntercept(), rng=StableRNG(1));
+    @test isfinite(loglikelihood(fit(GARCH{1, 1}, am.data; dist=StdGED, meanspec=NoIntercept())))
 end
 @testset "tests" begin
     am = fit(GARCH{1, 1}, BG96)
