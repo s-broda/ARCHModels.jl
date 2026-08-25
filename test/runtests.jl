@@ -94,6 +94,52 @@ end
     @test coefnames(EGARCH{2, 2, 2}) == ["ω", "γ₁", "γ₂", "β₁", "β₂", "α₁", "α₂"]
     @test_throws Base.ErrorException predict.(am7, :variance, 1:3)
 end
+@testset "APARCH" begin
+    @test ARCHModels.nparams(APARCH{1, 2, 3}) == 8
+    @test ARCHModels.presample(APARCH{1, 2, 3}) == 3
+    spec = APARCH{1,1,1}([1., .1, .8, .05, 1.5]);
+    str = sprint(show, "text/plain", spec)
+    if VERSION < v"1.5.5"
+        @test startswith(str, "APARCH{1,1,1} specification.\n\n─────────────────────────────────────\n               ω   γ₁   β₁    α₁    δ\n─────────────────────────────────────\nParameters:  1.0  0.1  0.8  0.05  1.5\n─────────────────────────────────────")
+    else
+        @test startswith(str, "APARCH{1, 1, 1} specification.\n\n─────────────────────────────────────\n               ω   γ₁   β₁    α₁    δ\n─────────────────────────────────────\nParameters:  1.0  0.1  0.8  0.05  1.5\n─────────────────────────────────────")
+    end
+    am = simulate(APARCH{1, 1, 1}([0.05, 0.1, 0.8, 0.1, 1.5]), T; meanspec=Intercept(3), rng=StableRNG(1))
+    am7 = selectmodel(APARCH, am.data; maxlags=2, show_trace=true)
+    @test all(isapprox(coef(am7), [0.0522542083064141,
+                                   0.1494774366884879,
+                                   0.7699438846123616,
+                                   0.10430944063773452,
+                                   1.706967659309824,
+                                   3.0004689554476163], rtol=1e-4))
+    @test coefnames(APARCH{2, 2, 2}) == ["ω", "γ₁", "γ₂", "β₁", "β₂", "α₁", "α₂", "δ"]
+    @test predict(am7) ≈ 0.5224925642908517
+    @test predict(am7, :variance) ≈ 0.2729984797392298
+    @test predict(am7, :return) ≈ 3.0004689554476163
+    @test predict(am7, :VaR) ≈ -1.7849694893074435
+    @test_throws Base.ErrorException predict(am7, :variance, 2)
+
+    mask = ARCHModels.subsetmask(APARCH{2, 2, 2}, (0, 1, 1))
+    @test mask == [true, false, false, true, false, true, false, true]
+    @test ARCHModels.subsettuple(APARCH{2, 2, 2}, mask) == (0, 1, 1)
+    @test ARCHModels.nparams(APARCH{2, 2, 2}, (1, 1, 1)) == 5
+
+    # Ding, Granger and Engle (1993): APARCH nests GARCH when δ=2 and γ=0.
+    # GARCH{1,1} estimates on BG96 match Bollerslev and Ghysels (1996) /
+    # Brooks et al. (2001) as documented in the package usage notes.
+    g = fit(GARCH{1, 1}, BG96; meanspec=NoIntercept)
+    amnest = UnivariateARCHModel(APARCH{0, 1, 1}(vcat(g.spec.coefs, 2.0)), BG96; meanspec=NoIntercept())
+    @test loglikelihood(amnest) ≈ loglikelihood(g) rtol=1e-8
+    @test volatilities(amnest) ≈ volatilities(g) rtol=1e-8
+    @test ARCHModels.uncond(APARCH{0, 1, 1}, [1., .9, .05, 2.0]) ≈ ARCHModels.uncond(GARCH{1, 1}, [1., .9, .05])
+
+    for dist in (StdNormal(), StdT(5.), StdSkewT(5., -0.2), StdGED(1.5))
+        amd = simulate(APARCH{1, 1, 1}([0.05, 0.1, 0.8, 0.1, 1.5]), 1500; dist=dist, rng=StableRNG(1), meanspec=NoIntercept())
+        fit!(amd)
+        @test isfitted(amd)
+        @test all(isfinite.(coef(amd)))
+    end
+end
 @testset "StatisticalModel" begin
     #not implemented: adjr2, deviance, mss, nulldeviance, r2, rss, weights
     spec = GARCH{1, 1}([1., .9, .05])
@@ -243,6 +289,7 @@ end
     str = sprint(showerror, e.value)
     @test startswith(str, "incorrect number of parameters")
     @test_throws ARCHModels.NumParamError GARCH{1, 1}([.1])
+    @test_throws ARCHModels.NumParamError APARCH{1, 1, 1}([.1])
     e = @test_throws ErrorException predict(UnivariateARCHModel(GARCH{0, 0}([1.]), zeros(10)), :blah)
     str = sprint(showerror, e.value)
     @test startswith(str, "Prediction target blah unknown")
