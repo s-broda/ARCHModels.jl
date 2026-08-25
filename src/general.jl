@@ -12,6 +12,9 @@ Abstract supertype of UnivariateVolatilitySpec{T} and MultivariateVolatilitySpec
 """
 abstract type VolatilitySpec{T} end
 
+# GARCH-style multi-step variance: future a² replaced by h in update!.
+supports_multistep_variance(::Type{<:VolatilitySpec}) = false
+
 """
     MeanSpec{T}
 Abstract supertype that mean specifications inherit from.
