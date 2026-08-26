@@ -5,7 +5,7 @@ ARCH (Autoregressive Conditional Heteroskedasticity) models are a class of model
 
 # Installation
 
-`ARCHModels` is a registered Julia package. To install it in Julia 1.0 or later, do
+`ARCHModels` is a registered Julia package. To install it in Julia 1.6 or later, do
 
 ```
 add ARCHModels
