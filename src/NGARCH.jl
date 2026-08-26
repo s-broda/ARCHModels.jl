@@ -169,3 +169,43 @@ end
 	end
 	(ps, qs)
 end
+
+# Master `predict` special-cases only TGARCH for multi-step variance.
+# This method enables NGARCH multi-step forecasts; unknown future residuals
+# use σ^δ inside update! (current_horizon branch). After APARCH lands, this
+# can share the generic `supports_multistep_variance` path.
+function predict(am::UnivariateARCHModel{T, VS, SD}, what=:volatility, horizon=1; level=0.01) where {T, VS<:NGARCH, SD}
+	ht = volatilities(am).^2
+	lht = log.(ht)
+	zt = residuals(am)
+	at = residuals(am, standardized=false)
+	themean = T(0)
+	if horizon > 1
+		if what == :VaR
+			error("Predicting VaR more than one period ahead is not implemented. Consider predicting one period ahead and scaling by `sqrt(horizon)`.")
+		elseif what == :volatility
+			error("Predicting volatility more than one period ahead is not implemented.")
+		end
+	end
+    data = copy(am.data)
+	for current_horizon = (1 : horizon)
+		t = length(am.data) + current_horizon
+		if what == :return || what == :VaR
+			themean = mean(at, ht, lht, data, am.meanspec, am.meanspec.coefs, t)
+		end
+		update!(ht, lht, zt, at, VS, am.spec.coefs, current_horizon)
+		push!(zt, 0.)
+		push!(at, 0.)
+        push!(data, themean)
+	end
+	if what == :return
+		return themean
+	elseif what == :volatility
+		return sqrt(ht[end])
+	elseif what == :variance
+		return ht[end]
+	elseif what == :VaR
+		return -themean - sqrt(ht[end]) * quantile(am.dist, level)
+	else error("Prediction target $what unknown.")
+	end
+end
