@@ -95,3 +95,4 @@ end
     @test_throws Base.ErrorException predict.(am7, :variance, 1:3)
 end
 include("ngarch.jl")
+include("runtests_rest.jl")
