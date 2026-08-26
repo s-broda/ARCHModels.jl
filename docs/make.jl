@@ -10,6 +10,8 @@ makedocs(modules=[ARCHModels],
                  "introduction.md",
                  "Type Hierarchy" => Any[
                         "univariatetypehierarchy.md",
+                        "univariatetypehierarchy_rest.md",
+                        "univariatetypehierarchy_working.md",
                         "multivariatetypehierarchy.md"
                         ],
                  "usage.md",
