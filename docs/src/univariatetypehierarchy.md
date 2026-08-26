@@ -16,6 +16,7 @@ The table below lists current options for the conditional mean, conditional vari
 | `ARMA{p,q}` 	| `GARCH{p,q}` 	| `StdGED` 	|
 | `Regression(X)` 	| `TGARCH{o,p,q}` 	| Std User-Defined 	|
 |  	| `EGARCH{o,p,q}` 	|  	|
+|  	| `APARCH{o,p,q}` 	|  	|
 
 Details on these options are given below.
 ## [Volatility specifications](@id volaspec)
@@ -93,6 +94,24 @@ EGARCH{1, 1, 1} specification.
 ─────────────────────────────────
 Parameters:  -0.1  0.1  0.9  0.04
 ─────────────────────────────────
+```
+
+### APARCH
+The APARCH{o, p, q} (Asymmetric Power ARCH) specification, due to [Ding, Granger, and Engle (1993)](https://doi.org/10.1016/0927-5398(93)90006-D), is
+```math
+\sigma_t^\delta=\omega+\sum_{i=1}^q\alpha_i(|a_{t-i}|-\gamma_i a_{t-i})^\delta+\sum_{j=1}^p\beta_j\sigma_{t-j}^\delta,
+\quad \omega,\alpha_i,\beta_j,\delta>0,\quad |\gamma_i|<1.
+```
+Type parameters follow the [`TGARCH{o, p, q}`](@ref) convention: ``o`` is the number of leverage lags ``\gamma_i``, ``p`` the GARCH lags ``\beta_j``, and ``q`` the ARCH lags ``\alpha_i``. The intercept ``\omega`` and power ``\delta`` are additional parameters. Coefficients are stored as ``(\omega,\gamma_1,\ldots,\gamma_o,\beta_1,\ldots,\beta_p,\alpha_1,\ldots,\alpha_q,\delta)``. When ``i>o``, ``\gamma_i`` is treated as zero, so `APARCH{0,p,q}` is APARCH without leverage; with ``\delta=2`` this further nests [`GARCH{p, q}`](@ref). A typical APARCH(1,1) is `APARCH{1, 1, 1}`. The corresponding type is [`APARCH{o, p, q}`](@ref):
+```jldoctest TYPES
+julia> APARCH{1, 1, 1}([1., .1, .8, .05, 1.5])
+APARCH{1, 1, 1} specification.
+
+─────────────────────────────────────
+               ω   γ₁   β₁    α₁    δ
+─────────────────────────────────────
+Parameters:  1.0  0.1  0.8  0.05  1.5
+─────────────────────────────────────
 ```
 ## [Mean specifications](@id meanspec)
 Mean specifications serve to specify ``\mu_t``. They are modelled as subtypes of [`MeanSpec`](@ref). They contain their parameters as (possibly empty) vectors, but convenience constructors are provided where appropriate. The following specifications are available:

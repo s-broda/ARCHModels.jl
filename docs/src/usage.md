@@ -56,7 +56,7 @@ The null is strongly rejected, again providing evidence for the presence of vola
 
 ## Estimation
 ### Standalone Models
-Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a GARCH(1, 1) with standard normal errors;  for other model classes such as [`EGARCH`](@ref), see the [section on volatility specifications](@ref volaspec).
+Having established the presence of volatility clustering, we can begin by fitting the workhorse model of volatility modeling, a GARCH(1, 1) with standard normal errors;  for other model classes such as [`EGARCH`](@ref) and [`APARCH`](@ref), see the [section on volatility specifications](@ref volaspec).
 
 ```jldoctest MANUAL
 julia> fit(GARCH{1, 1}, BG96)
