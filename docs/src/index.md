@@ -14,6 +14,7 @@ This package implements simulation, estimation, and model selection for the foll
 
   * ARCH(q)
   * GARCH(p, q)
+  * IGARCH(p, q)
   * TGARCH(o, p, q)
   * EGARCH(o, p q)
 
