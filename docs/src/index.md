@@ -16,6 +16,7 @@ This package implements simulation, estimation, and model selection for the foll
   * GARCH(p, q)
   * TGARCH(o, p, q)
   * EGARCH(o, p q)
+  * NGARCH(p, q)
 
 The conditional mean can be specified as either zero, an intercept, a linear regression model, or an ARMA(p, q) model.
 As for error distributions, the user may choose among the following:

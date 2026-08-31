@@ -95,6 +95,7 @@ end
     @test coefnames(EGARCH{2, 2, 2}) == ["ω", "γ₁", "γ₂", "β₁", "β₂", "α₁", "α₂"]
     @test_throws Base.ErrorException predict.(am7, :variance, 1:3)
 end
+include("ngarch.jl")
 @testset "StatisticalModel" begin
     #not implemented: adjr2, deviance, mss, nulldeviance, r2, rss, weights
     spec = GARCH{1, 1}([1., .9, .05])
