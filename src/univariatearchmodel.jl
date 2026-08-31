@@ -594,8 +594,10 @@ function show(io::IO, ::MIME"text/plain", am::UnivariateARCHModel)
 	    zzg = ccg ./ seg
 	    zzd = ccd ./ sed
 	    zzm = ccm ./ sem
-	    println(io, "\n", modname(typeof(am.spec)), " model with ",
-	            distname(typeof(am.dist)), " errors, T=", nobs(am), ".\n")
+	    println(io, "\n Mean model: ", typeof(am.meanspec),
+			"\n Volatility model: ", modname(typeof(am.spec)), " model with ",
+	            distname(typeof(am.dist)), " errors", 
+			"\n T=", nobs(am), "\n")
 
 	    if length(sem) > 0
 			println(io, "Mean equation parameters:")
